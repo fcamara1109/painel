@@ -1,0 +1,3008 @@
+{
+ "schema": {
+  "fields": [
+   {
+    "name": "metric_date",
+    "type": "DATE"
+   },
+   {
+    "name": "event_date",
+    "type": "DATE"
+   },
+   {
+    "name": "lead_date",
+    "type": "DATE"
+   },
+   {
+    "name": "appointment_date",
+    "type": "DATE"
+   },
+   {
+    "name": "patient_name",
+    "type": "STRING"
+   },
+   {
+    "name": "procedure_name",
+    "type": "STRING"
+   },
+   {
+    "name": "location",
+    "type": "STRING"
+   },
+   {
+    "name": "modality",
+    "type": "STRING"
+   },
+   {
+    "name": "payer",
+    "type": "STRING"
+   },
+   {
+    "name": "attribution",
+    "type": "STRING"
+   },
+   {
+    "name": "lead_campaign",
+    "type": "STRING"
+   },
+   {
+    "name": "lead_ad_group",
+    "type": "STRING"
+   },
+   {
+    "name": "billed_amount",
+    "type": "FLOAT"
+   },
+   {
+    "name": "physician_fee",
+    "type": "FLOAT"
+   },
+   {
+    "name": "event_id",
+    "type": "STRING"
+   }
+  ]
+ },
+ "rows": [
+  {
+   "f": [
+    {
+     "v": "2026-09-28"
+    },
+    {
+     "v": "2026-09-28"
+    },
+    {
+     "v": "2026-08-28"
+    },
+    {
+     "v": "2026-09-28"
+    },
+    {
+     "v": "Paciente A"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "350.0"
+    },
+    {
+     "v": "150.0"
+    },
+    {
+     "v": "evt-c000"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-27"
+    },
+    {
+     "v": "2026-09-27"
+    },
+    {
+     "v": "2026-08-27"
+    },
+    {
+     "v": "2026-09-27"
+    },
+    {
+     "v": "Paciente B"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "360.0"
+    },
+    {
+     "v": "154.5"
+    },
+    {
+     "v": "evt-c001"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-26"
+    },
+    {
+     "v": "2026-09-26"
+    },
+    {
+     "v": "2026-08-26"
+    },
+    {
+     "v": "2026-09-26"
+    },
+    {
+     "v": "Paciente C"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "370.0"
+    },
+    {
+     "v": "159.0"
+    },
+    {
+     "v": "evt-c002"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-25"
+    },
+    {
+     "v": "2026-09-25"
+    },
+    {
+     "v": "2026-08-25"
+    },
+    {
+     "v": "2026-09-25"
+    },
+    {
+     "v": "Paciente D"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-c003"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-24"
+    },
+    {
+     "v": "2026-09-24"
+    },
+    {
+     "v": "2026-08-24"
+    },
+    {
+     "v": "2026-09-24"
+    },
+    {
+     "v": "Paciente E"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "390.0"
+    },
+    {
+     "v": "168.0"
+    },
+    {
+     "v": "evt-c004"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-23"
+    },
+    {
+     "v": "2026-09-23"
+    },
+    {
+     "v": "2026-08-23"
+    },
+    {
+     "v": "2026-09-23"
+    },
+    {
+     "v": "Paciente F"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "400.0"
+    },
+    {
+     "v": "172.5"
+    },
+    {
+     "v": "evt-c005"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-22"
+    },
+    {
+     "v": "2026-09-22"
+    },
+    {
+     "v": "2026-08-22"
+    },
+    {
+     "v": "2026-09-22"
+    },
+    {
+     "v": "Paciente G"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "410.0"
+    },
+    {
+     "v": "177.0"
+    },
+    {
+     "v": "evt-c006"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-21"
+    },
+    {
+     "v": "2026-09-21"
+    },
+    {
+     "v": "2026-08-21"
+    },
+    {
+     "v": "2026-09-21"
+    },
+    {
+     "v": "Paciente H"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "420.0"
+    },
+    {
+     "v": "181.5"
+    },
+    {
+     "v": "evt-c007"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-20"
+    },
+    {
+     "v": "2026-09-20"
+    },
+    {
+     "v": "2026-08-20"
+    },
+    {
+     "v": "2026-09-20"
+    },
+    {
+     "v": "Paciente I"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "430.0"
+    },
+    {
+     "v": "186.0"
+    },
+    {
+     "v": "evt-c008"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-19"
+    },
+    {
+     "v": "2026-09-19"
+    },
+    {
+     "v": "2026-08-19"
+    },
+    {
+     "v": "2026-09-19"
+    },
+    {
+     "v": "Paciente J"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "440.0"
+    },
+    {
+     "v": "190.5"
+    },
+    {
+     "v": "evt-c009"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-18"
+    },
+    {
+     "v": "2026-09-18"
+    },
+    {
+     "v": "2026-08-18"
+    },
+    {
+     "v": "2026-09-18"
+    },
+    {
+     "v": "Paciente K"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-c010"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-17"
+    },
+    {
+     "v": "2026-09-17"
+    },
+    {
+     "v": "2026-08-17"
+    },
+    {
+     "v": "2026-09-17"
+    },
+    {
+     "v": "Paciente L"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "460.0"
+    },
+    {
+     "v": "199.5"
+    },
+    {
+     "v": "evt-c011"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-16"
+    },
+    {
+     "v": "2026-09-16"
+    },
+    {
+     "v": "2026-08-16"
+    },
+    {
+     "v": "2026-09-16"
+    },
+    {
+     "v": "Paciente M"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "470.0"
+    },
+    {
+     "v": "204.0"
+    },
+    {
+     "v": "evt-c012"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-15"
+    },
+    {
+     "v": "2026-09-15"
+    },
+    {
+     "v": "2026-08-15"
+    },
+    {
+     "v": "2026-09-15"
+    },
+    {
+     "v": "Paciente N"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "480.0"
+    },
+    {
+     "v": "208.5"
+    },
+    {
+     "v": "evt-c013"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-14"
+    },
+    {
+     "v": "2026-09-14"
+    },
+    {
+     "v": "2026-08-14"
+    },
+    {
+     "v": "2026-09-14"
+    },
+    {
+     "v": "Paciente O"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "490.0"
+    },
+    {
+     "v": "213.0"
+    },
+    {
+     "v": "evt-c014"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-13"
+    },
+    {
+     "v": "2026-09-13"
+    },
+    {
+     "v": "2026-08-13"
+    },
+    {
+     "v": "2026-09-13"
+    },
+    {
+     "v": "Paciente P"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "500.0"
+    },
+    {
+     "v": "217.5"
+    },
+    {
+     "v": "evt-c015"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-12"
+    },
+    {
+     "v": "2026-09-12"
+    },
+    {
+     "v": "2026-08-12"
+    },
+    {
+     "v": "2026-09-12"
+    },
+    {
+     "v": "Paciente Q"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "510.0"
+    },
+    {
+     "v": "222.0"
+    },
+    {
+     "v": "evt-c016"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-11"
+    },
+    {
+     "v": "2026-09-11"
+    },
+    {
+     "v": "2026-08-11"
+    },
+    {
+     "v": "2026-09-11"
+    },
+    {
+     "v": "Paciente R"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-c017"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-10"
+    },
+    {
+     "v": "2026-09-10"
+    },
+    {
+     "v": "2026-08-10"
+    },
+    {
+     "v": "2026-09-10"
+    },
+    {
+     "v": "Paciente S"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "530.0"
+    },
+    {
+     "v": "231.0"
+    },
+    {
+     "v": "evt-c018"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-09"
+    },
+    {
+     "v": "2026-09-09"
+    },
+    {
+     "v": "2026-08-09"
+    },
+    {
+     "v": "2026-09-09"
+    },
+    {
+     "v": "Paciente T"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "540.0"
+    },
+    {
+     "v": "235.5"
+    },
+    {
+     "v": "evt-c019"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-08"
+    },
+    {
+     "v": "2026-09-08"
+    },
+    {
+     "v": "2026-08-08"
+    },
+    {
+     "v": "2026-09-08"
+    },
+    {
+     "v": "Paciente U"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "550.0"
+    },
+    {
+     "v": "240.0"
+    },
+    {
+     "v": "evt-c020"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-07"
+    },
+    {
+     "v": "2026-09-07"
+    },
+    {
+     "v": "2026-08-07"
+    },
+    {
+     "v": "2026-09-07"
+    },
+    {
+     "v": "Paciente V"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "560.0"
+    },
+    {
+     "v": "244.5"
+    },
+    {
+     "v": "evt-c021"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-06"
+    },
+    {
+     "v": "2026-09-06"
+    },
+    {
+     "v": "2026-08-06"
+    },
+    {
+     "v": "2026-09-06"
+    },
+    {
+     "v": "Paciente W"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "570.0"
+    },
+    {
+     "v": "249.0"
+    },
+    {
+     "v": "evt-c022"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-05"
+    },
+    {
+     "v": "2026-09-05"
+    },
+    {
+     "v": "2026-08-05"
+    },
+    {
+     "v": "2026-09-05"
+    },
+    {
+     "v": "Paciente X"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "580.0"
+    },
+    {
+     "v": "253.5"
+    },
+    {
+     "v": "evt-c023"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-04"
+    },
+    {
+     "v": "2026-09-04"
+    },
+    {
+     "v": "2026-08-04"
+    },
+    {
+     "v": "2026-09-04"
+    },
+    {
+     "v": "Paciente Y"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-c024"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-03"
+    },
+    {
+     "v": "2026-09-03"
+    },
+    {
+     "v": "2026-08-03"
+    },
+    {
+     "v": "2026-09-03"
+    },
+    {
+     "v": "Paciente Z"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "600.0"
+    },
+    {
+     "v": "262.5"
+    },
+    {
+     "v": "evt-c025"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-02"
+    },
+    {
+     "v": "2026-09-02"
+    },
+    {
+     "v": "2026-08-02"
+    },
+    {
+     "v": "2026-09-02"
+    },
+    {
+     "v": "Paciente AA"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "610.0"
+    },
+    {
+     "v": "267.0"
+    },
+    {
+     "v": "evt-c026"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-01"
+    },
+    {
+     "v": "2026-09-01"
+    },
+    {
+     "v": "2026-08-01"
+    },
+    {
+     "v": "2026-09-01"
+    },
+    {
+     "v": "Paciente AB"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "620.0"
+    },
+    {
+     "v": "271.5"
+    },
+    {
+     "v": "evt-c027"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-28"
+    },
+    {
+     "v": "2026-09-28"
+    },
+    {
+     "v": "2026-08-28"
+    },
+    {
+     "v": "2026-09-28"
+    },
+    {
+     "v": "Paciente AC"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "630.0"
+    },
+    {
+     "v": "276.0"
+    },
+    {
+     "v": "evt-c028"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-27"
+    },
+    {
+     "v": "2026-09-27"
+    },
+    {
+     "v": "2026-08-27"
+    },
+    {
+     "v": "2026-09-27"
+    },
+    {
+     "v": "Paciente AD"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "640.0"
+    },
+    {
+     "v": "280.5"
+    },
+    {
+     "v": "evt-c029"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-26"
+    },
+    {
+     "v": "2026-09-26"
+    },
+    {
+     "v": "2026-08-26"
+    },
+    {
+     "v": "2026-09-26"
+    },
+    {
+     "v": "Paciente AE"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "650.0"
+    },
+    {
+     "v": "285.0"
+    },
+    {
+     "v": "evt-c030"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-25"
+    },
+    {
+     "v": "2026-09-25"
+    },
+    {
+     "v": "2026-08-25"
+    },
+    {
+     "v": "2026-09-25"
+    },
+    {
+     "v": "Paciente AF"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-c031"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-24"
+    },
+    {
+     "v": "2026-09-24"
+    },
+    {
+     "v": "2026-08-24"
+    },
+    {
+     "v": "2026-09-24"
+    },
+    {
+     "v": "Paciente AG"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "670.0"
+    },
+    {
+     "v": "294.0"
+    },
+    {
+     "v": "evt-c032"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-23"
+    },
+    {
+     "v": "2026-09-23"
+    },
+    {
+     "v": "2026-08-23"
+    },
+    {
+     "v": "2026-09-23"
+    },
+    {
+     "v": "Paciente AH"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "680.0"
+    },
+    {
+     "v": "298.5"
+    },
+    {
+     "v": "evt-c033"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-22"
+    },
+    {
+     "v": "2026-09-22"
+    },
+    {
+     "v": "2026-08-22"
+    },
+    {
+     "v": "2026-09-22"
+    },
+    {
+     "v": "Paciente AI"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "690.0"
+    },
+    {
+     "v": "303.0"
+    },
+    {
+     "v": "evt-c034"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-21"
+    },
+    {
+     "v": "2026-09-21"
+    },
+    {
+     "v": "2026-08-21"
+    },
+    {
+     "v": "2026-09-21"
+    },
+    {
+     "v": "Paciente AJ"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "700.0"
+    },
+    {
+     "v": "307.5"
+    },
+    {
+     "v": "evt-c035"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-20"
+    },
+    {
+     "v": "2026-09-20"
+    },
+    {
+     "v": "2026-08-20"
+    },
+    {
+     "v": "2026-09-20"
+    },
+    {
+     "v": "Paciente AK"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "710.0"
+    },
+    {
+     "v": "312.0"
+    },
+    {
+     "v": "evt-c036"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-19"
+    },
+    {
+     "v": "2026-09-19"
+    },
+    {
+     "v": "2026-08-19"
+    },
+    {
+     "v": "2026-09-19"
+    },
+    {
+     "v": "Paciente AL"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "720.0"
+    },
+    {
+     "v": "316.5"
+    },
+    {
+     "v": "evt-c037"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-18"
+    },
+    {
+     "v": "2026-09-18"
+    },
+    {
+     "v": "2026-08-18"
+    },
+    {
+     "v": "2026-09-18"
+    },
+    {
+     "v": "Paciente AM"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-c038"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-17"
+    },
+    {
+     "v": "2026-09-17"
+    },
+    {
+     "v": "2026-08-17"
+    },
+    {
+     "v": "2026-09-17"
+    },
+    {
+     "v": "Paciente AN"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "740.0"
+    },
+    {
+     "v": "325.5"
+    },
+    {
+     "v": "evt-c039"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-16"
+    },
+    {
+     "v": "2026-09-16"
+    },
+    {
+     "v": "2026-08-16"
+    },
+    {
+     "v": "2026-09-16"
+    },
+    {
+     "v": "Paciente AO"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "750.0"
+    },
+    {
+     "v": "330.0"
+    },
+    {
+     "v": "evt-c040"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-15"
+    },
+    {
+     "v": "2026-09-15"
+    },
+    {
+     "v": "2026-08-15"
+    },
+    {
+     "v": "2026-09-15"
+    },
+    {
+     "v": "Paciente AP"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "760.0"
+    },
+    {
+     "v": "334.5"
+    },
+    {
+     "v": "evt-c041"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-14"
+    },
+    {
+     "v": "2026-09-14"
+    },
+    {
+     "v": "2026-08-14"
+    },
+    {
+     "v": "2026-09-14"
+    },
+    {
+     "v": "Paciente AQ"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "770.0"
+    },
+    {
+     "v": "339.0"
+    },
+    {
+     "v": "evt-c042"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-13"
+    },
+    {
+     "v": "2026-09-13"
+    },
+    {
+     "v": "2026-08-13"
+    },
+    {
+     "v": "2026-09-13"
+    },
+    {
+     "v": "Paciente AR"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "780.0"
+    },
+    {
+     "v": "343.5"
+    },
+    {
+     "v": "evt-c043"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-12"
+    },
+    {
+     "v": "2026-09-12"
+    },
+    {
+     "v": "2026-08-12"
+    },
+    {
+     "v": "2026-09-12"
+    },
+    {
+     "v": "Paciente AS"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "790.0"
+    },
+    {
+     "v": "348.0"
+    },
+    {
+     "v": "evt-c044"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-11"
+    },
+    {
+     "v": "2026-09-11"
+    },
+    {
+     "v": "2026-08-11"
+    },
+    {
+     "v": "2026-09-11"
+    },
+    {
+     "v": "Paciente AT"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-c045"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-10"
+    },
+    {
+     "v": "2026-09-10"
+    },
+    {
+     "v": "2026-08-10"
+    },
+    {
+     "v": "2026-09-10"
+    },
+    {
+     "v": "Paciente AU"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "810.0"
+    },
+    {
+     "v": "357.0"
+    },
+    {
+     "v": "evt-c046"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-09"
+    },
+    {
+     "v": "2026-09-09"
+    },
+    {
+     "v": "2026-08-09"
+    },
+    {
+     "v": "2026-09-09"
+    },
+    {
+     "v": "Paciente AV"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "820.0"
+    },
+    {
+     "v": "361.5"
+    },
+    {
+     "v": "evt-c047"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-08"
+    },
+    {
+     "v": "2026-09-08"
+    },
+    {
+     "v": "2026-08-08"
+    },
+    {
+     "v": "2026-09-08"
+    },
+    {
+     "v": "Paciente AW"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "830.0"
+    },
+    {
+     "v": "366.0"
+    },
+    {
+     "v": "evt-c048"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-07"
+    },
+    {
+     "v": "2026-09-07"
+    },
+    {
+     "v": "2026-08-07"
+    },
+    {
+     "v": "2026-09-07"
+    },
+    {
+     "v": "Paciente AX"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "840.0"
+    },
+    {
+     "v": "370.5"
+    },
+    {
+     "v": "evt-c049"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-06"
+    },
+    {
+     "v": "2026-09-06"
+    },
+    {
+     "v": "2026-08-06"
+    },
+    {
+     "v": "2026-09-06"
+    },
+    {
+     "v": "Paciente AY"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "850.0"
+    },
+    {
+     "v": "375.0"
+    },
+    {
+     "v": "evt-c050"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-05"
+    },
+    {
+     "v": "2026-09-05"
+    },
+    {
+     "v": "2026-08-05"
+    },
+    {
+     "v": "2026-09-05"
+    },
+    {
+     "v": "Paciente AZ"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "860.0"
+    },
+    {
+     "v": "379.5"
+    },
+    {
+     "v": "evt-c051"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-04"
+    },
+    {
+     "v": "2026-09-04"
+    },
+    {
+     "v": "2026-08-04"
+    },
+    {
+     "v": "2026-09-04"
+    },
+    {
+     "v": "Paciente BA"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-c052"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-03"
+    },
+    {
+     "v": "2026-09-03"
+    },
+    {
+     "v": "2026-08-03"
+    },
+    {
+     "v": "2026-09-03"
+    },
+    {
+     "v": "Paciente BB"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "880.0"
+    },
+    {
+     "v": "388.5"
+    },
+    {
+     "v": "evt-c053"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-02"
+    },
+    {
+     "v": "2026-09-02"
+    },
+    {
+     "v": "2026-08-02"
+    },
+    {
+     "v": "2026-09-02"
+    },
+    {
+     "v": "Paciente BC"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "890.0"
+    },
+    {
+     "v": "393.0"
+    },
+    {
+     "v": "evt-c054"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-01"
+    },
+    {
+     "v": "2026-09-01"
+    },
+    {
+     "v": "2026-08-01"
+    },
+    {
+     "v": "2026-09-01"
+    },
+    {
+     "v": "Paciente BD"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "900.0"
+    },
+    {
+     "v": "397.5"
+    },
+    {
+     "v": "evt-c055"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-28"
+    },
+    {
+     "v": "2026-09-28"
+    },
+    {
+     "v": "2026-08-28"
+    },
+    {
+     "v": "2026-09-28"
+    },
+    {
+     "v": "Paciente BE"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "910.0"
+    },
+    {
+     "v": "402.0"
+    },
+    {
+     "v": "evt-c056"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-27"
+    },
+    {
+     "v": "2026-09-27"
+    },
+    {
+     "v": "2026-08-27"
+    },
+    {
+     "v": "2026-09-27"
+    },
+    {
+     "v": "Paciente BF"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "920.0"
+    },
+    {
+     "v": "406.5"
+    },
+    {
+     "v": "evt-c057"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-26"
+    },
+    {
+     "v": "2026-09-26"
+    },
+    {
+     "v": "2026-08-26"
+    },
+    {
+     "v": "2026-09-26"
+    },
+    {
+     "v": "Paciente BG"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "930.0"
+    },
+    {
+     "v": "411.0"
+    },
+    {
+     "v": "evt-c058"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-25"
+    },
+    {
+     "v": "2026-09-25"
+    },
+    {
+     "v": "2026-08-25"
+    },
+    {
+     "v": "2026-09-25"
+    },
+    {
+     "v": "Paciente BH"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-c059"
+    }
+   ]
+  }
+ ]
+}

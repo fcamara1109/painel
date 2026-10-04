@@ -1,0 +1,215 @@
+{
+ "schema": {
+  "fields": [
+   {
+    "name": "filter",
+    "type": "STRING"
+   },
+   {
+    "name": "value",
+    "type": "STRING"
+   },
+   {
+    "name": "n",
+    "type": "INTEGER"
+   }
+  ]
+ },
+ "rows": [
+  {
+   "f": [
+    {
+     "v": "attribution"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "120"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "attribution"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "45"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "procedure"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "90"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "procedure"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "30"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "location"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "70"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "location"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "40"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "modality"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "55"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "modality"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "65"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "event_type"
+    },
+    {
+     "v": "attended"
+    },
+    {
+     "v": "61"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "event_type"
+    },
+    {
+     "v": "lead_collect"
+    },
+    {
+     "v": "190"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "event_type"
+    },
+    {
+     "v": "scheduled"
+    },
+    {
+     "v": "71"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "campaign"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "100"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "campaign"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "50"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "ad_group"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "80"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "ad_group"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "50"
+    }
+   ]
+  }
+ ]
+}

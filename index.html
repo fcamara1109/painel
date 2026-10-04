@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Funil · Dr. Frederico</title>
+<link rel="icon" href="data:,">
+<style>
+:root {
+  --bg: #f6f7f9; --card: #fff; --ink: #1c2330; --mute: #5d6878; --line: #dfe3ea;
+  --accent: #1a5fb4; --accent-ink: #fff; --warn-bg: #fff6df; --warn-line: #e8cf8a; --err-bg: #fde8e8; --err-line: #e5a1a1;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 1200px; margin: 0 auto; padding: 16px; }
+h1 { font-size: 22px; margin: 0 0 12px; }
+h2 { font-size: 16px; margin: 0 0 8px; }
+.abas { display: flex; gap: 4px; margin-bottom: 12px; }
+.abas button { border: 1px solid var(--line); background: var(--card); color: var(--ink); padding: 8px 14px; border-radius: 8px 8px 0 0; cursor: pointer; font: inherit; }
+.abas button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.controles { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 12px; }
+.controles label { display: flex; flex-direction: column; font-size: 12px; color: var(--mute); gap: 2px; }
+.controles input[type=date], .controles select { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); }
+.filtros { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; }
+.filtro { position: relative; }
+.filtro summary { list-style: none; cursor: pointer; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; background: #fff; font-size: 14px; }
+.filtro summary::-webkit-details-marker { display: none; }
+.filtro[open] summary { border-color: var(--accent); }
+.filtro .qtd { color: var(--accent); font-weight: 600; }
+.opcoes { position: absolute; z-index: 5; top: calc(100% + 4px); left: 0; min-width: 220px; max-width: 320px; max-height: 260px; overflow: auto; background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 6px; box-shadow: 0 6px 18px rgba(0,0,0,.12); }
+.opcoes label { flex-direction: row; align-items: center; gap: 8px; font-size: 14px; color: var(--ink); padding: 4px 6px; cursor: pointer; }
+.opcoes .n { color: var(--mute); margin-left: auto; font-size: 12px; }
+.opcoes .vazio { color: var(--mute); padding: 6px; font-size: 13px; }
+.aviso { background: var(--warn-bg); border: 1px solid var(--warn-line); border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; font-size: 14px; }
+.erro { background: var(--err-bg); border: 1px solid var(--err-line); border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; font-size: 14px; }
+[hidden] { display: none !important; }
+.login { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 24px; text-align: center; margin-bottom: 12px; }
+.login button { border: 0; background: var(--accent); color: var(--accent-ink); padding: 10px 18px; border-radius: 8px; font: inherit; cursor: pointer; }
+.bloco { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
+.carregando .bloco { opacity: .55; }
+.rolagem { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; white-space: nowrap; }
+th, td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: right; }
+th { background: #eef1f6; font-weight: 600; color: var(--mute); position: sticky; top: 0; }
+th:first-child, td:first-child { text-align: left; }
+td.txt, th.txt { text-align: left; }
+tr.total td { font-weight: 700; border-top: 2px solid var(--ink); background: #f7f9fc; }
+small.sv { display: block; color: var(--mute); font-weight: 400; font-size: 11px; }
+.pag { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 14px; color: var(--mute); }
+.pag button { font: inherit; padding: 4px 10px; border: 1px solid var(--line); background: #fff; border-radius: 6px; cursor: pointer; }
+.pag button:disabled { opacity: .4; cursor: default; }
+.vazio-lista { color: var(--mute); padding: 8px 0; }
+@media (max-width: 600px) { main { padding: 10px; } h1 { font-size: 19px; } .controles { gap: 8px; } }
+</style>
+</head>
+<body>
+<main id="app">
+  <h1>Funil · Dr. Frederico</h1>
+
+  <section id="login" class="login" hidden>
+    <p id="login-msg">Entre com a conta Google que tem acesso ao BigQuery.</p>
+    <button id="btn-login" type="button">Entrar com Google</button>
+  </section>
+
+  <section id="painel" hidden>
+    <div class="abas" role="tablist">
+      <button type="button" role="tab" id="aba-event" data-basis="event" aria-selected="true">Data do evento</button>
+      <button type="button" role="tab" id="aba-lead" data-basis="lead" aria-selected="false">Data do lead</button>
+    </div>
+
+    <div class="controles">
+      <label>Data inicial <input type="date" id="c-inicio"></label>
+      <label>Data final <input type="date" id="c-fim"></label>
+      <label>Agrupar por
+        <select id="c-grao">
+          <option value="day">Dia</option>
+          <option value="week">Semana</option>
+          <option value="month" selected>Mês</option>
+        </select>
+      </label>
+      <div class="filtros" id="filtros"></div>
+    </div>
+
+    <div class="aviso" id="aviso-campanha">Campanha e grupo do lead só são completos desde ago/2026.</div>
+    <div class="aviso" id="aviso-custo" hidden>Custo não se aplica a este filtro</div>
+    <div class="erro" id="erro" hidden></div>
+
+    <div id="blocos">
+      <section class="bloco" id="bloco-custo"><h2>Custo e retorno</h2><div class="rolagem"></div></section>
+      <section class="bloco" id="bloco-conv"><h2>Conversões</h2><div class="rolagem"></div></section>
+      <section class="bloco" id="bloco-vol"><h2>Volumes</h2><div class="rolagem"></div></section>
+      <section class="bloco" id="bloco-realizados"><h2>Realizados</h2><div class="rolagem"></div><div class="pag"></div></section>
+      <section class="bloco" id="bloco-marcacoes"><h2>Marcações</h2><div class="rolagem"></div><div class="pag"></div></section>
+    </div>
+  </section>
+</main>
+<script src="config.js"></script>
+<script src="painel.js"></script>
+</body>
+</html>

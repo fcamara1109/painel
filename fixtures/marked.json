@@ -1,0 +1,1726 @@
+{
+ "schema": {
+  "fields": [
+   {
+    "name": "metric_date",
+    "type": "DATE"
+   },
+   {
+    "name": "event_date",
+    "type": "DATE"
+   },
+   {
+    "name": "lead_date",
+    "type": "DATE"
+   },
+   {
+    "name": "appointment_date",
+    "type": "DATE"
+   },
+   {
+    "name": "marking_type",
+    "type": "STRING"
+   },
+   {
+    "name": "patient_name",
+    "type": "STRING"
+   },
+   {
+    "name": "procedure_name",
+    "type": "STRING"
+   },
+   {
+    "name": "location",
+    "type": "STRING"
+   },
+   {
+    "name": "modality",
+    "type": "STRING"
+   },
+   {
+    "name": "payer",
+    "type": "STRING"
+   },
+   {
+    "name": "attribution",
+    "type": "STRING"
+   },
+   {
+    "name": "lead_campaign",
+    "type": "STRING"
+   },
+   {
+    "name": "lead_ad_group",
+    "type": "STRING"
+   },
+   {
+    "name": "source",
+    "type": "STRING"
+   },
+   {
+    "name": "referred_to",
+    "type": "STRING"
+   },
+   {
+    "name": "reason",
+    "type": "STRING"
+   },
+   {
+    "name": "event_id",
+    "type": "STRING"
+   }
+  ]
+ },
+ "rows": [
+  {
+   "f": [
+    {
+     "v": "2026-09-28"
+    },
+    {
+     "v": "2026-09-28"
+    },
+    {
+     "v": "2026-08-28"
+    },
+    {
+     "v": "2026-10-01"
+    },
+    {
+     "v": "scheduled"
+    },
+    {
+     "v": "Paciente CW"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-m000"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-27"
+    },
+    {
+     "v": "2026-09-27"
+    },
+    {
+     "v": "2026-08-27"
+    },
+    {
+     "v": "2026-10-02"
+    },
+    {
+     "v": "scheduled"
+    },
+    {
+     "v": "Paciente CX"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-m001"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-26"
+    },
+    {
+     "v": "2026-09-26"
+    },
+    {
+     "v": "2026-08-26"
+    },
+    {
+     "v": "2026-10-03"
+    },
+    {
+     "v": "scheduled"
+    },
+    {
+     "v": "Paciente CY"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-m002"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-25"
+    },
+    {
+     "v": "2026-09-25"
+    },
+    {
+     "v": "2026-08-25"
+    },
+    {
+     "v": "2026-10-04"
+    },
+    {
+     "v": "scheduled"
+    },
+    {
+     "v": "Paciente CZ"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-m003"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-24"
+    },
+    {
+     "v": "2026-09-24"
+    },
+    {
+     "v": "2026-08-24"
+    },
+    {
+     "v": "2026-10-05"
+    },
+    {
+     "v": "referral"
+    },
+    {
+     "v": "Paciente DA"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": "Clínica Exemplo"
+    },
+    {
+     "v": "Motivo de exemplo"
+    },
+    {
+     "v": "evt-m004"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-23"
+    },
+    {
+     "v": "2026-09-23"
+    },
+    {
+     "v": "2026-08-23"
+    },
+    {
+     "v": "2026-10-06"
+    },
+    {
+     "v": "scheduled"
+    },
+    {
+     "v": "Paciente DB"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-m005"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-22"
+    },
+    {
+     "v": "2026-09-22"
+    },
+    {
+     "v": "2026-08-22"
+    },
+    {
+     "v": "2026-10-07"
+    },
+    {
+     "v": "scheduled"
+    },
+    {
+     "v": "Paciente DC"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-m006"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-21"
+    },
+    {
+     "v": "2026-09-21"
+    },
+    {
+     "v": "2026-08-21"
+    },
+    {
+     "v": "2026-10-08"
+    },
+    {
+     "v": "scheduled"
+    },
+    {
+     "v": "Paciente DD"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-m007"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-20"
+    },
+    {
+     "v": "2026-09-20"
+    },
+    {
+     "v": "2026-08-20"
+    },
+    {
+     "v": "2026-10-09"
+    },
+    {
+     "v": "scheduled"
+    },
+    {
+     "v": "Paciente DE"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-m008"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-19"
+    },
+    {
+     "v": "2026-09-19"
+    },
+    {
+     "v": "2026-08-19"
+    },
+    {
+     "v": "2026-10-10"
+    },
+    {
+     "v": "referral"
+    },
+    {
+     "v": "Paciente DF"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": "Clínica Exemplo"
+    },
+    {
+     "v": "Motivo de exemplo"
+    },
+    {
+     "v": "evt-m009"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-18"
+    },
+    {
+     "v": "2026-09-18"
+    },
+    {
+     "v": "2026-08-18"
+    },
+    {
+     "v": "2026-10-11"
+    },
+    {
+     "v": "scheduled"
+    },
+    {
+     "v": "Paciente DG"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-m010"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-17"
+    },
+    {
+     "v": "2026-09-17"
+    },
+    {
+     "v": "2026-08-17"
+    },
+    {
+     "v": "2026-10-12"
+    },
+    {
+     "v": "scheduled"
+    },
+    {
+     "v": "Paciente DH"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-m011"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-16"
+    },
+    {
+     "v": "2026-09-16"
+    },
+    {
+     "v": "2026-08-16"
+    },
+    {
+     "v": "2026-10-13"
+    },
+    {
+     "v": "scheduled"
+    },
+    {
+     "v": "Paciente DI"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-m012"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-15"
+    },
+    {
+     "v": "2026-09-15"
+    },
+    {
+     "v": "2026-08-15"
+    },
+    {
+     "v": "2026-10-14"
+    },
+    {
+     "v": "scheduled"
+    },
+    {
+     "v": "Paciente DJ"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-m013"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-14"
+    },
+    {
+     "v": "2026-09-14"
+    },
+    {
+     "v": "2026-08-14"
+    },
+    {
+     "v": "2026-10-15"
+    },
+    {
+     "v": "referral"
+    },
+    {
+     "v": "Paciente DK"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": "Clínica Exemplo"
+    },
+    {
+     "v": "Motivo de exemplo"
+    },
+    {
+     "v": "evt-m014"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-13"
+    },
+    {
+     "v": "2026-09-13"
+    },
+    {
+     "v": "2026-08-13"
+    },
+    {
+     "v": "2026-10-16"
+    },
+    {
+     "v": "scheduled"
+    },
+    {
+     "v": "Paciente DL"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-m015"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-12"
+    },
+    {
+     "v": "2026-09-12"
+    },
+    {
+     "v": "2026-08-12"
+    },
+    {
+     "v": "2026-10-17"
+    },
+    {
+     "v": "scheduled"
+    },
+    {
+     "v": "Paciente DM"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-m016"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-11"
+    },
+    {
+     "v": "2026-09-11"
+    },
+    {
+     "v": "2026-08-11"
+    },
+    {
+     "v": "2026-10-18"
+    },
+    {
+     "v": "scheduled"
+    },
+    {
+     "v": "Paciente DN"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-m017"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-10"
+    },
+    {
+     "v": "2026-09-10"
+    },
+    {
+     "v": "2026-08-10"
+    },
+    {
+     "v": "2026-10-19"
+    },
+    {
+     "v": "scheduled"
+    },
+    {
+     "v": "Paciente DO"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-m018"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-09"
+    },
+    {
+     "v": "2026-09-09"
+    },
+    {
+     "v": "2026-08-09"
+    },
+    {
+     "v": "2026-10-20"
+    },
+    {
+     "v": "referral"
+    },
+    {
+     "v": "Paciente DP"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": "Clínica Exemplo"
+    },
+    {
+     "v": "Motivo de exemplo"
+    },
+    {
+     "v": "evt-m019"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-08"
+    },
+    {
+     "v": "2026-09-08"
+    },
+    {
+     "v": "2026-08-08"
+    },
+    {
+     "v": "2026-10-21"
+    },
+    {
+     "v": "scheduled"
+    },
+    {
+     "v": "Paciente DQ"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-m020"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-07"
+    },
+    {
+     "v": "2026-09-07"
+    },
+    {
+     "v": "2026-08-07"
+    },
+    {
+     "v": "2026-10-22"
+    },
+    {
+     "v": "scheduled"
+    },
+    {
+     "v": "Paciente DR"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-m021"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-06"
+    },
+    {
+     "v": "2026-09-06"
+    },
+    {
+     "v": "2026-08-06"
+    },
+    {
+     "v": "2026-10-23"
+    },
+    {
+     "v": "scheduled"
+    },
+    {
+     "v": "Paciente DS"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-m022"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-05"
+    },
+    {
+     "v": "2026-09-05"
+    },
+    {
+     "v": "2026-08-05"
+    },
+    {
+     "v": "2026-10-24"
+    },
+    {
+     "v": "scheduled"
+    },
+    {
+     "v": "Paciente DT"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-m023"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-04"
+    },
+    {
+     "v": "2026-09-04"
+    },
+    {
+     "v": "2026-08-04"
+    },
+    {
+     "v": "2026-10-25"
+    },
+    {
+     "v": "referral"
+    },
+    {
+     "v": "Paciente DU"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": "Clínica Exemplo"
+    },
+    {
+     "v": "Motivo de exemplo"
+    },
+    {
+     "v": "evt-m024"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-03"
+    },
+    {
+     "v": "2026-09-03"
+    },
+    {
+     "v": "2026-08-03"
+    },
+    {
+     "v": "2026-10-26"
+    },
+    {
+     "v": "scheduled"
+    },
+    {
+     "v": "Paciente DV"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-m025"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-02"
+    },
+    {
+     "v": "2026-09-02"
+    },
+    {
+     "v": "2026-08-02"
+    },
+    {
+     "v": "2026-10-27"
+    },
+    {
+     "v": "scheduled"
+    },
+    {
+     "v": "Paciente DW"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-m026"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-01"
+    },
+    {
+     "v": "2026-09-01"
+    },
+    {
+     "v": "2026-08-01"
+    },
+    {
+     "v": "2026-10-01"
+    },
+    {
+     "v": "scheduled"
+    },
+    {
+     "v": "Paciente DX"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-m027"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-28"
+    },
+    {
+     "v": "2026-09-28"
+    },
+    {
+     "v": "2026-08-28"
+    },
+    {
+     "v": "2026-10-02"
+    },
+    {
+     "v": "scheduled"
+    },
+    {
+     "v": "Paciente DY"
+    },
+    {
+     "v": "Retorno"
+    },
+    {
+     "v": "Gastrus"
+    },
+    {
+     "v": "Online"
+    },
+    {
+     "v": "Convênio Exemplo"
+    },
+    {
+     "v": "Google Ads"
+    },
+    {
+     "v": "Campanha Exemplo"
+    },
+    {
+     "v": "Grupo Exemplo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "evt-m028"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-09-27"
+    },
+    {
+     "v": "2026-09-27"
+    },
+    {
+     "v": "2026-08-27"
+    },
+    {
+     "v": "2026-10-03"
+    },
+    {
+     "v": "referral"
+    },
+    {
+     "v": "Paciente DZ"
+    },
+    {
+     "v": "Consulta"
+    },
+    {
+     "v": "Consultório"
+    },
+    {
+     "v": "Presencial"
+    },
+    {
+     "v": "Particular"
+    },
+    {
+     "v": "Orgânico"
+    },
+    {
+     "v": "sem campanha"
+    },
+    {
+     "v": "sem grupo"
+    },
+    {
+     "v": "whatsapp"
+    },
+    {
+     "v": "Clínica Exemplo"
+    },
+    {
+     "v": "Motivo de exemplo"
+    },
+    {
+     "v": "evt-m029"
+    }
+   ]
+  }
+ ]
+}
