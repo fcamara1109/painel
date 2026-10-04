@@ -6,10 +6,16 @@
 -- Parâmetros: @tenant, @start_date, @end_date, @grain, @basis ('event'|'lead') e os arrays
 -- @attribution, @procedure, @location, @modality, @event_type, @campaign, @ad_group.
 -- Base 'lead': eventos de paciente caem na cohort_date; gasto, impressões e cliques ficam na data deles.
+-- Retorno fica fora (visit_type 'return' ou procedimento Retorno): ver is_return em _prelude.sql.
 -- Filtro de procedimento, local, modalidade ou tipo de evento não se aplica ao gasto: com
 -- qualquer um ativo, gasto, impressões, cliques, custos, CTR, clique->lead e ROAS saem NULL.
 WITH cfg AS (
   SELECT (n_items(@procedure) + n_items(@location) + n_items(@modality) + n_items(@event_type)) = 0 AS has_spend
+),
+visit_types AS (
+  SELECT event_id, JSON_VALUE(body, '$.visit_type') AS visit_type
+  FROM `my-first-project-237704.raw.events`
+  WHERE tenant = @tenant AND JSON_VALUE(body, '$._debug') IS NULL AND JSON_VALUE(body, '$.visit_type') IS NOT NULL
 ),
 dated AS (
   SELECT
@@ -19,7 +25,9 @@ dated AS (
     IF(e.event_name = 'ad_spend' OR @basis != 'lead', e.event_date, e.cohort_date) AS metric_date
   FROM `my-first-project-237704.analytics.funnel_events_attributed` AS e
   CROSS JOIN cfg
+  LEFT JOIN visit_types AS v ON v.event_id = e.event_id
   WHERE e.tenant = @tenant
+    AND counts_in_funnel(v.visit_type, e.procedure_name)
     AND IF(
       e.event_name = 'ad_spend',
       cfg.has_spend AND spend_matches(e.attribution, e.campaign, e.ad_group_name, @attribution, @campaign, @ad_group),
