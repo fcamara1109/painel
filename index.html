@@ -4,97 +4,161 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Funil · Dr. Frederico</title>
+<title>Funil · Felipe Câmara</title>
 <link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Schibsted+Grotesk:wght@300;400;500&display=swap">
+<!-- Fonte única de cor, fonte, espaço e forma (marca da casa). Não copiar valores: o publicar.sh copia o tokens.css canônico. -->
+<link rel="stylesheet" href="tokens.css">
 <style>
-:root {
-  --bg: #f6f7f9; --card: #fff; --ink: #1c2330; --mute: #5d6878; --line: #dfe3ea;
-  --accent: #1a5fb4; --accent-ink: #fff; --warn-bg: #fff6df; --warn-line: #e8cf8a; --err-bg: #fde8e8; --err-line: #e5a1a1;
-}
-* { box-sizing: border-box; }
-body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-main { max-width: 1200px; margin: 0 auto; padding: 16px; }
-h1 { font-size: 22px; margin: 0 0 12px; }
-h2 { font-size: 16px; margin: 0 0 8px; }
-.abas { display: flex; gap: 4px; margin-bottom: 12px; }
-.abas button { border: 1px solid var(--line); background: var(--card); color: var(--ink); padding: 8px 14px; border-radius: 8px 8px 0 0; cursor: pointer; font: inherit; }
-.abas button[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-.controles { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 12px; }
-.controles label { display: flex; flex-direction: column; font-size: 12px; color: var(--mute); gap: 2px; }
-.controles input[type=date], .controles select { font: inherit; padding: 6px 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff; color: var(--ink); }
-.filtros { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; }
-.filtro { position: relative; }
-.filtro summary { list-style: none; cursor: pointer; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; background: #fff; font-size: 14px; }
-.filtro summary::-webkit-details-marker { display: none; }
-.filtro[open] summary { border-color: var(--accent); }
-.filtro .qtd { color: var(--accent); font-weight: 600; }
-.opcoes { position: absolute; z-index: 5; top: calc(100% + 4px); left: 0; min-width: 220px; max-width: 320px; max-height: 260px; overflow: auto; background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 6px; box-shadow: 0 6px 18px rgba(0,0,0,.12); }
-.opcoes label { flex-direction: row; align-items: center; gap: 8px; font-size: 14px; color: var(--ink); padding: 4px 6px; cursor: pointer; }
-.opcoes .n { color: var(--mute); margin-left: auto; font-size: 12px; }
-.opcoes .vazio { color: var(--mute); padding: 6px; font-size: 13px; }
-.aviso { background: var(--warn-bg); border: 1px solid var(--warn-line); border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; font-size: 14px; }
-.erro { background: var(--err-bg); border: 1px solid var(--err-line); border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; font-size: 14px; }
+body { margin: 0; }
+:focus-visible { outline: 3px solid var(--fc-accent); outline-offset: 2px; }
 [hidden] { display: none !important; }
-.login { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 24px; text-align: center; margin-bottom: 12px; }
-.login button { border: 0; background: var(--accent); color: var(--accent-ink); padding: 10px 18px; border-radius: 8px; font: inherit; cursor: pointer; }
-.bloco { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 12px; margin-bottom: 12px; }
-.carregando .bloco { opacity: .55; }
+
+.pagina { max-width: 1200px; margin: 0 auto; padding: var(--fc-e-2); }
+@media (min-width: 700px) { .pagina { padding: var(--fc-e-3); } }
+
+/* cabeçalho: o único bloco de mesh da página */
+.topo { padding: var(--fc-e-3); margin-bottom: var(--fc-e-2); display: flex; flex-wrap: wrap; gap: var(--fc-e-3); align-items: center; justify-content: space-between; }
+.marca { display: flex; align-items: center; gap: var(--fc-e-2); }
+.marca svg { display: block; flex: none; }
+.logo-fundo { fill: var(--fc-on-mesh); }
+.logo-traco { stroke: var(--fc-mesh-1); }
+.topo-ctl { display: flex; flex-wrap: wrap; gap: var(--fc-e-3); align-items: flex-end; }
+.topo-ctl > div { display: flex; flex-direction: column; gap: var(--fc-e-1); }
+.estado { min-height: var(--fc-toque); display: flex; align-items: center; }
+
+.campo { min-height: var(--fc-toque); padding: 0 var(--fc-e-2); border: 1px solid var(--fc-hair-forte); border-radius: var(--fc-r-campo); background: var(--fc-surface); color: var(--fc-ink); font-family: var(--fc-body); font-size: var(--fc-t-corpo); }
+select.campo { min-width: 200px; }
+
+.abas { display: flex; flex-wrap: wrap; gap: var(--fc-e-1); margin-bottom: var(--fc-e-2); }
+.abas button { min-height: var(--fc-toque); padding: 0 var(--fc-e-3); border: 1px solid var(--fc-hair-forte); border-radius: var(--fc-r-pilula); background: var(--fc-surface); color: var(--fc-ink); font-family: var(--fc-body); font-size: var(--fc-t-legenda); font-weight: 500; cursor: pointer; }
+.abas button[aria-selected="true"] { background: var(--fc-accent); border-color: var(--fc-accent); color: var(--fc-on-accent); }
+
+.controles { padding: var(--fc-e-3); display: flex; flex-wrap: wrap; gap: var(--fc-e-2) var(--fc-e-3); align-items: flex-end; margin-bottom: var(--fc-e-2); }
+.controles label { display: flex; flex-direction: column; gap: var(--fc-e-1); }
+.barra-filtros { width: 100%; display: flex; flex-direction: column; gap: var(--fc-e-1); padding-top: var(--fc-e-2); border-top: 1px solid var(--fc-hair); }
+.filtros { display: flex; flex-wrap: wrap; gap: var(--fc-e-1); }
+.filtro { position: relative; }
+.filtro summary { list-style: none; cursor: pointer; min-height: var(--fc-toque); display: flex; align-items: center; gap: var(--fc-e-1); padding: 0 var(--fc-e-2); border: 1px solid var(--fc-hair-forte); border-radius: var(--fc-r-pilula); background: var(--fc-surface); font-size: var(--fc-t-legenda); }
+.filtro summary::-webkit-details-marker { display: none; }
+.filtro[open] summary { border-color: var(--fc-accent); }
+.filtro .qtd { color: var(--fc-accent-forte); font-weight: 600; }
+.opcoes { position: absolute; z-index: 5; top: calc(100% + var(--fc-e-1)); left: 0; min-width: 240px; max-width: 340px; max-height: 300px; overflow: auto; background: var(--fc-surface); border: 1px solid var(--fc-hair); border-radius: var(--fc-r-campo); padding: var(--fc-e-1); box-shadow: 0 14px 34px color-mix(in srgb, var(--fc-ink) 18%, transparent); }
+.opcoes label { flex-direction: row; align-items: center; gap: var(--fc-e-1); min-height: var(--fc-toque); padding: 0 var(--fc-e-1); font-size: var(--fc-t-legenda); cursor: pointer; }
+.opcoes input { width: 20px; height: 20px; accent-color: var(--fc-accent); }
+.opcoes .n { margin-left: auto; font-size: var(--fc-t-rotulo); color: var(--fc-ink-3); }
+.opcoes .vazio { padding: var(--fc-e-1); font-size: var(--fc-t-legenda); color: var(--fc-ink-3); }
+
+.aviso, .erro { padding: var(--fc-e-1) var(--fc-e-2); margin-bottom: var(--fc-e-1); border: 1px solid var(--fc-ambar); border-radius: var(--fc-r-campo); background: color-mix(in srgb, var(--fc-ambar) 16%, var(--fc-surface)); font-size: var(--fc-t-legenda); line-height: var(--fc-lh-legenda); }
+.erro { border-color: var(--fc-erro); background: color-mix(in srgb, var(--fc-erro) 10%, var(--fc-surface)); }
+
+.login { padding: var(--fc-e-4) var(--fc-e-3); text-align: center; margin-bottom: var(--fc-e-2); display: flex; flex-direction: column; align-items: center; gap: var(--fc-e-2); }
+
+.cartoes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--fc-e-2); margin-bottom: var(--fc-e-2); }
+@media (min-width: 760px) { .cartoes { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.cartao { padding: var(--fc-e-2); display: flex; flex-direction: column; gap: var(--fc-e-1); }
+.cartao .fc-numero { font-size: clamp(21px, 5.2vw, 34px); white-space: nowrap; }
+
+.bloco { padding: var(--fc-e-3); margin-bottom: var(--fc-e-2); }
+.bloco h2 { margin-bottom: var(--fc-e-2); }
 .rolagem { overflow-x: auto; }
-table { border-collapse: collapse; width: 100%; font-size: 14px; white-space: nowrap; }
-th, td { padding: 6px 10px; border-bottom: 1px solid var(--line); text-align: right; }
-th { background: #eef1f6; font-weight: 600; color: var(--mute); position: sticky; top: 0; }
+.rolagem:focus-visible { outline: 3px solid var(--fc-accent); outline-offset: 3px; }
+table { border-collapse: collapse; width: 100%; font-size: var(--fc-t-legenda); line-height: var(--fc-lh-legenda); font-variant-numeric: tabular-nums; }
+th, td { padding: var(--fc-e-1) var(--fc-e-2); border-bottom: 1px solid var(--fc-hair); text-align: right; white-space: nowrap; }
+th { background: var(--fc-paper); color: var(--fc-ink-3); font-size: var(--fc-t-rotulo); font-weight: 600; letter-spacing: var(--fc-track-rotulo); line-height: 1.35; text-transform: uppercase; white-space: normal; vertical-align: bottom; }
 th:first-child, td:first-child { text-align: left; }
 td.txt, th.txt { text-align: left; }
-tr.total td { font-weight: 700; border-top: 2px solid var(--ink); background: #f7f9fc; }
-small.sv { display: block; color: var(--mute); font-weight: 400; font-size: 11px; }
-.pag { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 14px; color: var(--mute); }
-.pag button { font: inherit; padding: 4px 10px; border: 1px solid var(--line); background: #fff; border-radius: 6px; cursor: pointer; }
-.pag button:disabled { opacity: .4; cursor: default; }
-.vazio-lista { color: var(--mute); padding: 8px 0; }
-@media (max-width: 600px) { main { padding: 10px; } h1 { font-size: 19px; } .controles { gap: 8px; } }
+tr.total td { font-weight: 700; border-top: 2px solid var(--fc-ink); background: var(--fc-paper-2); }
+small.sv { display: block; color: var(--fc-ink-3); font-size: var(--fc-t-rotulo); font-weight: 400; }
+.pag { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fc-e-2); margin-top: var(--fc-e-2); font-size: var(--fc-t-legenda); color: var(--fc-ink-3); }
+.pag button { min-height: var(--fc-toque); padding: 0 var(--fc-e-3); border: 1px solid var(--fc-hair-forte); border-radius: var(--fc-r-pilula); background: var(--fc-surface); color: var(--fc-ink); font-family: var(--fc-body); font-size: var(--fc-t-legenda); cursor: pointer; }
+.pag button:disabled { color: var(--fc-ink-3); border-color: var(--fc-hair); cursor: default; }
+.vazio-lista { padding: var(--fc-e-1) 0; color: var(--fc-ink-3); }
+.carregando { cursor: progress; }
+
+@media (max-width: 600px) {
+  .topo { padding: var(--fc-e-2); gap: var(--fc-e-2); }
+  .topo-ctl { width: 100%; }
+  .topo-ctl > div:first-child { flex: 1 1 100%; }
+  select.campo { width: 100%; }
+  .controles, .bloco { padding: var(--fc-e-2); }
+  .filtro[open] { flex: 1 1 100%; }
+  .opcoes { position: static; max-width: none; margin-top: var(--fc-e-1); box-shadow: none; }
+}
 </style>
 </head>
-<body>
-<main id="app">
-  <h1>Funil · Dr. Frederico</h1>
-
-  <section id="login" class="login" hidden>
-    <p id="login-msg">Entre com a conta Google que tem acesso ao BigQuery.</p>
-    <button id="btn-login" type="button">Entrar com Google</button>
-  </section>
-
-  <section id="painel" hidden>
-    <div class="abas" role="tablist">
-      <button type="button" role="tab" id="aba-event" data-basis="event" aria-selected="true">Data do evento</button>
-      <button type="button" role="tab" id="aba-lead" data-basis="lead" aria-selected="false">Data do lead</button>
+<body class="fc-base">
+<div class="pagina">
+  <header class="topo fc-mesh">
+    <div class="marca">
+      <svg width="46" height="46" viewBox="0 0 46 46" role="img" aria-label="Símbolo Felipe Câmara">
+        <rect class="logo-fundo" x="1" y="9" width="44" height="28" rx="14"/>
+        <path class="logo-traco" d="M9 23 H17 L20 16 L26 30 L29 23 H37" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <div>
+        <h1 class="fc-h2">Funil</h1>
+        <p class="fc-legenda">Felipe Câmara</p>
+      </div>
     </div>
-
-    <div class="controles">
-      <label>Data inicial <input type="date" id="c-inicio"></label>
-      <label>Data final <input type="date" id="c-fim"></label>
-      <label>Agrupar por
-        <select id="c-grao">
-          <option value="day">Dia</option>
-          <option value="week">Semana</option>
-          <option value="month" selected>Mês</option>
-        </select>
-      </label>
-      <div class="filtros" id="filtros"></div>
+    <div class="topo-ctl">
+      <div>
+        <label class="fc-rotulo" for="c-tenant">Cliente</label>
+        <select class="campo" id="c-tenant" disabled></select>
+      </div>
+      <div>
+        <p class="fc-rotulo">Login</p>
+        <p class="fc-legenda estado"><span id="estado-login">Sem login</span><span id="estado-carga" hidden>, atualizando</span></p>
+      </div>
     </div>
+  </header>
 
-    <div class="aviso" id="aviso-campanha">Campanha e grupo do lead só são completos desde ago/2026.</div>
-    <div class="aviso" id="aviso-custo" hidden>Custo não se aplica a este filtro</div>
-    <div class="erro" id="erro" hidden></div>
+  <main id="app">
+    <section id="login" class="login fc-cartao" hidden>
+      <p id="login-msg" class="fc-corpo">Entre com a conta Google que tem acesso ao BigQuery.</p>
+      <button id="btn-login" class="fc-btn" type="button">Entrar com Google</button>
+    </section>
 
-    <div id="blocos">
-      <section class="bloco" id="bloco-custo"><h2>Custo e retorno</h2><div class="rolagem"></div></section>
-      <section class="bloco" id="bloco-conv"><h2>Conversões</h2><div class="rolagem"></div></section>
-      <section class="bloco" id="bloco-vol"><h2>Volumes</h2><div class="rolagem"></div></section>
-      <section class="bloco" id="bloco-realizados"><h2>Realizados</h2><div class="rolagem"></div><div class="pag"></div></section>
-      <section class="bloco" id="bloco-marcacoes"><h2>Marcações</h2><div class="rolagem"></div><div class="pag"></div></section>
-    </div>
-  </section>
-</main>
+    <section id="painel" hidden>
+      <div class="abas" role="tablist">
+        <button type="button" role="tab" id="aba-event" data-basis="event" aria-selected="true">Data do evento</button>
+        <button type="button" role="tab" id="aba-lead" data-basis="lead" aria-selected="false">Data do lead</button>
+      </div>
+
+      <div class="controles fc-cartao">
+        <label><span class="fc-rotulo">Data inicial</span> <input class="campo" type="date" id="c-inicio"></label>
+        <label><span class="fc-rotulo">Data final</span> <input class="campo" type="date" id="c-fim"></label>
+        <label><span class="fc-rotulo">Agrupar por</span>
+          <select class="campo" id="c-grao">
+            <option value="day">Dia</option>
+            <option value="week">Semana</option>
+            <option value="month" selected>Mês</option>
+          </select>
+        </label>
+        <div class="barra-filtros">
+          <span class="fc-rotulo">Filtros</span>
+          <div class="filtros" id="filtros"></div>
+        </div>
+      </div>
+
+      <div class="aviso" id="aviso-campanha">Campanha e grupo do lead só são completos desde ago/2026.</div>
+      <div class="aviso" id="aviso-custo" hidden>Custo não se aplica a este filtro</div>
+      <div class="aviso" id="aviso-midia" hidden>Cliente sem dado de mídia: gasto e custos ficam vazios.</div>
+      <div class="erro" id="erro" hidden></div>
+
+      <div class="cartoes" id="cartoes"></div>
+
+      <div id="blocos">
+        <section class="bloco fc-cartao" id="bloco-custo"><h2 class="fc-h3">Custo e retorno</h2><div class="rolagem"></div></section>
+        <section class="bloco fc-cartao" id="bloco-conv"><h2 class="fc-h3">Conversões</h2><div class="rolagem"></div></section>
+        <section class="bloco fc-cartao" id="bloco-vol"><h2 class="fc-h3">Volumes</h2><div class="rolagem"></div></section>
+        <section class="bloco fc-cartao" id="bloco-realizados"><h2 class="fc-h3">Realizados</h2><div class="rolagem"></div><div class="pag"></div></section>
+        <section class="bloco fc-cartao" id="bloco-marcacoes"><h2 class="fc-h3">Marcações</h2><div class="rolagem"></div><div class="pag"></div></section>
+      </div>
+    </section>
+  </main>
+</div>
 <script src="config.js"></script>
 <script src="painel.js"></script>
 </body>

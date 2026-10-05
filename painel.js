@@ -1,4 +1,4 @@
-// Painel de funil do Fred. Consulta o BigQuery ao vivo com o login Google de quem abre a página.
+// Painel de funil por cliente (tenant). Consulta o BigQuery ao vivo com o login Google de quem abre a página.
 // Todas as contas ficam nos .sql; aqui só se consulta, converte e formata.
 (function () {
   'use strict';
@@ -30,6 +30,10 @@
     { id: 'bloco-conv', cols: [['ctr', 'CTR', 'pct'], ['click_to_lead', 'Clique para lead', 'pct'], ['lead_to_marked', 'Lead para marcação', 'pct'], ['marked_to_completed', 'Marcação para realizado', 'pct'], ['completed_to_upsell', 'Realizado para upsell', 'pct'], ['avg_ticket', 'Ticket médio por paciente', 'money', true], ['avg_fee', 'Honorário médio por paciente', 'money', true]] },
     { id: 'bloco-vol', cols: [['spend', 'Investimento', 'money'], ['impressions', 'Impressões', 'int'], ['clicks', 'Cliques', 'int'], ['leads', 'Leads', 'int'], ['marked_patients', 'Marcações', 'int'], ['scheduled_patients', 'Agendamentos', 'int'], ['completed_patients', 'Realizados', 'int'], ['billed_amount', 'Faturado', 'money'], ['physician_fee', 'Honorário', 'money']] },
   ];
+
+  // Cartões de destaque: campo da linha 'total' do funil, rótulo, formato. Gasto, CPA e ROAS dependem de mídia.
+  const CARTOES = [['spend', 'Gasto', 'money'], ['leads', 'Leads', 'int'], ['marked_patients', 'Marcações', 'int'], ['completed_patients', 'Realizados', 'int'], ['cpa', 'CPA', 'money'], ['roas_honorario', 'ROAS do honorário', 'ratio']];
+  const CARTOES_DE_MIDIA = ['spend', 'cpa', 'roas_honorario'];
 
   const TIPO_MARCACAO = { scheduled: 'Agendamento', referral: 'Encaminhamento' };
   const LISTAS = {
@@ -89,6 +93,8 @@
 
   // ------------------------------------------------------------ estado
   const state = {
+    tenant: new URLSearchParams(location.search).get('tenant') || CFG.TENANT,
+    tenants: null, // [{tenant, n, spend_rows}] do tenants.sql, carregado uma vez
     basis: 'event',
     start: CFG.START_DEFAULT,
     end: hojeISO(),
@@ -128,12 +134,14 @@
   function mostraLogin(msg) {
     $('painel').hidden = true;
     $('login').hidden = false;
+    $('estado-login').textContent = 'Sem login';
     $('login-msg').textContent = msg || 'Entre com a conta Google que tem acesso ao BigQuery.';
   }
 
   function mostraPainel() {
     $('login').hidden = true;
     $('painel').hidden = false;
+    $('estado-login').textContent = FIXTURE ? 'Dados de exemplo' : 'Conectado ao BigQuery';
   }
 
   function carregaGIS() {
@@ -236,11 +244,11 @@
 
   async function bqQuery(nome, params) {
     const [prelude, sql] = await Promise.all([textoSql('_prelude'), textoSql(nome)]);
+    const nomeados = Object.entries(params).map(([k, v]) => param(k, v));
     const corpo = {
       query: `${prelude}\n${sql}`,
       useLegacySql: false,
-      parameterMode: 'NAMED',
-      queryParameters: Object.entries(params).map(([k, v]) => param(k, v)),
+      ...(nomeados.length ? { parameterMode: 'NAMED', queryParameters: nomeados } : {}),
       location: CFG.LOCATION,
       maximumBytesBilled: String(2 * 1024 ** 3),
       timeoutMs: 60000,
@@ -277,14 +285,14 @@
   async function consulta(nome, params) {
     if (FIXTURE) {
       window.__consultas.push({ nome, params: JSON.parse(JSON.stringify(params)) });
-      return fixture(nome === 'completed' || nome === 'marked' || nome === 'options' ? nome : 'funnel');
+      return fixture(['completed', 'marked', 'options', 'tenants'].includes(nome) ? nome : 'funnel');
     }
     return bqQuery(nome, params);
   }
 
   // Mesmos parâmetros em todas as consultas; os 7 arrays vão sempre, mesmo vazios.
   function parametros() {
-    return { tenant: CFG.TENANT, start_date: state.start, end_date: state.end, grain: state.grain, basis: state.basis, ...state.filters };
+    return { tenant: state.tenant, start_date: state.start, end_date: state.end, grain: state.grain, basis: state.basis, ...state.filters };
   }
 
   // ------------------------------------------------------------ tela
@@ -294,13 +302,60 @@
     e.hidden = !msg;
   }
 
+  function semMidia() {
+    const t = (state.tenants || []).find((x) => x.tenant === state.tenant);
+    return !!t && t.spend_rows === 0;
+  }
+
   function atualizaAvisos() {
     const semCusto = FILTROS_SEM_CUSTO.some((k) => state.filters[k].length > 0);
     $('aviso-custo').hidden = !semCusto;
+    $('aviso-midia').hidden = !semMidia();
+  }
+
+  // ------------------------------------------------------------ cliente (tenant)
+  function rotuloCliente(t) {
+    const s = t.replace(/_/g, ' ');
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+
+  function renderSeletor() {
+    const nomes = state.tenants ? state.tenants.map((t) => t.tenant) : [];
+    if (!nomes.includes(state.tenant)) nomes.unshift(state.tenant);
+    const sel = $('c-tenant');
+    sel.innerHTML = nomes.map((t) => `<option value="${esc(t)}">${esc(rotuloCliente(t))}</option>`).join('');
+    sel.value = state.tenant;
+    sel.disabled = !state.tenants;
+  }
+
+  function guardaTenantNaUrl() {
+    const q = new URLSearchParams(location.search);
+    q.set('tenant', state.tenant);
+    try { history.replaceState(null, '', `${location.pathname}?${q}`); } catch (e) { /* ok */ }
+  }
+
+  async function carregaClientes() {
+    state.tenants = await consulta('tenants', {});
+    const nomes = state.tenants.map((t) => t.tenant);
+    if (nomes.length && !nomes.includes(state.tenant)) {
+      state.tenant = nomes.includes(CFG.TENANT) ? CFG.TENANT : nomes[0];
+      guardaTenantNaUrl();
+    }
+    renderSeletor();
+    atualizaAvisos();
   }
 
   function celula(valor, tipo, campo, extra) {
     return `<td data-col="${campo}"><span class="v">${esc(fmt(valor, tipo))}</span>${extra || ''}</td>`;
+  }
+
+  function renderCartoes() {
+    const total = state.funnel.find((r) => r.period === 'total');
+    const sem = semMidia();
+    $('cartoes').innerHTML = CARTOES.map(([campo, rotulo, tipo]) => {
+      const nota = sem && CARTOES_DE_MIDIA.includes(campo) ? '<p class="fc-legenda">sem dado de mídia</p>' : '';
+      return `<div class="cartao fc-cartao" data-card="${campo}"><p class="fc-rotulo">${esc(rotulo)}</p><p class="fc-numero v">${esc(fmt(total && total[campo], tipo))}</p>${nota}</div>`;
+    }).join('');
   }
 
   function renderBloco(def) {
@@ -341,6 +396,7 @@
   }
 
   function renderTudo() {
+    renderCartoes();
     BLOCOS.forEach(renderBloco);
     renderLista('completed');
     renderLista('marked');
@@ -384,8 +440,11 @@
     const meu = ++seq;
     const app = $('painel');
     app.classList.add('carregando');
-    const p = parametros();
+    $('estado-carga').hidden = false;
     try {
+      if (!state.tenants) await carregaClientes();
+      if (meu !== seq) return;
+      const p = parametros();
       const [funil, realizados, marcacoes, opcoes] = await Promise.all([
         consulta('funnel', p),
         consulta('completed', p),
@@ -406,7 +465,10 @@
       if (e instanceof AuthError) return;
       if (meu === seq) mostraErro(e.message);
     } finally {
-      if (meu === seq) app.classList.remove('carregando');
+      if (meu === seq) {
+        app.classList.remove('carregando');
+        $('estado-carga').hidden = true;
+      }
     }
   }
 
@@ -420,6 +482,15 @@
       document.querySelectorAll('.abas button').forEach((x) => x.setAttribute('aria-selected', String(x === b)));
       recarrega(true);
     }));
+
+    $('c-tenant').addEventListener('change', (e) => {
+      state.tenant = e.target.value;
+      guardaTenantNaUrl();
+      for (const k of Object.keys(state.filters)) state.filters[k] = []; // as opções mudam por cliente
+      state.options = {};
+      renderFiltros();
+      recarrega(true);
+    });
 
     $('c-inicio').addEventListener('change', (e) => { state.start = e.target.value; agenda(true); });
     $('c-fim').addEventListener('change', (e) => { state.end = e.target.value; agenda(true); });
@@ -453,7 +524,9 @@
   function inicia() {
     $('c-inicio').value = state.start;
     $('c-fim').value = state.end;
+    renderSeletor();
     renderFiltros();
+    renderCartoes();
     atualizaAvisos();
     ligaEventos();
     if (FIXTURE) {

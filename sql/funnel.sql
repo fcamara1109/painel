@@ -9,8 +9,10 @@
 -- Retorno fica fora (visit_type 'return' ou procedimento Retorno): ver is_return em _prelude.sql.
 -- Filtro de procedimento, local, modalidade ou tipo de evento não se aplica ao gasto: com
 -- qualquer um ativo, gasto, impressões, cliques, custos, CTR, clique->lead e ROAS saem NULL.
+-- Cliente sem nenhuma linha de gasto de mídia (ad_spend) também sai NULL: vazio, nunca 0 que pareça real.
 WITH cfg AS (
-  SELECT (n_items(@procedure) + n_items(@location) + n_items(@modality) + n_items(@event_type)) = 0 AS has_spend
+  SELECT (n_items(@procedure) + n_items(@location) + n_items(@modality) + n_items(@event_type)) = 0
+    AND EXISTS (SELECT 1 FROM `my-first-project-237704.analytics.funnel_events_attributed` WHERE tenant = @tenant AND event_name = 'ad_spend') AS has_spend
 ),
 visit_types AS (
   SELECT event_id, JSON_VALUE(body, '$.visit_type') AS visit_type

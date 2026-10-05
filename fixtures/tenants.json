@@ -1,0 +1,59 @@
+{
+ "schema": {
+  "fields": [
+   {
+    "name": "tenant",
+    "type": "STRING"
+   },
+   {
+    "name": "n",
+    "type": "INTEGER"
+   },
+   {
+    "name": "spend_rows",
+    "type": "INTEGER"
+   }
+  ]
+ },
+ "rows": [
+  {
+   "f": [
+    {
+     "v": "fred"
+    },
+    {
+     "v": "1000"
+    },
+    {
+     "v": "120"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "marilia"
+    },
+    {
+     "v": "16"
+    },
+    {
+     "v": "14"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "exemplo_sem_midia"
+    },
+    {
+     "v": "3"
+    },
+    {
+     "v": "0"
+    }
+   ]
+  }
+ ]
+}
