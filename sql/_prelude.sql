@@ -82,3 +82,24 @@ CREATE TEMP FUNCTION spend_matches(
   AND in_filter(label_campaign(campaign), f_campaign)
   AND in_filter(label_ad_group(ad_group_name), f_ad_group)
 );
+
+-- Comparação com o período anterior. NULL quando não há base (anterior vazio, zero ou nulo): nunca inventa número.
+-- chg: variação relativa (0,12 = +12%). pp: diferença em pontos percentuais entre duas taxas (0 a 1).
+CREATE TEMP FUNCTION chg(cur FLOAT64, prev FLOAT64) AS (SAFE_DIVIDE(cur - prev, prev));
+CREATE TEMP FUNCTION pp(cur FLOAT64, prev FLOAT64) AS ((cur - prev) * 100);
+-- Período anterior da comparação (s = início, e = fim do intervalo atual):
+-- 1) começa no dia 1 e termina no último dia de um mês (k meses inteiros): os k meses inteiros logo antes
+--    (01/09 a 30/09 contra 01/08 a 31/08; 01/01 a 31/01 contra 01/12 a 31/12 do ano anterior);
+-- 2) começa no dia 1 e termina no meio do mês: o mesmo trecho k meses antes (01/10 a 06/10 contra 01/09 a 06/09),
+--    k = meses entre o mês do início e o do fim + 1;
+-- 3) qualquer outro intervalo: mesma duração, logo antes.
+CREATE TEMP FUNCTION prev_window(s DATE, e DATE) AS (
+  CASE
+    WHEN EXTRACT(DAY FROM s) = 1 AND e = LAST_DAY(e, MONTH) THEN
+      STRUCT(DATE_SUB(s, INTERVAL DATE_DIFF(e, s, MONTH) + 1 MONTH) AS prev_start, DATE_SUB(s, INTERVAL 1 DAY) AS prev_end)
+    WHEN EXTRACT(DAY FROM s) = 1 THEN
+      STRUCT(DATE_SUB(s, INTERVAL DATE_DIFF(e, s, MONTH) + 1 MONTH) AS prev_start, DATE_SUB(e, INTERVAL DATE_DIFF(e, s, MONTH) + 1 MONTH) AS prev_end)
+    ELSE
+      STRUCT(DATE_SUB(s, INTERVAL DATE_DIFF(e, s, DAY) + 1 DAY) AS prev_start, DATE_SUB(s, INTERVAL 1 DAY) AS prev_end)
+  END
+);

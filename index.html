@@ -15,68 +15,161 @@
 body { margin: 0; }
 :focus-visible { outline: 3px solid var(--fc-accent); outline-offset: 2px; }
 [hidden] { display: none !important; }
+h1, h2, h3, p { margin: 0; }
 
-.pagina { max-width: 1200px; margin: 0 auto; padding: var(--fc-e-2); }
-@media (min-width: 700px) { .pagina { padding: var(--fc-e-3); } }
+.pagina { max-width: 1440px; margin: 0 auto; padding: var(--fc-e-3) var(--fc-e-2) var(--fc-e-5); display: flex; flex-direction: column; gap: var(--fc-e-3); }
+@media (min-width: 700px) { .pagina { padding-left: var(--fc-e-4); padding-right: var(--fc-e-4); } }
 
-/* cabeçalho: o único bloco de mesh da página */
-.topo { padding: var(--fc-e-3); margin-bottom: var(--fc-e-2); display: flex; flex-wrap: wrap; gap: var(--fc-e-3); align-items: center; justify-content: space-between; }
-.marca { display: flex; align-items: center; gap: var(--fc-e-2); }
+/* cabeçalho: o único bloco de mesh da página, de ponta a ponta */
+.topo { border-radius: 0 0 var(--fc-r-bloco) var(--fc-r-bloco); }
+.topo-in { max-width: 1440px; margin: 0 auto; padding: var(--fc-e-3) var(--fc-e-2); display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--fc-e-2) var(--fc-e-3); }
+@media (min-width: 700px) { .topo-in { padding-left: var(--fc-e-4); padding-right: var(--fc-e-4); } }
+.marca { display: flex; align-items: center; gap: var(--fc-e-2); margin-right: auto; min-height: var(--fc-toque); }
 .marca svg { display: block; flex: none; }
 .logo-fundo { fill: var(--fc-on-mesh); }
 .logo-traco { stroke: var(--fc-mesh-1); }
-.topo-ctl { display: flex; flex-wrap: wrap; gap: var(--fc-e-3); align-items: flex-end; }
-.topo-ctl > div { display: flex; flex-direction: column; gap: var(--fc-e-1); }
-.estado { min-height: var(--fc-toque); display: flex; align-items: center; }
+.topo-campo { display: flex; flex-direction: column; gap: var(--fc-e-1); width: 240px; max-width: 100%; }
+.login-estado { display: flex; align-items: center; gap: var(--fc-e-2); min-height: var(--fc-toque); font-size: var(--fc-t-legenda); }
+.ponto { width: 10px; height: 10px; border-radius: 50%; background: var(--fc-menta); flex: none; }
+.selo { align-self: center; padding: 2px var(--fc-e-2); border: 1px solid var(--fc-on-mesh); border-radius: var(--fc-r-pilula); font-size: var(--fc-t-rotulo); font-weight: 600; white-space: nowrap; }
 
-.campo { min-height: var(--fc-toque); padding: 0 var(--fc-e-2); border: 1px solid var(--fc-hair-forte); border-radius: var(--fc-r-campo); background: var(--fc-surface); color: var(--fc-ink); font-family: var(--fc-body); font-size: var(--fc-t-corpo); }
-select.campo { min-width: 200px; }
+.campo { width: 100%; min-width: 0; min-height: var(--fc-toque); padding: 0 var(--fc-e-2); border: 1px solid var(--fc-hair-forte); border-radius: var(--fc-r-campo); background: var(--fc-surface); color: var(--fc-ink); font-family: var(--fc-body); font-size: var(--fc-t-legenda); }
 
-.abas { display: flex; flex-wrap: wrap; gap: var(--fc-e-1); margin-bottom: var(--fc-e-2); }
-.abas button { min-height: var(--fc-toque); padding: 0 var(--fc-e-3); border: 1px solid var(--fc-hair-forte); border-radius: var(--fc-r-pilula); background: var(--fc-surface); color: var(--fc-ink); font-family: var(--fc-body); font-size: var(--fc-t-legenda); font-weight: 500; cursor: pointer; }
-.abas button[aria-selected="true"] { background: var(--fc-accent); border-color: var(--fc-accent); color: var(--fc-on-accent); }
+.btn { display: inline-flex; align-items: center; gap: var(--fc-e-1); min-height: var(--fc-toque); padding: 0 var(--fc-e-3); border: 1px solid var(--fc-accent); border-radius: var(--fc-r-pilula); background: var(--fc-accent); color: var(--fc-on-accent); font-family: var(--fc-body); font-size: var(--fc-t-legenda); font-weight: 600; cursor: pointer; }
+.btn.ghost { background: var(--fc-surface); border-color: var(--fc-hair-forte); color: var(--fc-ink); font-weight: 400; }
+.btn svg { transition: transform var(--fc-dur) var(--fc-curva); }
+.btn[aria-expanded="true"] svg { transform: rotate(180deg); }
+.btn .ativos { color: var(--fc-accent-forte); font-weight: 600; }
 
-.controles { padding: var(--fc-e-3); display: flex; flex-wrap: wrap; gap: var(--fc-e-2) var(--fc-e-3); align-items: flex-end; margin-bottom: var(--fc-e-2); }
-.controles label { display: flex; flex-direction: column; gap: var(--fc-e-1); }
-.barra-filtros { width: 100%; display: flex; flex-direction: column; gap: var(--fc-e-1); padding-top: var(--fc-e-2); border-top: 1px solid var(--fc-hair); }
-.filtros { display: flex; flex-wrap: wrap; gap: var(--fc-e-1); }
+/* controle segmentado: pílula com opções exclusivas */
+.seg { display: inline-flex; gap: 2px; padding: 3px; border: 1px solid var(--fc-hair-forte); border-radius: var(--fc-r-pilula); background: var(--fc-surface); }
+.seg button { min-height: var(--fc-toque); padding: 0 var(--fc-e-2); border: 0; border-radius: var(--fc-r-pilula); background: transparent; color: var(--fc-ink-2); font-family: var(--fc-body); font-size: var(--fc-t-legenda); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--fc-accent); color: var(--fc-on-accent); font-weight: 600; }
+
+/* controles do período */
+.controles { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--fc-e-2) var(--fc-e-3); }
+.controles .cmp { display: flex; flex-direction: column; gap: var(--fc-e-1); }
+.controles .data { width: 180px; max-width: 100%; }
+
+/* painel de filtros: os 7 filtros em grade (multiescolha, um menu por filtro) */
+.painel-filtros { padding: var(--fc-e-2); display: flex; flex-direction: column; gap: var(--fc-e-2); }
+.filtros { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: var(--fc-e-2); }
+.filtro-campo { display: flex; flex-direction: column; gap: var(--fc-e-1); min-width: 0; }
 .filtro { position: relative; }
-.filtro summary { list-style: none; cursor: pointer; min-height: var(--fc-toque); display: flex; align-items: center; gap: var(--fc-e-1); padding: 0 var(--fc-e-2); border: 1px solid var(--fc-hair-forte); border-radius: var(--fc-r-pilula); background: var(--fc-surface); font-size: var(--fc-t-legenda); }
+.filtro summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: var(--fc-e-1); min-height: var(--fc-toque); padding: 0 var(--fc-e-2); border: 1px solid var(--fc-hair-forte); border-radius: var(--fc-r-campo); background: var(--fc-surface); font-size: var(--fc-t-legenda); }
 .filtro summary::-webkit-details-marker { display: none; }
+.filtro summary .val { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.filtro summary svg { flex: none; }
 .filtro[open] summary { border-color: var(--fc-accent); }
-.filtro .qtd { color: var(--fc-accent-forte); font-weight: 600; }
 .opcoes { position: absolute; z-index: 5; top: calc(100% + var(--fc-e-1)); left: 0; min-width: 240px; max-width: 340px; max-height: 300px; overflow: auto; background: var(--fc-surface); border: 1px solid var(--fc-hair); border-radius: var(--fc-r-campo); padding: var(--fc-e-1); box-shadow: 0 14px 34px color-mix(in srgb, var(--fc-ink) 18%, transparent); }
-.opcoes label { flex-direction: row; align-items: center; gap: var(--fc-e-1); min-height: var(--fc-toque); padding: 0 var(--fc-e-1); font-size: var(--fc-t-legenda); cursor: pointer; }
+.opcoes label { display: flex; align-items: center; gap: var(--fc-e-1); min-height: var(--fc-toque); padding: 0 var(--fc-e-1); font-size: var(--fc-t-legenda); cursor: pointer; }
 .opcoes input { width: 20px; height: 20px; accent-color: var(--fc-accent); }
 .opcoes .n { margin-left: auto; font-size: var(--fc-t-rotulo); color: var(--fc-ink-3); }
 .opcoes .vazio { padding: var(--fc-e-1); font-size: var(--fc-t-legenda); color: var(--fc-ink-3); }
+.nota { display: flex; gap: var(--fc-e-1); align-items: flex-start; font-size: var(--fc-t-legenda); line-height: var(--fc-lh-legenda); color: var(--fc-ink-3); }
+.nota svg { flex: none; margin-top: 3px; }
 
-.aviso, .erro { padding: var(--fc-e-1) var(--fc-e-2); margin-bottom: var(--fc-e-1); border: 1px solid var(--fc-ambar); border-radius: var(--fc-r-campo); background: color-mix(in srgb, var(--fc-ambar) 16%, var(--fc-surface)); font-size: var(--fc-t-legenda); line-height: var(--fc-lh-legenda); }
+.aviso, .erro { padding: var(--fc-e-1) var(--fc-e-2); border: 1px solid var(--fc-ambar); border-radius: var(--fc-r-campo); background: color-mix(in srgb, var(--fc-ambar) 16%, var(--fc-surface)); font-size: var(--fc-t-legenda); line-height: var(--fc-lh-legenda); }
 .erro { border-color: var(--fc-erro); background: color-mix(in srgb, var(--fc-erro) 10%, var(--fc-surface)); }
+#painel { display: flex; flex-direction: column; gap: var(--fc-e-3); }
+#blocos { display: contents; }
 
-.login { padding: var(--fc-e-4) var(--fc-e-3); text-align: center; margin-bottom: var(--fc-e-2); display: flex; flex-direction: column; align-items: center; gap: var(--fc-e-2); }
+.login { padding: var(--fc-e-4) var(--fc-e-3); text-align: center; display: flex; flex-direction: column; align-items: center; gap: var(--fc-e-2); }
 
-.cartoes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--fc-e-2); margin-bottom: var(--fc-e-2); }
-@media (min-width: 760px) { .cartoes { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-.cartao { padding: var(--fc-e-2); display: flex; flex-direction: column; gap: var(--fc-e-1); }
-.cartao .fc-numero { font-size: clamp(21px, 5.2vw, 34px); white-space: nowrap; }
+/* números grandes: Schibsted 500 e algarismos proporcionais (tabular espaça "R$ 40 . 600"); tabular só nas tabelas */
+.num { font-family: var(--fc-display); font-weight: 500; font-variant-numeric: lining-nums proportional-nums; letter-spacing: -.01em; line-height: var(--fc-lh-numero); margin: 0; }
 
-.bloco { padding: var(--fc-e-3); margin-bottom: var(--fc-e-2); }
-.bloco h2 { margin-bottom: var(--fc-e-2); }
-.rolagem { overflow-x: auto; }
+/* onde o funil quebra */
+.funil { display: flex; flex-direction: column; gap: var(--fc-e-2); }
+.funil .sub { color: var(--fc-ink-3); font-size: var(--fc-t-legenda); line-height: var(--fc-lh-legenda); margin-top: 4px; }
+.fl { display: flex; flex-direction: column; gap: var(--fc-e-1); }
+.cn { flex: 0 0 auto; }
+.passo { flex: 1 1 0; min-width: 0; padding: var(--fc-e-3); border: 1px solid var(--fc-hair); border-radius: var(--fc-r-cartao); background: var(--fc-surface); display: flex; flex-direction: column; gap: var(--fc-e-1); }
+.passo .num.vol { font-size: clamp(40px, 12vw, 60px); white-space: nowrap; }
+.passo .num.custo { font-size: 26px; white-space: nowrap; }
+.passo .linha { display: flex; flex-wrap: wrap; gap: 0 var(--fc-e-1); font-size: var(--fc-t-legenda); }
+.passo .peq { font-size: var(--fc-t-rotulo); color: var(--fc-ink-3); }
+.passo .parte { display: flex; flex-direction: column; gap: 6px; }
+.passo .parte span { font-size: var(--fc-t-legenda); color: var(--fc-ink-2); }
+.barra { height: 12px; border-radius: var(--fc-r-pilula); background: var(--fc-paper-2); }
+.barra i { display: block; height: 100%; border-radius: var(--fc-r-pilula); background: var(--fc-accent); }
+.passo hr { width: 100%; height: 1px; margin: 0; border: 0; background: var(--fc-hair); }
+.passo .custo-bloco { display: flex; flex-direction: column; gap: 2px; }
+.passo .custo-bloco .rot { font-size: var(--fc-t-legenda); color: var(--fc-ink-2); }
+.cn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; padding: var(--fc-e-1) 0; }
+.cn .num { font-size: 28px; white-space: nowrap; }
+.cn .seta { transform: rotate(90deg); margin: var(--fc-e-2) 0; }
+.cn .antes { font-size: var(--fc-t-rotulo); color: var(--fc-ink-3); }
+.cn .pp { font-size: var(--fc-t-legenda); }
+.cn.quebra { padding: var(--fc-e-2) var(--fc-e-1); border-radius: 22px; background: color-mix(in srgb, var(--fc-erro) 8%, var(--fc-paper)); }
+.cn.quebra .taxa { color: var(--fc-erro); }
+.cn.quebra .queda { background: var(--fc-surface); }
+.queda { padding: 2px var(--fc-e-1); border-radius: var(--fc-r-pilula); background: color-mix(in srgb, var(--fc-erro) 12%, var(--fc-surface)); color: var(--fc-erro); font-size: var(--fc-t-rotulo); font-weight: 600; }
+@media (min-width: 1200px) {
+  .fl { flex-direction: row; align-items: stretch; gap: var(--fc-e-2); }
+  .cn { flex-basis: 112px; padding: 0; }
+  .cn .seta { transform: none; margin: 0; }
+  .passo .num.vol { font-size: clamp(40px, 4.1vw, 60px); }
+}
+
+/* variação contra o período anterior: seta e sinal sempre, a cor só reforça (queda ruim em erro, alta boa em ok) */
+.dlt { font-weight: 600; white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; }
+.dlt .vs { flex: none; }
+.dlt.ok { color: var(--fc-ok); }
+.dlt.ruim { color: var(--fc-erro); }
+.dlt.neu { color: var(--fc-ink-2); }
+.sem-base { color: var(--fc-ink-3); font-size: var(--fc-t-legenda); }
+
+/* sparkline: série por período do funnel.sql */
+.spark { margin-top: auto; padding-top: var(--fc-e-1); }
+.spark .area { position: relative; height: 32px; }
+.spark svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.spark polyline { fill: none; stroke: var(--fc-accent); stroke-width: 2.5; vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
+.spark polyline.tracejado { stroke-dasharray: 4 5; }
+.spark.escuro polyline { stroke: var(--fc-ink); }
+.spark .ponta { position: absolute; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--fc-surface); background: var(--fc-accent); transform: translate(-50%, 50%); }
+.spark.escuro .ponta { background: var(--fc-ink); }
+.spark .ponta.parcial { background: var(--fc-surface); border-color: var(--fc-accent); }
+.spark.escuro .ponta.parcial { background: var(--fc-surface); border-color: var(--fc-ink); }
+.spark .eixo { display: flex; justify-content: space-between; font-size: var(--fc-t-rotulo); color: var(--fc-ink-3); }
+
+/* faixa Gasto, CPA, ROAS */
+.faixa { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: var(--fc-e-2); }
+.faixa-cartao { padding: var(--fc-e-3); display: flex; flex-wrap: wrap; gap: var(--fc-e-2) var(--fc-e-3); align-items: flex-end; justify-content: space-between; min-width: 0; }
+.faixa-cartao .txt { display: flex; flex-direction: column; gap: var(--fc-e-1); }
+.faixa-cartao .num { font-size: 40px; white-space: nowrap; }
+.faixa-cartao .num .un { font-size: 26px; }
+.faixa-cartao .linha { display: flex; flex-wrap: wrap; gap: 0 var(--fc-e-1); font-size: var(--fc-t-legenda); }
+.faixa-cartao .peq { font-size: var(--fc-t-rotulo); color: var(--fc-ink-3); }
+.faixa-cartao .spark { flex: 1 1 120px; min-width: 100px; max-width: 200px; margin-top: 0; padding-top: 0; }
+
+/* detalhe */
+.bloco { padding: var(--fc-e-3); display: flex; flex-direction: column; gap: var(--fc-e-2); min-width: 0; }
+.bloco .cab { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--fc-e-2); }
+.rolagem { overflow-x: auto; border: 1px solid var(--fc-hair); border-radius: var(--fc-r-campo); }
 .rolagem:focus-visible { outline: 3px solid var(--fc-accent); outline-offset: 3px; }
 table { border-collapse: collapse; width: 100%; font-size: var(--fc-t-legenda); line-height: var(--fc-lh-legenda); font-variant-numeric: tabular-nums; }
-th, td { padding: var(--fc-e-1) var(--fc-e-2); border-bottom: 1px solid var(--fc-hair); text-align: right; white-space: nowrap; }
-th { background: var(--fc-paper); color: var(--fc-ink-3); font-size: var(--fc-t-rotulo); font-weight: 600; letter-spacing: var(--fc-track-rotulo); line-height: 1.35; text-transform: uppercase; white-space: normal; vertical-align: bottom; }
+th, td { padding: var(--fc-e-1) var(--fc-e-2); border-top: 1px solid var(--fc-hair); text-align: right; white-space: nowrap; }
+thead th { border-top: 0; background: var(--fc-paper-2); color: var(--fc-ink-2); font-size: var(--fc-t-legenda); font-weight: 600; vertical-align: bottom; }
 th:first-child, td:first-child { text-align: left; }
 td.txt, th.txt { text-align: left; }
-tr.total td { font-weight: 700; border-top: 2px solid var(--fc-ink); background: var(--fc-paper-2); }
+tr.total td { font-weight: 500; border-top: 2px solid var(--fc-ink); background: var(--fc-paper-2); }
+td.sem-gasto { color: var(--fc-ink-3); font-weight: 400; }
 small.sv { display: block; color: var(--fc-ink-3); font-size: var(--fc-t-rotulo); font-weight: 400; }
-.pag { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fc-e-2); margin-top: var(--fc-e-2); font-size: var(--fc-t-legenda); color: var(--fc-ink-3); }
-.pag button { min-height: var(--fc-toque); padding: 0 var(--fc-e-3); border: 1px solid var(--fc-hair-forte); border-radius: var(--fc-r-pilula); background: var(--fc-surface); color: var(--fc-ink); font-family: var(--fc-body); font-size: var(--fc-t-legenda); cursor: pointer; }
-.pag button:disabled { color: var(--fc-ink-3); border-color: var(--fc-hair); cursor: default; }
-.vazio-lista { padding: var(--fc-e-1) 0; color: var(--fc-ink-3); }
+.pag { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fc-e-2); font-size: var(--fc-t-legenda); color: var(--fc-ink-3); }
+.pag button { min-height: var(--fc-toque); padding: 0 var(--fc-e-3); border: 1px solid var(--fc-hair-forte); border-radius: var(--fc-r-campo); background: var(--fc-surface); color: var(--fc-ink); font-family: var(--fc-body); font-size: var(--fc-t-legenda); cursor: pointer; }
+.pag button:disabled { background: var(--fc-paper-2); color: var(--fc-ink-3); border-color: var(--fc-hair); cursor: default; }
+.vazio-lista { padding: var(--fc-e-2); color: var(--fc-ink-3); }
 .carregando { cursor: progress; }
+
+/* listas recolhidas por padrão */
+.lista h2 { font-family: var(--fc-display); font-weight: 500; font-size: 22px; line-height: var(--fc-lh-h3); }
+.acc { display: flex; width: 100%; min-height: 64px; align-items: center; justify-content: space-between; gap: var(--fc-e-2); padding: 0 var(--fc-e-3); border: 0; border-radius: var(--fc-r-cartao); background: transparent; color: var(--fc-ink); text-align: left; font: inherit; cursor: pointer; }
+.acc .dir { display: inline-flex; align-items: center; gap: var(--fc-e-2); }
+.acc .hint { font-family: var(--fc-body); font-size: var(--fc-t-legenda); font-weight: 400; color: var(--fc-ink-3); }
+.acc svg { transition: transform var(--fc-dur) var(--fc-curva); }
+.acc[aria-expanded="true"] svg { transform: rotate(180deg); }
+.lista-corpo { padding: 0 var(--fc-e-3) var(--fc-e-3); display: flex; flex-direction: column; gap: var(--fc-e-2); }
 
 /* barra de carregamento: fina, indeterminada, no topo; some quando a última consulta ao BigQuery termina */
 .barra-carga { position: fixed; top: 0; left: 0; right: 0; height: 4px; z-index: 20; overflow: hidden; background: color-mix(in srgb, var(--fc-accent) 18%, transparent); }
@@ -86,50 +179,49 @@ small.sv { display: block; color: var(--fc-ink-3); font-size: var(--fc-t-rotulo)
 /* esqueleto: bloco cinza no lugar do número e da tabela enquanto a resposta não chega */
 .esq { display: block; background: var(--fc-hair); border-radius: var(--fc-r-campo); }
 .esq-numero { width: 5ch; height: 0.8em; }
-.esq-tabela { display: flex; flex-direction: column; gap: var(--fc-e-1); padding: var(--fc-e-1) 0; }
+.esq-tabela { display: flex; flex-direction: column; gap: var(--fc-e-1); padding: var(--fc-e-1); }
 .esq-linha { height: 22px; }
 
 @media (prefers-reduced-motion: reduce) {
   .barra-carga span { width: 100%; animation: none; }
+  .btn svg, .acc svg { transition: none; }
 }
 
 @media (max-width: 600px) {
-  .topo { padding: var(--fc-e-2); gap: var(--fc-e-2); }
-  .topo-ctl { width: 100%; }
-  .topo-ctl > div:first-child { flex: 1 1 100%; }
-  select.campo { width: 100%; }
-  .controles, .bloco { padding: var(--fc-e-2); }
-  .filtro[open] { flex: 1 1 100%; }
+  .bloco { padding: var(--fc-e-2); }
+  .seg button { padding: 0 var(--fc-e-1); }
+  .controles .seg { max-width: 100%; }
   .opcoes { position: static; max-width: none; margin-top: var(--fc-e-1); box-shadow: none; }
+  .acc { padding: 0 var(--fc-e-2); }
+  .lista-corpo { padding: 0 var(--fc-e-2) var(--fc-e-2); }
 }
 </style>
 </head>
 <body class="fc-base">
 <div id="barra-carga" class="barra-carga" role="progressbar" aria-label="Carregando dados do BigQuery" hidden><span></span></div>
-<div class="pagina">
-  <header class="topo fc-mesh">
+<header class="topo fc-mesh">
+  <div class="topo-in">
     <div class="marca">
       <svg width="46" height="46" viewBox="0 0 46 46" role="img" aria-label="Símbolo Felipe Câmara">
         <rect class="logo-fundo" x="1" y="9" width="44" height="28" rx="14"/>
         <path class="logo-traco" d="M9 23 H17 L20 16 L26 30 L29 23 H37" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <div>
-        <h1 class="fc-h2">Funil</h1>
-        <p class="fc-legenda">Felipe Câmara</p>
-      </div>
+      <h1 class="fc-h2">Funil</h1>
     </div>
-    <div class="topo-ctl">
-      <div>
-        <label class="fc-rotulo" for="c-tenant">Cliente</label>
-        <select class="campo" id="c-tenant" disabled></select>
-      </div>
-      <div>
-        <p class="fc-rotulo">Login</p>
-        <p class="fc-legenda estado"><span id="estado-login">Sem login</span><span id="estado-carga" hidden>, atualizando</span></p>
-      </div>
+    <div class="topo-campo">
+      <label class="fc-rotulo" for="c-tenant">Cliente</label>
+      <select class="campo" id="c-tenant" disabled></select>
     </div>
-  </header>
+    <div class="login-estado">
+      <span class="ponto" aria-hidden="true"></span>
+      <span><span id="estado-login">Sem login</span><span id="estado-carga" hidden>, atualizando</span></span>
+      <button class="btn ghost" id="btn-sair" type="button" hidden>Sair</button>
+    </div>
+    <span class="selo" id="selo-exemplo" hidden>Dados de exemplo</span>
+  </div>
+</header>
 
+<div class="pagina">
   <main id="app">
     <section id="login" class="login fc-cartao" hidden>
       <p id="login-msg" class="fc-corpo">Entre com a conta Google que tem acesso ao BigQuery.</p>
@@ -137,40 +229,75 @@ small.sv { display: block; color: var(--fc-ink-3); font-size: var(--fc-t-rotulo)
     </section>
 
     <section id="painel" hidden>
-      <div class="abas" role="tablist">
-        <button type="button" role="tab" id="aba-event" data-basis="event" aria-selected="true">Data do evento</button>
-        <button type="button" role="tab" id="aba-lead" data-basis="lead" aria-selected="false">Data do lead</button>
-      </div>
-
-      <div class="controles fc-cartao">
-        <label><span class="fc-rotulo">Data inicial</span> <input class="campo" type="date" id="c-inicio"></label>
-        <label><span class="fc-rotulo">Data final</span> <input class="campo" type="date" id="c-fim"></label>
-        <label><span class="fc-rotulo">Agrupar por</span>
-          <select class="campo" id="c-grao">
-            <option value="day">Dia</option>
-            <option value="week">Semana</option>
-            <option value="month" selected>Mês</option>
-          </select>
-        </label>
-        <div class="barra-filtros">
-          <span class="fc-rotulo">Filtros</span>
-          <div class="filtros" id="filtros"></div>
+      <div class="controles">
+        <div class="seg" role="group" aria-label="Base da data">
+          <button type="button" id="aba-event" data-basis="event" aria-pressed="true">Data do evento</button>
+          <button type="button" id="aba-lead" data-basis="lead" aria-pressed="false">Data do lead</button>
         </div>
+        <label class="cmp data"><span class="fc-rotulo">Data inicial</span><input class="campo" type="date" id="c-inicio"></label>
+        <label class="cmp data"><span class="fc-rotulo">Data final</span><input class="campo" type="date" id="c-fim"></label>
+        <div class="cmp">
+          <span class="fc-rotulo" id="lg-grao">Agrupar por</span>
+          <div class="seg" role="group" aria-labelledby="lg-grao">
+            <button type="button" id="g-day" data-grao="day" aria-pressed="false">Dia</button>
+            <button type="button" id="g-week" data-grao="week" aria-pressed="true">Semana</button>
+            <button type="button" id="g-month" data-grao="month" aria-pressed="false">Mês</button>
+          </div>
+        </div>
+        <button type="button" class="btn ghost" id="btn-filtros" aria-expanded="false" aria-controls="painel-filtros">
+          <span>Filtros<span class="ativos" id="filtros-ativos"></span></span>
+          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
       </div>
 
-      <div class="aviso" id="aviso-campanha">Campanha e grupo do lead só são completos desde ago/2026.</div>
+      <div class="painel-filtros fc-cartao" id="painel-filtros" hidden>
+        <div class="filtros" id="filtros"></div>
+        <p class="nota" id="aviso-campanha">
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 7.2v4M8 4.6v.1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <span>Campanha e grupo do lead só são completos desde ago/2026.</span>
+        </p>
+      </div>
+
       <div class="aviso" id="aviso-custo" hidden>Custo não se aplica a este filtro</div>
       <div class="aviso" id="aviso-midia" hidden>Cliente sem dado de mídia: gasto e custos ficam vazios.</div>
       <div class="erro" id="erro" hidden></div>
 
-      <div class="cartoes" id="cartoes"></div>
+      <section class="funil" aria-labelledby="t-funil">
+        <div>
+          <h2 class="fc-h2" id="t-funil">Onde o funil quebra</h2>
+          <p class="sub" id="funil-sub"></p>
+        </div>
+        <div class="fl" id="cartoes"></div>
+      </section>
+
+      <div class="faixa" id="faixa"></div>
 
       <div id="blocos">
-        <section class="bloco fc-cartao" id="bloco-custo"><h2 class="fc-h3">Custo e retorno</h2><div class="rolagem"></div></section>
-        <section class="bloco fc-cartao" id="bloco-conv"><h2 class="fc-h3">Conversões</h2><div class="rolagem"></div></section>
-        <section class="bloco fc-cartao" id="bloco-vol"><h2 class="fc-h3">Volumes</h2><div class="rolagem"></div></section>
-        <section class="bloco fc-cartao" id="bloco-realizados"><h2 class="fc-h3">Realizados</h2><div class="rolagem"></div><div class="pag"></div></section>
-        <section class="bloco fc-cartao" id="bloco-marcacoes"><h2 class="fc-h3">Marcações</h2><div class="rolagem"></div><div class="pag"></div></section>
+        <section class="bloco fc-cartao" id="bloco-detalhe">
+          <div class="cab">
+            <h2 class="fc-h3" id="t-detalhe">Detalhe por semana</h2>
+            <div class="seg" role="group" aria-label="Tabela">
+              <button type="button" id="aba-custo" data-aba="custo" aria-pressed="true">Custo e retorno</button>
+              <button type="button" id="aba-conv" data-aba="conv" aria-pressed="false">Conversões</button>
+              <button type="button" id="aba-vol" data-aba="vol" aria-pressed="false">Volumes</button>
+            </div>
+          </div>
+          <div class="rolagem" tabindex="0"></div>
+        </section>
+        <section class="lista fc-cartao" id="bloco-realizados">
+          <h2><button type="button" class="acc" id="acc-realizados" aria-expanded="false" aria-controls="corpo-realizados">
+            <span>Realizados</span>
+            <span class="dir"><span class="hint"></span><svg width="16" height="16" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </button></h2>
+          <div class="lista-corpo" id="corpo-realizados" hidden><div class="rolagem" tabindex="0"></div><div class="pag"></div></div>
+        </section>
+        <section class="lista fc-cartao" id="bloco-marcacoes">
+          <h2><button type="button" class="acc" id="acc-marcacoes" aria-expanded="false" aria-controls="corpo-marcacoes">
+            <span>Marcações</span>
+            <span class="dir"><span class="hint"></span><svg width="16" height="16" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </button></h2>
+          <div class="lista-corpo" id="corpo-marcacoes" hidden><div class="rolagem" tabindex="0"></div><div class="pag"></div></div>
+        </section>
       </div>
     </section>
   </main>

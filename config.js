@@ -4,5 +4,4 @@ window.PAINEL_CONFIG = {
   PROJECT_ID: 'my-first-project-237704', // literal-ok: mesmo projeto dos .sql
   TENANT: 'fred', // cliente padrão do seletor; ?tenant= na URL vence
   LOCATION: 'US', // location real do dataset analytics (bigquery.Client.get_dataset, 04/10/2026)
-  START_DEFAULT: '2026-05-01',
 };
