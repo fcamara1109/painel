@@ -6,7 +6,7 @@
 -- Parâmetros: @tenant, @start_date, @end_date, @grain, @basis ('event'|'lead') e os arrays
 -- @attribution, @procedure, @location, @modality, @event_type, @campaign, @ad_group.
 -- Base 'lead': eventos de paciente caem na cohort_date; gasto, impressões e cliques ficam na data deles.
--- Retorno fica fora (visit_type 'return' ou procedimento Retorno): ver is_return em _prelude.sql.
+-- Retorno fica fora (visit_type 'return' do BQ): ver is_return em _prelude.sql.
 -- Filtro de procedimento, local, modalidade ou tipo de evento não se aplica ao gasto: com
 -- qualquer um ativo, gasto, impressões, cliques, custos, CTR, clique->lead e ROAS saem NULL.
 -- Cliente sem nenhuma linha de gasto de mídia (ad_spend) também sai NULL: vazio, nunca 0 que pareça real.
@@ -41,7 +41,7 @@ dated AS (
   CROSS JOIN cfg
   LEFT JOIN visit_types AS v ON v.event_id = e.event_id
   WHERE e.tenant = @tenant
-    AND counts_in_funnel(v.visit_type, e.procedure_name)
+    AND counts_in_funnel(v.visit_type)
     AND IF(
       e.event_name = 'ad_spend',
       cfg.has_spend AND spend_matches(e.attribution, e.campaign, e.ad_group_name, @attribution, @campaign, @ad_group),

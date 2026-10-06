@@ -30,7 +30,7 @@ JOIN `analytics.funnel_events_attributed` AS e
  AND e.event_id = c.event_id
 LEFT JOIN visit_types AS v ON v.event_id = e.event_id
 WHERE c.tenant = @tenant
-  AND counts_in_funnel(v.visit_type, e.procedure_name)
+  AND counts_in_funnel(v.visit_type)
   AND IF(@basis = 'lead', c.cohort_date, c.event_date) BETWEEN @start_date AND @end_date
   AND event_matches(
     e.attribution, e.procedure_name, e.location, e.modality, e.event_name, e.lead_campaign, e.lead_ad_group_name,

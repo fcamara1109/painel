@@ -18,7 +18,7 @@ rows_in_range AS (
   FROM `analytics.funnel_events_attributed` AS e
   LEFT JOIN visit_types AS v ON v.event_id = e.event_id
   WHERE e.tenant = @tenant
-    AND counts_in_funnel(v.visit_type, e.procedure_name)
+    AND counts_in_funnel(v.visit_type)
     AND IF(e.event_name = 'ad_spend' OR @basis != 'lead', e.event_date, e.cohort_date) BETWEEN @start_date AND @end_date
 )
 SELECT filter, value, n FROM (

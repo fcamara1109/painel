@@ -33,14 +33,11 @@ CREATE TEMP FUNCTION label_campaign(x STRING) AS (COALESCE(NULLIF(TRIM(x), ''), 
 CREATE TEMP FUNCTION label_ad_group(x STRING) AS (COALESCE(NULLIF(TRIM(x), ''), 'sem grupo'));
 
 -- Retorno fica fora do funil (decisão do Felipe, 04/10/2026): marcação, agendamento, realizado e upsell
--- contam só visita nova, como o Looker fazia. Retorno = visit_type 'return' no body do raw.events
--- (cobre os scheduled sintéticos do Asa, que têm procedimento "Consulta") OU procedimento normalizado
--- 'Retorno' (cobre attended e cancelled do Asa). Hoje as duas regras caem nos mesmos eventos de retorno,
--- exceto os scheduled sintéticos, que só a primeira pega. Cada consulta junta o visit_type pelo event_id.
-CREATE TEMP FUNCTION is_return(visit_type STRING, procedure_name STRING) AS (
-  COALESCE(visit_type = 'return', FALSE) OR COALESCE(norm_procedure(procedure_name) = 'Retorno', FALSE)
-);
-CREATE TEMP FUNCTION counts_in_funnel(visit_type STRING, procedure_name STRING) AS (NOT is_return(visit_type, procedure_name));
+-- contam só visita nova, como o Looker fazia. Retorno = visit_type 'return' no body do raw.events: o BQ é a
+-- fonte da verdade (Felipe, 06/10/2026), a mesma etiqueta que o fechamento do mês lê. O nome do procedimento
+-- não decide. Cada consulta junta o visit_type pelo event_id.
+CREATE TEMP FUNCTION is_return(visit_type STRING) AS (COALESCE(visit_type = 'return', FALSE));
+CREATE TEMP FUNCTION counts_in_funnel(visit_type STRING) AS (NOT is_return(visit_type));
 
 -- Início do período: dia, semana (segunda) ou mês.
 CREATE TEMP FUNCTION bucket(d DATE, grain STRING) AS (
