@@ -5,7 +5,7 @@
 -- Parâmetros: os mesmos do funnel.sql.
 WITH visit_types AS (
   SELECT event_id, JSON_VALUE(body, '$.visit_type') AS visit_type
-  FROM `my-first-project-237704.raw.events`
+  FROM `raw.events`
   WHERE tenant = @tenant AND JSON_VALUE(body, '$._debug') IS NULL AND JSON_VALUE(body, '$.visit_type') IS NOT NULL
 )
 SELECT
@@ -24,8 +24,8 @@ SELECT
   c.billed_amount,
   c.physician_fee,
   c.event_id
-FROM `my-first-project-237704.analytics.completed_procedures` AS c
-JOIN `my-first-project-237704.analytics.funnel_events_attributed` AS e
+FROM `analytics.completed_procedures` AS c
+JOIN `analytics.funnel_events_attributed` AS e
   ON e.tenant = c.tenant
  AND e.event_id = c.event_id
 LEFT JOIN visit_types AS v ON v.event_id = e.event_id

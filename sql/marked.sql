@@ -4,7 +4,7 @@
 -- Campanha e grupo do lead vêm de funnel_events_attributed. Parâmetros: os mesmos do funnel.sql.
 WITH visit_types AS (
   SELECT event_id, JSON_VALUE(body, '$.visit_type') AS visit_type
-  FROM `my-first-project-237704.raw.events`
+  FROM `raw.events`
   WHERE tenant = @tenant AND JSON_VALUE(body, '$._debug') IS NULL AND JSON_VALUE(body, '$.visit_type') IS NOT NULL
 )
 SELECT
@@ -25,8 +25,8 @@ SELECT
   m.referred_to,
   m.reason,
   m.event_id
-FROM `my-first-project-237704.analytics.marked_patient_detail` AS m
-JOIN `my-first-project-237704.analytics.funnel_events_attributed` AS e
+FROM `analytics.marked_patient_detail` AS m
+JOIN `analytics.funnel_events_attributed` AS e
   ON e.tenant = m.tenant
  AND e.event_id = m.event_id
 LEFT JOIN visit_types AS v ON v.event_id = e.event_id

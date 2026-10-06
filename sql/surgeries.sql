@@ -16,9 +16,9 @@ SELECT
   last_interaction_kind,
   follow_up,
   follow_up_decided_on
-FROM `my-first-project-237704.clean.surgery_followup`
+FROM `clean.surgery_followup`
 WHERE tenant = @tenant
   AND snapshot_at = (
-    SELECT MAX(snapshot_at) FROM `my-first-project-237704.clean.surgery_followup` WHERE tenant = @tenant
+    SELECT MAX(snapshot_at) FROM `clean.surgery_followup` WHERE tenant = @tenant
   )
 ORDER BY last_interaction_date, first_name;

@@ -17,7 +17,7 @@
 -- Anterior vazio, zero ou nulo = NULL (sem base): nunca uma variação inventada. As linhas por período não levam comparação.
 WITH cfg AS (
   SELECT (n_items(@procedure) + n_items(@location) + n_items(@modality) + n_items(@event_type)) = 0
-    AND EXISTS (SELECT 1 FROM `my-first-project-237704.analytics.funnel_events_attributed` WHERE tenant = @tenant AND event_name = 'ad_spend') AS has_spend
+    AND EXISTS (SELECT 1 FROM `analytics.funnel_events_attributed` WHERE tenant = @tenant AND event_name = 'ad_spend') AS has_spend
 ),
 win AS (
   SELECT
@@ -28,7 +28,7 @@ win AS (
 ),
 visit_types AS (
   SELECT event_id, JSON_VALUE(body, '$.visit_type') AS visit_type
-  FROM `my-first-project-237704.raw.events`
+  FROM `raw.events`
   WHERE tenant = @tenant AND JSON_VALUE(body, '$._debug') IS NULL AND JSON_VALUE(body, '$.visit_type') IS NOT NULL
 ),
 dated AS (
@@ -37,7 +37,7 @@ dated AS (
     e.lead_key, e.patient_key,
     e.lead_event_flag, e.marked_event_flag, e.scheduled_event_flag, e.completed_event_flag, e.upsell_event_flag,
     IF(e.event_name = 'ad_spend' OR @basis != 'lead', e.event_date, e.cohort_date) AS metric_date
-  FROM `my-first-project-237704.analytics.funnel_events_attributed` AS e
+  FROM `analytics.funnel_events_attributed` AS e
   CROSS JOIN cfg
   LEFT JOIN visit_types AS v ON v.event_id = e.event_id
   WHERE e.tenant = @tenant
@@ -59,7 +59,7 @@ joined AS (
     completed.physician_fee
   FROM dated
   CROSS JOIN win
-  LEFT JOIN `my-first-project-237704.analytics.completed_procedures` AS completed
+  LEFT JOIN `analytics.completed_procedures` AS completed
     ON completed.tenant = @tenant
    AND completed.event_id = dated.event_id
   WHERE dated.metric_date BETWEEN win.cur_start AND @end_date
