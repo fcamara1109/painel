@@ -7,6 +7,7 @@
   const FIXTURE = new URLSearchParams(location.search).get('fixture') === '1';
   const SCOPE = 'https://www.googleapis.com/auth/bigquery.readonly';
   const TOKEN_KEY = 'painel_token';
+  const RENOVA_ANTES_MS = 5 * 60 * 1000; // tenta renovar o token 5 min antes de vencer
   const PAGE_SIZE = 25;
   const BQ = `https://bigquery.googleapis.com/bigquery/v2/projects/${CFG.PROJECT_ID}`;
 
@@ -132,28 +133,47 @@
   let seq = 0;
   let token = null;
   let tokenClient = null;
+  let modoPedido = null; // por que o último requestAccessToken saiu: 'clique' | 'silencioso' | 'renovacao'
+  let timerRenova = null;
   const sqlCache = {};
   if (FIXTURE) window.__consultas = [];
 
   // ------------------------------------------------------------ login (Google Identity Services)
   class AuthError extends Error {}
 
-  function lerToken() {
+  // O token fica no localStorage: sobrevive a fechar a aba e o navegador (no sessionStorage morria junto com a aba).
+  // Vencido ele continua lá: é o sinal de que este navegador já entrou, e a abertura tenta renovar sem clique.
+  function lerRegistro() {
     try {
-      const t = JSON.parse(sessionStorage.getItem(TOKEN_KEY));
-      if (t && t.value && t.exp > Date.now() + 30000) return t;
-    } catch (e) { /* sem sessionStorage: segue sem token */ }
+      const t = JSON.parse(localStorage.getItem(TOKEN_KEY));
+      if (t && t.value && Number.isFinite(t.exp)) return t;
+    } catch (e) { /* sem localStorage: segue sem token */ }
     return null;
+  }
+
+  function lerToken() {
+    const t = lerRegistro();
+    return t && t.exp > Date.now() + 30000 ? t : null;
   }
 
   function guardaToken(t) {
     token = t;
-    try { sessionStorage.setItem(TOKEN_KEY, JSON.stringify(t)); } catch (e) { /* ok */ }
+    try { localStorage.setItem(TOKEN_KEY, JSON.stringify(t)); } catch (e) { /* ok */ }
+    agendaRenovacao();
   }
 
   function limpaToken() {
     token = null;
-    try { sessionStorage.removeItem(TOKEN_KEY); } catch (e) { /* ok */ }
+    clearTimeout(timerRenova);
+    try { localStorage.removeItem(TOKEN_KEY); } catch (e) { /* ok */ }
+  }
+
+  // Renova sem clique um pouco antes de vencer. Falhou (popup barrado, sessão Google fora): não mexe na tela,
+  // quando o token vencer a próxima consulta mostra o botão de entrar.
+  function agendaRenovacao() {
+    clearTimeout(timerRenova);
+    if (!token || FIXTURE) return;
+    timerRenova = setTimeout(() => pedeToken('renovacao'), Math.max(token.exp - RENOVA_ANTES_MS - Date.now(), 0));
   }
 
   function mostraLogin(msg) {
@@ -185,37 +205,53 @@
     });
   }
 
-  async function iniciaLogin() {
+  // O pedido falhou. Renovação em segundo plano não mexe na tela; a abertura silenciosa volta ao botão sem alarme.
+  function pedidoFalhou() {
+    if (modoPedido === 'renovacao') return;
+    mostraLogin(modoPedido === 'silencioso' ? undefined : 'Login não concluído. Tente de novo.');
+  }
+
+  // modo: sem modo só prepara o cliente do Google; com modo já pede o token em seguida.
+  async function iniciaLogin(modo) {
     if (CFG.CLIENT_ID === 'PREENCHER') {
-      mostraLogin('Falta configurar o CLIENT_ID em config.js.');
+      if (!token) mostraLogin('Falta configurar o CLIENT_ID em config.js.');
       return;
     }
     try {
       await carregaGIS();
     } catch (e) {
-      mostraLogin(e.message);
+      if (!token) mostraLogin(e.message);
       return;
     }
-    tokenClient = google.accounts.oauth2.initTokenClient({
-      client_id: CFG.CLIENT_ID,
-      scope: SCOPE,
-      callback: (resp) => {
-        if (resp.error || !resp.access_token) {
-          mostraLogin('Login não concluído. Tente de novo.');
-          return;
-        }
-        guardaToken({ value: resp.access_token, exp: Date.now() + Number(resp.expires_in || 3600) * 1000 });
-        mostraPainel();
-        recarrega(true);
-      },
-      error_callback: () => mostraLogin('Login não concluído. Tente de novo.'),
-    });
+    if (!tokenClient) {
+      tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CFG.CLIENT_ID,
+        scope: SCOPE,
+        callback: (resp) => {
+          if (resp.error || !resp.access_token) {
+            pedidoFalhou();
+            return;
+          }
+          const jaNoPainel = !$('painel').hidden;
+          guardaToken({ value: resp.access_token, exp: Date.now() + Number(resp.expires_in || 3600) * 1000 });
+          mostraPainel();
+          if (!jaNoPainel) recarrega(true);
+        },
+        error_callback: pedidoFalhou,
+      });
+    }
+    if (modo) pedeToken(modo);
+  }
+
+  function pedeToken(modo) {
+    if (!tokenClient) { iniciaLogin(modo); return; }
+    modoPedido = modo;
+    tokenClient.requestAccessToken({ prompt: '' });
   }
 
   function pedeLogin() {
     if (FIXTURE) { mostraPainel(); recarrega(true); return; }
-    if (tokenClient) tokenClient.requestAccessToken({ prompt: '' });
-    else iniciaLogin();
+    pedeToken('clique');
   }
 
   // ------------------------------------------------------------ BigQuery (REST)
@@ -244,7 +280,7 @@
 
   async function bqFetch(url, opts) {
     if (!token || token.exp <= Date.now() + 30000) {
-      limpaToken();
+      token = null; // o registro vencido fica no storage: a próxima abertura tenta renovar sem clique
       mostraLogin('Sua sessão expirou. Entre de novo.');
       throw new AuthError();
     }
@@ -916,10 +952,16 @@
       recarrega(true);
       return;
     }
+    const jaEntrou = !!lerRegistro();
     token = lerToken();
     if (token) {
       mostraPainel();
       recarrega(true);
+      agendaRenovacao();
+      iniciaLogin();
+    } else if (jaEntrou) {
+      mostraLogin('Renovando o login...');
+      iniciaLogin('silencioso');
     } else {
       mostraLogin();
       iniciaLogin();
