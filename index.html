@@ -78,6 +78,21 @@ small.sv { display: block; color: var(--fc-ink-3); font-size: var(--fc-t-rotulo)
 .vazio-lista { padding: var(--fc-e-1) 0; color: var(--fc-ink-3); }
 .carregando { cursor: progress; }
 
+/* barra de carregamento: fina, indeterminada, no topo; some quando a última consulta ao BigQuery termina */
+.barra-carga { position: fixed; top: 0; left: 0; right: 0; height: 4px; z-index: 20; overflow: hidden; background: color-mix(in srgb, var(--fc-accent) 18%, transparent); }
+.barra-carga span { display: block; width: 40%; height: 100%; background: var(--fc-accent); animation: varre calc(var(--fc-dur) * 4) var(--fc-curva) infinite; }
+@keyframes varre { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+
+/* esqueleto: bloco cinza no lugar do número e da tabela enquanto a resposta não chega */
+.esq { display: block; background: var(--fc-hair); border-radius: var(--fc-r-campo); }
+.esq-numero { width: 5ch; height: 0.8em; }
+.esq-tabela { display: flex; flex-direction: column; gap: var(--fc-e-1); padding: var(--fc-e-1) 0; }
+.esq-linha { height: 22px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .barra-carga span { width: 100%; animation: none; }
+}
+
 @media (max-width: 600px) {
   .topo { padding: var(--fc-e-2); gap: var(--fc-e-2); }
   .topo-ctl { width: 100%; }
@@ -90,6 +105,7 @@ small.sv { display: block; color: var(--fc-ink-3); font-size: var(--fc-t-rotulo)
 </style>
 </head>
 <body class="fc-base">
+<div id="barra-carga" class="barra-carga" role="progressbar" aria-label="Carregando dados do BigQuery" hidden><span></span></div>
 <div class="pagina">
   <header class="topo fc-mesh">
     <div class="marca">

@@ -282,12 +282,25 @@
     return linhasDoResultado(resp, resp.rows || []);
   }
 
+  // Barra de carregamento: contador de consultas em andamento, não booleano. Só some quando a última termina,
+  // com sucesso ou erro (inclusive consulta que ficou para trás depois de um erro das outras).
+  let pendentes = 0;
+  function emConsulta(delta) {
+    pendentes += delta;
+    $('barra-carga').hidden = pendentes <= 0;
+  }
+
   async function consulta(nome, params) {
-    if (FIXTURE) {
-      window.__consultas.push({ nome, params: JSON.parse(JSON.stringify(params)) });
-      return fixture(['completed', 'marked', 'options', 'tenants'].includes(nome) ? nome : 'funnel');
+    emConsulta(1);
+    try {
+      if (FIXTURE) {
+        window.__consultas.push({ nome, params: JSON.parse(JSON.stringify(params)) });
+        return await fixture(['completed', 'marked', 'options', 'tenants'].includes(nome) ? nome : 'funnel');
+      }
+      return await bqQuery(nome, params);
+    } finally {
+      emConsulta(-1);
     }
-    return bqQuery(nome, params);
   }
 
   // Mesmos parâmetros em todas as consultas; os 7 arrays vão sempre, mesmo vazios.
@@ -349,13 +362,27 @@
     return `<td data-col="${campo}"><span class="v">${esc(fmt(valor, tipo))}</span>${extra || ''}</td>`;
   }
 
-  function renderCartoes() {
+  // Estado de espera: bloco cinza no lugar do número e da tabela (sem opacity em texto, sem número velho).
+  const ESQUELETO_TABELA = `<div class="esq-tabela" aria-hidden="true">${'<span class="esq esq-linha"></span>'.repeat(4)}</div>`;
+
+  function renderCartoes(esperando) {
     const total = state.funnel.find((r) => r.period === 'total');
     const sem = semMidia();
     $('cartoes').innerHTML = CARTOES.map(([campo, rotulo, tipo]) => {
-      const nota = sem && CARTOES_DE_MIDIA.includes(campo) ? '<p class="fc-legenda">sem dado de mídia</p>' : '';
-      return `<div class="cartao fc-cartao" data-card="${campo}"><p class="fc-rotulo">${esc(rotulo)}</p><p class="fc-numero v">${esc(fmt(total && total[campo], tipo))}</p>${nota}</div>`;
+      const nota = !esperando && sem && CARTOES_DE_MIDIA.includes(campo) ? '<p class="fc-legenda">sem dado de mídia</p>' : '';
+      const numero = esperando ? '<p class="fc-numero" aria-hidden="true"><span class="esq esq-numero"></span></p>' : `<p class="fc-numero v">${esc(fmt(total && total[campo], tipo))}</p>`;
+      return `<div class="cartao fc-cartao" data-card="${campo}"><p class="fc-rotulo">${esc(rotulo)}</p>${numero}${nota}</div>`;
     }).join('');
+  }
+
+  function renderEsperando() {
+    renderCartoes(true);
+    for (const def of BLOCOS) document.querySelector(`#${def.id} .rolagem`).innerHTML = ESQUELETO_TABELA;
+    for (const chave of Object.keys(LISTAS)) {
+      const bloco = $(LISTAS[chave].bloco);
+      bloco.querySelector('.rolagem').innerHTML = ESQUELETO_TABELA;
+      bloco.querySelector('.pag').innerHTML = '';
+    }
   }
 
   function renderBloco(def) {
@@ -440,7 +467,9 @@
     const meu = ++seq;
     const app = $('painel');
     app.classList.add('carregando');
+    app.setAttribute('aria-busy', 'true');
     $('estado-carga').hidden = false;
+    renderEsperando();
     try {
       if (!state.tenants) await carregaClientes();
       if (meu !== seq) return;
@@ -463,10 +492,17 @@
       renderTudo();
     } catch (e) {
       if (e instanceof AuthError) return;
-      if (meu === seq) mostraErro(e.message);
+      if (meu === seq) {
+        mostraErro(e.message);
+        // o esqueleto não pode ficar para sempre, e o número velho não volta como se fosse deste período
+        state.funnel = [];
+        state.lists = { completed: { rows: [], page: 0 }, marked: { rows: [], page: 0 } };
+        renderTudo();
+      }
     } finally {
       if (meu === seq) {
         app.classList.remove('carregando');
+        app.removeAttribute('aria-busy');
         $('estado-carga').hidden = true;
       }
     }
