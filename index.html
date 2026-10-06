@@ -11,6 +11,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Schibsted+Grotesk:wght@300;400;500&display=swap">
 <!-- Fonte única de cor, fonte, espaço e forma (marca da casa). Não copiar valores: o publicar.sh copia o tokens.css canônico. -->
 <link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="cirurgias.css">
 <style>
 body { margin: 0; }
 :focus-visible { outline: 3px solid var(--fc-accent); outline-offset: 2px; }
@@ -163,7 +164,7 @@ small.sv { display: block; color: var(--fc-ink-3); font-size: var(--fc-t-rotulo)
 .carregando { cursor: progress; }
 
 /* listas recolhidas por padrão */
-.lista h2 { font-family: var(--fc-display); font-weight: 500; font-size: 22px; line-height: var(--fc-lh-h3); }
+.lista h2, .lista .cir-h3 { font-family: var(--fc-display); font-weight: 500; font-size: 22px; line-height: var(--fc-lh-h3); }
 .acc { display: flex; width: 100%; min-height: 64px; align-items: center; justify-content: space-between; gap: var(--fc-e-2); padding: 0 var(--fc-e-3); border: 0; border-radius: var(--fc-r-cartao); background: transparent; color: var(--fc-ink); text-align: left; font: inherit; cursor: pointer; }
 .acc .dir { display: inline-flex; align-items: center; gap: var(--fc-e-2); }
 .acc .hint { font-family: var(--fc-body); font-size: var(--fc-t-legenda); font-weight: 400; color: var(--fc-ink-3); }
@@ -182,12 +183,8 @@ small.sv { display: block; color: var(--fc-ink-3); font-size: var(--fc-t-rotulo)
 .esq-tabela { display: flex; flex-direction: column; gap: var(--fc-e-1); padding: var(--fc-e-1); }
 .esq-linha { height: 22px; }
 
-/* página Cirurgias: só leitura, mesma tabela e mesmo cartão das listas */
+/* página Cirurgias: o estilo da fila está em cirurgias.css */
 #pg-funil, #pg-cirurgias { display: flex; flex-direction: column; gap: var(--fc-e-3); }
-.cir-cab .sub { color: var(--fc-ink-3); font-size: var(--fc-t-legenda); line-height: var(--fc-lh-legenda); margin-top: 4px; }
-.cir-resumo { display: flex; flex-wrap: wrap; gap: var(--fc-e-1) var(--fc-e-2); }
-.cir-chip { display: inline-flex; align-items: baseline; gap: var(--fc-e-1); padding: var(--fc-e-1) var(--fc-e-2); border: 1px solid var(--fc-hair); border-radius: var(--fc-r-pilula); background: var(--fc-surface); font-size: var(--fc-t-legenda); }
-.cir-chip .num { font-size: 22px; }
 td.txt small.sv { white-space: nowrap; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -316,24 +313,41 @@ td.txt small.sv { white-space: nowrap; }
 
       <section id="pg-cirurgias" aria-labelledby="t-cirurgias" hidden>
         <div class="cir-cab">
-          <h2 class="fc-h2" id="t-cirurgias">Acompanhamento de cirurgia</h2>
+          <h2 class="fc-h2" id="t-cirurgias">Quem ainda pode operar</h2>
           <p class="sub" id="cir-sub"></p>
         </div>
         <div class="aviso" id="cir-aviso" hidden></div>
         <div class="erro" id="cir-erro" hidden></div>
-        <div class="cir-resumo" id="cir-resumo"></div>
-        <section class="bloco fc-cartao" id="bloco-cirurgias">
-          <div class="rolagem" tabindex="0"></div>
+        <div class="cir-resumo fc-cartao" id="cir-resumo"></div>
+        <div id="cir-fila"></div>
+        <section class="lista fc-cartao" id="bloco-operaram" hidden>
+          <h3 class="cir-h3"><button type="button" class="acc" id="acc-operaram" aria-expanded="false" aria-controls="corpo-operaram">
+            <span>Já operaram</span>
+            <span class="dir"><span class="hint"></span><svg width="16" height="16" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </button></h3>
+          <div class="lista-corpo" id="corpo-operaram" hidden><ol class="cir-itens"></ol></div>
         </section>
+        <section class="lista fc-cartao" id="bloco-desistiram" hidden>
+          <h3 class="cir-h3"><button type="button" class="acc" id="acc-desistiram" aria-expanded="false" aria-controls="corpo-desistiram">
+            <span>Desistiram</span>
+            <span class="dir"><span class="hint"></span><svg width="16" height="16" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </button></h3>
+          <div class="lista-corpo" id="corpo-desistiram" hidden><ol class="cir-itens"></ol></div>
+        </section>
+        <p class="nota" id="cir-sem-link" hidden>
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 7.2v4M8 4.6v.1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <span>Este cliente ainda não tem link do paciente no sistema da clínica. A lista aparece sem os links.</span>
+        </p>
         <p class="nota">
           <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 7.2v4M8 4.6v.1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
-          <span>Só leitura. Esta lista é para revisão: ninguém recebe mensagem por causa dela. A escolha de quem acompanhar é registrada pelo Felipe e aparece na lista seguinte.</span>
+          <span>Só leitura. Esta lista é para revisão: ninguém recebe mensagem por causa dela. Quando o Felipe registra que um paciente deve ser acompanhado, a linha dele passa a mostrar "Acompanhar: sim" na próxima atualização da lista.</span>
         </p>
       </section>
     </section>
   </main>
 </div>
 <script src="config.js"></script>
+<script src="cirurgias.js"></script>
 <script src="painel.js"></script>
 </body>
 </html>

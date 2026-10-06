@@ -6,6 +6,14 @@
     "type": "STRING"
    },
    {
+    "name": "erp",
+    "type": "STRING"
+   },
+   {
+    "name": "erp_patient_id",
+    "type": "STRING"
+   },
+   {
     "name": "first_name",
     "type": "STRING"
    },
@@ -54,84 +62,16 @@
      "v": "2026-10-06"
     },
     {
+     "v": "asa"
+    },
+    {
+     "v": "9000001"
+    },
+    {
      "v": "Paciente A"
     },
     {
      "v": "0001"
-    },
-    {
-     "v": "2026-08-13"
-    },
-    {
-     "v": "Fistulectomia"
-    },
-    {
-     "v": "indicated"
-    },
-    {
-     "v": "funnel"
-    },
-    {
-     "v": "2026-08-13"
-    },
-    {
-     "v": "Consulta em consultório · atendido"
-    },
-    {
-     "v": "yes"
-    },
-    {
-     "v": "2026-10-06"
-    }
-   ]
-  },
-  {
-   "f": [
-    {
-     "v": "2026-10-06"
-    },
-    {
-     "v": "Paciente B"
-    },
-    {
-     "v": "0002"
-    },
-    {
-     "v": "2026-06-08"
-    },
-    {
-     "v": null
-    },
-    {
-     "v": "indicated"
-    },
-    {
-     "v": "funnel"
-    },
-    {
-     "v": "2026-07-06"
-    },
-    {
-     "v": "Consulta retorno · cancelado"
-    },
-    {
-     "v": null
-    },
-    {
-     "v": null
-    }
-   ]
-  },
-  {
-   "f": [
-    {
-     "v": "2026-10-06"
-    },
-    {
-     "v": "Paciente C"
-    },
-    {
-     "v": "0003"
     },
     {
      "v": "2026-09-21"
@@ -152,7 +92,7 @@
      "v": "Consulta em consultório · atendido"
     },
     {
-     "v": "no"
+     "v": "yes"
     },
     {
      "v": "2026-10-06"
@@ -165,10 +105,59 @@
      "v": "2026-10-06"
     },
     {
-     "v": "Paciente D"
+     "v": "asa"
     },
     {
-     "v": "0004"
+     "v": "9000002"
+    },
+    {
+     "v": "Paciente B"
+    },
+    {
+     "v": "0002"
+    },
+    {
+     "v": "2026-09-29"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "indicated"
+    },
+    {
+     "v": "funnel"
+    },
+    {
+     "v": "2026-10-14"
+    },
+    {
+     "v": "Colonoscopia · marcado"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-10-06"
+    },
+    {
+     "v": "asa"
+    },
+    {
+     "v": "9000003"
+    },
+    {
+     "v": "Paciente C"
+    },
+    {
+     "v": "0003"
     },
     {
      "v": "2026-07-01"
@@ -202,31 +191,80 @@
      "v": "2026-10-06"
     },
     {
+     "v": "asa"
+    },
+    {
+     "v": "9000004"
+    },
+    {
+     "v": "Paciente D"
+    },
+    {
+     "v": "0004"
+    },
+    {
+     "v": "2026-09-03"
+    },
+    {
+     "v": "Fistulectomia"
+    },
+    {
+     "v": "in_conversation"
+    },
+    {
+     "v": "clinic"
+    },
+    {
+     "v": "2026-10-05"
+    },
+    {
+     "v": "Consulta retorno · atendido"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-10-06"
+    },
+    {
+     "v": "asa"
+    },
+    {
+     "v": "9000005"
+    },
+    {
      "v": "Paciente E"
     },
     {
      "v": "0005"
     },
     {
-     "v": "2026-07-01"
+     "v": "2026-09-28"
     },
     {
-     "v": "Fissurectomia"
+     "v": "Drenagem"
     },
     {
-     "v": "operated"
+     "v": "indicated"
     },
     {
-     "v": "funnel"
+     "v": "clinic"
     },
     {
-     "v": "2026-09-24"
+     "v": "2026-09-30"
     },
     {
-     "v": "Consulta retorno · atendido"
+     "v": "Retossigmoidoscopia flexível · atendido"
     },
     {
-     "v": "yes"
+     "v": "no"
     },
     {
      "v": "2026-10-06"
@@ -239,7 +277,228 @@
      "v": "2026-10-06"
     },
     {
+     "v": "asa"
+    },
+    {
+     "v": "9000006"
+    },
+    {
      "v": "Paciente F"
+    },
+    {
+     "v": "0006"
+    },
+    {
+     "v": "2026-08-27"
+    },
+    {
+     "v": "Ligadura"
+    },
+    {
+     "v": "indicated"
+    },
+    {
+     "v": "funnel"
+    },
+    {
+     "v": "2026-08-27"
+    },
+    {
+     "v": "Consulta em consultório · atendido"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-10-06"
+    },
+    {
+     "v": "asa"
+    },
+    {
+     "v": "9000007"
+    },
+    {
+     "v": "Paciente G"
+    },
+    {
+     "v": "0007"
+    },
+    {
+     "v": "2026-08-13"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "indicated"
+    },
+    {
+     "v": "funnel"
+    },
+    {
+     "v": "2026-08-13"
+    },
+    {
+     "v": "Consulta em consultório · atendido"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-10-06"
+    },
+    {
+     "v": "asa"
+    },
+    {
+     "v": "9000008"
+    },
+    {
+     "v": "Paciente H"
+    },
+    {
+     "v": "0008"
+    },
+    {
+     "v": "2026-07-22"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "monitoring"
+    },
+    {
+     "v": "funnel"
+    },
+    {
+     "v": "2026-09-28"
+    },
+    {
+     "v": "Anuscopia · atendido"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-10-06"
+    },
+    {
+     "v": "asa"
+    },
+    {
+     "v": "9000009"
+    },
+    {
+     "v": "Paciente I"
+    },
+    {
+     "v": "0009"
+    },
+    {
+     "v": "2026-06-11"
+    },
+    {
+     "v": "Drenagem"
+    },
+    {
+     "v": "indicated"
+    },
+    {
+     "v": "funnel"
+    },
+    {
+     "v": "2026-06-11"
+    },
+    {
+     "v": "Consulta em consultório · atendido"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-10-06"
+    },
+    {
+     "v": "asa"
+    },
+    {
+     "v": "9000010"
+    },
+    {
+     "v": "Paciente J"
+    },
+    {
+     "v": "0010"
+    },
+    {
+     "v": "2026-05-28"
+    },
+    {
+     "v": "Ligadura"
+    },
+    {
+     "v": "indicated"
+    },
+    {
+     "v": "clinic"
+    },
+    {
+     "v": "2026-05-28"
+    },
+    {
+     "v": "Consulta retorno · atendido"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-10-06"
+    },
+    {
+     "v": "asa"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "Paciente K"
     },
     {
      "v": null
@@ -276,16 +535,108 @@
      "v": "2026-10-06"
     },
     {
-     "v": "Paciente G"
+     "v": "asa"
     },
     {
-     "v": "0007"
+     "v": "9000012"
+    },
+    {
+     "v": "Paciente L"
+    },
+    {
+     "v": "0012"
+    },
+    {
+     "v": "2026-07-01"
+    },
+    {
+     "v": "Fissurectomia"
+    },
+    {
+     "v": "operated"
+    },
+    {
+     "v": "funnel"
+    },
+    {
+     "v": "2026-09-24"
+    },
+    {
+     "v": "Consulta retorno · atendido"
+    },
+    {
+     "v": "yes"
+    },
+    {
+     "v": "2026-10-06"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-10-06"
+    },
+    {
+     "v": "asa"
+    },
+    {
+     "v": "9000013"
+    },
+    {
+     "v": "Paciente M"
+    },
+    {
+     "v": "0013"
+    },
+    {
+     "v": "2026-06-18"
+    },
+    {
+     "v": "Fistulectomia"
+    },
+    {
+     "v": "operated"
+    },
+    {
+     "v": "clinic"
+    },
+    {
+     "v": "2026-09-11"
+    },
+    {
+     "v": "Consulta retorno · atendido"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-10-06"
+    },
+    {
+     "v": "asa"
+    },
+    {
+     "v": "9000014"
+    },
+    {
+     "v": "Paciente N"
+    },
+    {
+     "v": "0014"
     },
     {
      "v": "2026-05-28"
     },
     {
-     "v": "Ligadura"
+     "v": null
     },
     {
      "v": "dropped"
@@ -304,43 +655,6 @@
     },
     {
      "v": "2026-10-06"
-    }
-   ]
-  },
-  {
-   "f": [
-    {
-     "v": "2026-10-06"
-    },
-    {
-     "v": "Paciente H"
-    },
-    {
-     "v": "0008"
-    },
-    {
-     "v": "2026-09-03"
-    },
-    {
-     "v": "Fistulectomia"
-    },
-    {
-     "v": "in_conversation"
-    },
-    {
-     "v": "clinic"
-    },
-    {
-     "v": "2026-10-05"
-    },
-    {
-     "v": "Consulta retorno · marcado"
-    },
-    {
-     "v": "Consulta retorno · atendido"
-    },
-    {
-     "v": null
     }
    ]
   }

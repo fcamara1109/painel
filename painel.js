@@ -644,79 +644,17 @@
   }
 
   // ------------------------------------------------------------ página Cirurgias (só leitura)
-  // Lista do radar do Asa (último snapshot em clean.surgery_followup). Ordem do mais urgente: indicada, em conversa,
-  // marcada, em observação, operou, desistiu; dentro de cada uma, a interação mais antiga primeiro (o mais parado).
-  const STATUS_CIR = [['indicated', 'Indicada'], ['in_conversation', 'Em conversa'], ['scheduled', 'Marcada'], ['monitoring', 'Em observação'], ['operated', 'Operou'], ['dropped', 'Desistiu']];
-  const ORIGEM_CIR = { funnel: 'Funil', clinic: 'Clínica' };
-  const ACOMPANHAR_CIR = { yes: 'Sim', no: 'Não' };
-  const COLS_CIR = [['patient', 'Paciente'], ['consult_date', 'Consulta da indicação'], ['procedure', 'Procedimento'], ['status', 'Status'], ['last_interaction', 'Última interação'], ['origin', 'Origem'], ['follow_up', 'Acompanhar']];
-  const DIAS_LISTA_VELHA = 15;
+  // O desenho mora em cirurgias.js (quem ainda pode operar, do mais quente ao mais frio, links do paciente no sistema da clínica).
+  // Aqui fica o que depende do painel: login, consulta ao BigQuery, ?tenant= e o relógio.
   let seqCir = 0;
-
   const hojeIso = () => isoLocal(new Date());
   const diasEntre = (deIso, ateIso) => Math.round((dataDeISO(ateIso) - dataDeISO(deIso)) / 86400000);
-  const rotuloStatusCir = (st) => (STATUS_CIR.find(([k]) => k === st) || [null, st])[1];
-
-  function quandoCir(iso) {
-    const d = diasEntre(iso, hojeIso());
-    if (d === 0) return 'hoje';
-    const n = Math.abs(d);
-    return `${d > 0 ? 'há' : 'em'} ${n} ${n === 1 ? 'dia' : 'dias'}`;
-  }
-
-  function ordemCir(linhas) {
-    const rank = (st) => { const i = STATUS_CIR.findIndex(([k]) => k === st); return i < 0 ? STATUS_CIR.length : i; };
-    return linhas.slice().sort((a, b) => rank(a.status) - rank(b.status)
-      || (a.last_interaction_date || '9999').localeCompare(b.last_interaction_date || '9999')
-      || a.first_name.localeCompare(b.first_name, 'pt-BR'));
-  }
-
-  function renderCirurgias(esperando) {
-    const rolagem = document.querySelector('#bloco-cirurgias .rolagem');
-    if (esperando) {
-      rolagem.innerHTML = ESQUELETO_TABELA;
-      $('cir-resumo').innerHTML = '';
-      $('cir-sub').textContent = '';
-      $('cir-aviso').hidden = true;
-      return;
-    }
-    const linhas = ordemCir(state.cirurgias);
-    $('cir-resumo').innerHTML = STATUS_CIR.map(([k, rot]) => `<span class="cir-chip" data-status="${k}"><strong class="num">${NF0.format(linhas.filter((r) => r.status === k).length)}</strong> ${esc(rot)}</span>`).join('');
-    if (!linhas.length) {
-      $('cir-sub').textContent = '';
-      $('cir-aviso').hidden = true;
-      rolagem.innerHTML = '<div class="vazio-lista">Sem lista de cirurgia para este cliente.</div>';
-      return;
-    }
-    const dia = linhas[0].snapshot_date;
-    const idade = diasEntre(dia, hojeIso());
-    $('cir-sub').textContent = `Lista de ${fmtData(dia)}, ${NF0.format(linhas.length)} ${linhas.length === 1 ? 'paciente' : 'pacientes'}. Do mais parado para o mais recente em cada status.`;
-    $('cir-aviso').hidden = idade <= DIAS_LISTA_VELHA;
-    $('cir-aviso').textContent = `Lista com ${NF0.format(idade)} dias: passou do prazo de ${DIAS_LISTA_VELHA} dias. Peça uma rodada nova.`;
-    const cab = COLS_CIR.map(([, rot]) => `<th class="txt">${esc(rot)}</th>`).join('');
-    const corpo = linhas.map((r) => {
-      const quem = `${esc(r.first_name)}${r.phone_last4 ? ` <small class="sv">final ${esc(r.phone_last4)}</small>` : ''}`;
-      const ult = r.last_interaction_date
-        ? `${esc(fmtData(r.last_interaction_date))}<small class="sv">${esc(quandoCir(r.last_interaction_date))}${r.last_interaction_kind ? ' · ' + esc(r.last_interaction_kind) : ''}</small>`
-        : VAZIO;
-      const cels = {
-        patient: quem,
-        consult_date: esc(fmt(r.consult_date, 'date')),
-        procedure: esc(r.procedure || 'A definir'),
-        status: esc(rotuloStatusCir(r.status)),
-        last_interaction: ult,
-        origin: esc(ORIGEM_CIR[r.origin] || VAZIO),
-        follow_up: esc(ACOMPANHAR_CIR[r.follow_up] || 'A decidir'),
-      };
-      return `<tr data-status="${esc(r.status)}">${COLS_CIR.map(([c]) => `<td class="txt" data-col="${c}">${cels[c]}</td>`).join('')}</tr>`;
-    }).join('');
-    rolagem.innerHTML = `<table data-tabela="cirurgias"><thead><tr>${cab}</tr></thead><tbody>${corpo}</tbody></table>`;
-  }
+  const ctxCir = () => ({ esc, fmtData, nf0: NF0, hoje: hojeIso(), diasEntre, esqueleto: ESQUELETO_TABELA });
 
   async function carregaCirurgias() {
     const meu = ++seqCir;
     $('cir-erro').hidden = true;
-    renderCirurgias(true);
+    window.PainelCirurgias.render(null, ctxCir());
     const app = $('painel');
     app.classList.add('carregando');
     app.setAttribute('aria-busy', 'true');
@@ -726,14 +664,14 @@
       const linhas = await consulta('surgeries', { tenant: state.tenant });
       if (meu !== seqCir) return;
       state.cirurgias = linhas;
-      renderCirurgias();
+      window.PainelCirurgias.render(state.cirurgias, ctxCir());
     } catch (e) {
       if (e instanceof AuthError) return;
       if (meu === seqCir) {
-        $('cir-erro').textContent = e.message;
+        $('cir-erro').textContent = 'Não consegui carregar a lista de cirurgias. Tente de novo em alguns minutos.';
         $('cir-erro').hidden = false;
         state.cirurgias = [];
-        renderCirurgias();
+        window.PainelCirurgias.render(false, ctxCir()); // limpa a tela sem desenhar "lista vazia" em cima do erro
       }
     } finally {
       if (meu === seqCir) {

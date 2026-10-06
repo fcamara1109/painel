@@ -1,0 +1,73 @@
+/* Página Cirurgias. Só usa os tokens da marca (tokens.css) e os componentes do index.html: .fc-cartao, .acc, .lista, .btn, .nota, .aviso. */
+.cir-cab .sub { color: var(--fc-ink-3); font-size: var(--fc-t-legenda); line-height: var(--fc-lh-legenda); margin-top: 4px; max-width: var(--fc-medida); }
+
+/* resumo do topo: três fatos, uma frase cada, sem moldura própria */
+.cir-resumo { display: grid; grid-template-columns: 1fr 1fr; gap: var(--fc-e-2) var(--fc-e-3); padding: var(--fc-e-3); }
+.cir-fato:first-child { grid-column: 1 / -1; }
+.cir-fato:not(:first-child) .num { font-size: 28px; } /* celular: o número que manda (quantos podem operar) fica grande, os outros dois em linha */
+@media (min-width: 700px) {
+  .cir-resumo { grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr)); gap: var(--fc-e-2) var(--fc-e-4); }
+  .cir-fato:first-child { grid-column: auto; }
+  .cir-fato:not(:first-child) .num { font-size: 44px; }
+}
+.cir-resumo:empty { display: none; }
+.cir-fato { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cir-fato .num { font-size: 44px; }
+.cir-fato-t { color: var(--fc-ink-2); font-size: var(--fc-t-legenda); line-height: var(--fc-lh-legenda); }
+.cir-fato-vazio { grid-column: 1 / -1; color: var(--fc-ink-2); }
+
+/* a fila: um cartão por temperatura, linhas separadas por fio */
+#cir-fila { display: flex; flex-direction: column; gap: var(--fc-e-3); }
+.cir-grupo { padding: var(--fc-e-3) 0 0; overflow: hidden; }
+.cir-gh { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px var(--fc-e-1); padding: 0 var(--fc-e-3) var(--fc-e-2); }
+.cir-ponto { width: 12px; height: 12px; border-radius: 50%; background: var(--fc-accent); align-self: center; flex: none; margin-right: 2px; }
+.cir-gt { flex: 0 1 auto; min-width: 0; }
+.cir-gn { flex: none; white-space: nowrap; }
+.cir-so-leitor { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+.cir-grupo[data-grupo="esfriando"] .cir-ponto { background: var(--fc-ambar); }
+.cir-grupo[data-grupo="frios"] .cir-ponto { background: var(--fc-hair-forte); }
+.cir-gn { font-family: var(--fc-body); font-size: var(--fc-t-legenda); font-weight: 600; color: var(--fc-ink-2); }
+.cir-regra { flex-basis: 100%; font-family: var(--fc-body); font-size: var(--fc-t-legenda); font-weight: 400; line-height: var(--fc-lh-legenda); color: var(--fc-ink-3); padding-left: 20px; }
+@media (min-width: 700px) { .cir-regra { flex-basis: auto; padding-left: var(--fc-e-1); } }
+
+.cir-itens { list-style: none; margin: 0; padding: 0; }
+.cir-item { display: grid; gap: 2px var(--fc-e-2); padding: var(--fc-e-2) var(--fc-e-2); border-top: 1px solid var(--fc-hair); align-items: center;
+  grid-template-columns: 1fr auto;
+  grid-template-areas: "quem estado" "quando quando" "proc proc" "links links"; }
+.cir-item small { display: block; color: var(--fc-ink-3); font-size: var(--fc-t-legenda); line-height: var(--fc-lh-legenda); }
+.cir-item small:empty { display: none; }
+.cir-quem { grid-area: quem; min-width: 0; }
+.cir-estado { grid-area: estado; text-align: right; }
+.cir-quando { grid-area: quando; margin-top: var(--fc-e-1); }
+.cir-proc { grid-area: proc; font-size: var(--fc-t-legenda); color: var(--fc-ink-2); }
+.cir-links { grid-area: links; display: flex; gap: var(--fc-e-1); margin-top: var(--fc-e-1); }
+.cir-links:empty { display: none; }
+.cir-sem { color: var(--fc-ink-3); font-size: var(--fc-t-legenda); line-height: var(--fc-lh-legenda); padding: var(--fc-e-1) 0; }
+.cir-proc small { display: inline; }
+.cir-proc small:not(:empty)::before { content: ' · '; }
+.cir-nome { font-size: var(--fc-t-corpo); font-weight: 600; }
+.cir-dias { font-size: var(--fc-t-corpo); font-weight: 500; }
+.cir-item[data-proxima] .cir-dias { color: var(--fc-accent-forte); font-weight: 600; }
+.cir-chip { display: inline-block; padding: 2px var(--fc-e-2); border: 1px solid var(--fc-hair-forte); border-radius: var(--fc-r-pilula); font-size: var(--fc-t-legenda); white-space: nowrap; }
+
+.cir-link { display: inline-flex; flex: 1 1 0; align-items: center; justify-content: center; gap: 6px; min-height: var(--fc-toque); padding: 0 var(--fc-e-2); border: 1px solid var(--fc-hair-forte); border-radius: var(--fc-r-pilula); background: var(--fc-surface); color: var(--fc-accent-forte); font-size: var(--fc-t-legenda); font-weight: 600; text-decoration: none; white-space: nowrap; }
+.cir-link:hover { border-color: var(--fc-accent); background: color-mix(in srgb, var(--fc-accent) 8%, var(--fc-surface)); }
+.cir-link svg { flex: none; }
+
+@media (min-width: 600px) { .cir-link { flex: none; } }
+@media (min-width: 1100px) {
+  .cir-item { padding: var(--fc-e-2) var(--fc-e-3); gap: 0 var(--fc-e-3);
+    grid-template-columns: minmax(140px, 1fr) minmax(130px, .9fr) minmax(200px, 1.5fr) 150px 280px;
+    grid-template-areas: "quem proc quando estado links"; }
+  .cir-quando, .cir-links { margin-top: 0; }
+  .cir-links:empty { display: block; }
+  .cir-proc small { display: block; }
+  .cir-proc small:not(:empty)::before { content: none; }
+  .cir-estado { text-align: left; }
+  .cir-link { flex: none; border-color: transparent; background: transparent; }
+  .cir-link:hover { border-color: var(--fc-accent); }
+}
+
+/* recolhidos: operou e desistiu, no mesmo padrão das listas do funil */
+#bloco-operaram .cir-item, #bloco-desistiram .cir-item { color: var(--fc-ink-2); }
+#bloco-operaram .lista-corpo, #bloco-desistiram .lista-corpo { padding: 0; gap: 0; }
