@@ -116,6 +116,8 @@
   // ------------------------------------------------------------ estado
   const state = {
     tenant: new URLSearchParams(location.search).get('tenant') || CFG.TENANT,
+    pagina: new URLSearchParams(location.search).get('pagina') === 'cirurgias' ? 'cirurgias' : 'funil',
+    cirurgias: [], // linhas do surgeries.sql (último snapshot do radar)
     tenants: null, // [{tenant, n, spend_rows}] do tenants.sql, carregado uma vez
     basis: 'event',
     aba: 'custo',
@@ -158,6 +160,7 @@
     $('painel').hidden = true;
     $('login').hidden = false;
     $('btn-sair').hidden = true;
+    $('nav-pagina').hidden = true;
     $('estado-login').textContent = 'Sem login';
     $('login-msg').textContent = msg || 'Entre com a conta Google que tem acesso ao BigQuery.';
   }
@@ -166,6 +169,7 @@
     $('login').hidden = true;
     $('painel').hidden = false;
     $('btn-sair').hidden = false;
+    $('nav-pagina').hidden = false;
     $('estado-login').textContent = 'Login ativo';
   }
 
@@ -321,7 +325,7 @@
     try {
       if (FIXTURE) {
         window.__consultas.push({ nome, params: JSON.parse(JSON.stringify(params)) });
-        return await fixture(['completed', 'marked', 'options', 'tenants'].includes(nome) ? nome : 'funnel');
+        return await fixture(['completed', 'marked', 'options', 'tenants', 'surgeries'].includes(nome) ? nome : 'funnel');
       }
       return await bqQuery(nome, params);
     } finally {
@@ -603,6 +607,118 @@
     renderLista('marked');
   }
 
+  // ------------------------------------------------------------ página Cirurgias (só leitura)
+  // Lista do radar do Asa (último snapshot em clean.surgery_followup). Ordem do mais urgente: indicada, em conversa,
+  // marcada, em observação, operou, desistiu; dentro de cada uma, a interação mais antiga primeiro (o mais parado).
+  const STATUS_CIR = [['indicated', 'Indicada'], ['in_conversation', 'Em conversa'], ['scheduled', 'Marcada'], ['monitoring', 'Em observação'], ['operated', 'Operou'], ['dropped', 'Desistiu']];
+  const ORIGEM_CIR = { funnel: 'Funil', clinic: 'Clínica' };
+  const ACOMPANHAR_CIR = { yes: 'Sim', no: 'Não' };
+  const COLS_CIR = [['patient', 'Paciente'], ['consult_date', 'Consulta da indicação'], ['procedure', 'Procedimento'], ['status', 'Status'], ['last_interaction', 'Última interação'], ['origin', 'Origem'], ['follow_up', 'Acompanhar']];
+  const DIAS_LISTA_VELHA = 15;
+  let seqCir = 0;
+
+  const hojeIso = () => isoLocal(new Date());
+  const diasEntre = (deIso, ateIso) => Math.round((dataDeISO(ateIso) - dataDeISO(deIso)) / 86400000);
+  const rotuloStatusCir = (st) => (STATUS_CIR.find(([k]) => k === st) || [null, st])[1];
+
+  function quandoCir(iso) {
+    const d = diasEntre(iso, hojeIso());
+    if (d === 0) return 'hoje';
+    const n = Math.abs(d);
+    return `${d > 0 ? 'há' : 'em'} ${n} ${n === 1 ? 'dia' : 'dias'}`;
+  }
+
+  function ordemCir(linhas) {
+    const rank = (st) => { const i = STATUS_CIR.findIndex(([k]) => k === st); return i < 0 ? STATUS_CIR.length : i; };
+    return linhas.slice().sort((a, b) => rank(a.status) - rank(b.status)
+      || (a.last_interaction_date || '9999').localeCompare(b.last_interaction_date || '9999')
+      || a.first_name.localeCompare(b.first_name, 'pt-BR'));
+  }
+
+  function renderCirurgias(esperando) {
+    const rolagem = document.querySelector('#bloco-cirurgias .rolagem');
+    if (esperando) {
+      rolagem.innerHTML = ESQUELETO_TABELA;
+      $('cir-resumo').innerHTML = '';
+      $('cir-sub').textContent = '';
+      $('cir-aviso').hidden = true;
+      return;
+    }
+    const linhas = ordemCir(state.cirurgias);
+    $('cir-resumo').innerHTML = STATUS_CIR.map(([k, rot]) => `<span class="cir-chip" data-status="${k}"><strong class="num">${NF0.format(linhas.filter((r) => r.status === k).length)}</strong> ${esc(rot)}</span>`).join('');
+    if (!linhas.length) {
+      $('cir-sub').textContent = '';
+      $('cir-aviso').hidden = true;
+      rolagem.innerHTML = '<div class="vazio-lista">Sem lista de cirurgia para este cliente.</div>';
+      return;
+    }
+    const dia = linhas[0].snapshot_date;
+    const idade = diasEntre(dia, hojeIso());
+    $('cir-sub').textContent = `Lista de ${fmtData(dia)}, ${NF0.format(linhas.length)} ${linhas.length === 1 ? 'paciente' : 'pacientes'}. Do mais parado para o mais recente em cada status.`;
+    $('cir-aviso').hidden = idade <= DIAS_LISTA_VELHA;
+    $('cir-aviso').textContent = `Lista com ${NF0.format(idade)} dias: passou do prazo de ${DIAS_LISTA_VELHA} dias. Peça uma rodada nova.`;
+    const cab = COLS_CIR.map(([, rot]) => `<th class="txt">${esc(rot)}</th>`).join('');
+    const corpo = linhas.map((r) => {
+      const quem = `${esc(r.first_name)}${r.phone_last4 ? ` <small class="sv">final ${esc(r.phone_last4)}</small>` : ''}`;
+      const ult = r.last_interaction_date
+        ? `${esc(fmtData(r.last_interaction_date))}<small class="sv">${esc(quandoCir(r.last_interaction_date))}${r.last_interaction_kind ? ' · ' + esc(r.last_interaction_kind) : ''}</small>`
+        : VAZIO;
+      const cels = {
+        patient: quem,
+        consult_date: esc(fmt(r.consult_date, 'date')),
+        procedure: esc(r.procedure || 'A definir'),
+        status: esc(rotuloStatusCir(r.status)),
+        last_interaction: ult,
+        origin: esc(ORIGEM_CIR[r.origin] || VAZIO),
+        follow_up: esc(ACOMPANHAR_CIR[r.follow_up] || 'A decidir'),
+      };
+      return `<tr data-status="${esc(r.status)}">${COLS_CIR.map(([c]) => `<td class="txt" data-col="${c}">${cels[c]}</td>`).join('')}</tr>`;
+    }).join('');
+    rolagem.innerHTML = `<table data-tabela="cirurgias"><thead><tr>${cab}</tr></thead><tbody>${corpo}</tbody></table>`;
+  }
+
+  async function carregaCirurgias() {
+    const meu = ++seqCir;
+    $('cir-erro').hidden = true;
+    renderCirurgias(true);
+    const app = $('painel');
+    app.classList.add('carregando');
+    app.setAttribute('aria-busy', 'true');
+    try {
+      if (!state.tenants) await carregaClientes();
+      if (meu !== seqCir) return;
+      const linhas = await consulta('surgeries', { tenant: state.tenant });
+      if (meu !== seqCir) return;
+      state.cirurgias = linhas;
+      renderCirurgias();
+    } catch (e) {
+      if (e instanceof AuthError) return;
+      if (meu === seqCir) {
+        $('cir-erro').textContent = e.message;
+        $('cir-erro').hidden = false;
+        state.cirurgias = [];
+        renderCirurgias();
+      }
+    } finally {
+      if (meu === seqCir) {
+        app.classList.remove('carregando');
+        app.removeAttribute('aria-busy');
+      }
+    }
+  }
+
+  function mudaPagina(pagina) {
+    state.pagina = pagina;
+    $('pg-funil').hidden = pagina !== 'funil';
+    $('pg-cirurgias').hidden = pagina !== 'cirurgias';
+    document.querySelectorAll('[data-pagina]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.pagina === pagina)));
+    const q = new URLSearchParams(location.search);
+    if (pagina === 'funil') q.delete('pagina'); else q.set('pagina', pagina);
+    if (q.toString() !== location.search.slice(1)) {
+      try { history.replaceState(null, '', `${location.pathname}${q.toString() ? '?' + q : ''}`); } catch (e) { /* ok */ }
+    }
+  }
+
   // ------------------------------------------------------------ filtros
   const CHEVRON = '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
@@ -646,6 +762,7 @@
 
   async function recarrega(comOpcoes) {
     if (!FIXTURE && !token) return;
+    if (state.pagina === 'cirurgias') return carregaCirurgias();
     if (state.start > state.end) {
       mostraErro('A data inicial vem depois da final.');
       return;
@@ -699,6 +816,12 @@
   // ------------------------------------------------------------ eventos
   function ligaEventos() {
     $('btn-login').addEventListener('click', pedeLogin);
+
+    document.querySelectorAll('[data-pagina]').forEach((b) => b.addEventListener('click', () => {
+      if (state.pagina === b.dataset.pagina) return;
+      mudaPagina(b.dataset.pagina);
+      recarrega(true);
+    }));
 
     document.querySelectorAll('[data-basis]').forEach((b) => b.addEventListener('click', () => {
       if (state.basis === b.dataset.basis) return;
@@ -785,6 +908,7 @@
     renderCartoes(true);
     atualizaTituloDetalhe();
     $('selo-exemplo').hidden = !FIXTURE;
+    mudaPagina(state.pagina);
     atualizaAvisos();
     ligaEventos();
     if (FIXTURE) {

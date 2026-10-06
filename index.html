@@ -182,6 +182,14 @@ small.sv { display: block; color: var(--fc-ink-3); font-size: var(--fc-t-rotulo)
 .esq-tabela { display: flex; flex-direction: column; gap: var(--fc-e-1); padding: var(--fc-e-1); }
 .esq-linha { height: 22px; }
 
+/* página Cirurgias: só leitura, mesma tabela e mesmo cartão das listas */
+#pg-funil, #pg-cirurgias { display: flex; flex-direction: column; gap: var(--fc-e-3); }
+.cir-cab .sub { color: var(--fc-ink-3); font-size: var(--fc-t-legenda); line-height: var(--fc-lh-legenda); margin-top: 4px; }
+.cir-resumo { display: flex; flex-wrap: wrap; gap: var(--fc-e-1) var(--fc-e-2); }
+.cir-chip { display: inline-flex; align-items: baseline; gap: var(--fc-e-1); padding: var(--fc-e-1) var(--fc-e-2); border: 1px solid var(--fc-hair); border-radius: var(--fc-r-pilula); background: var(--fc-surface); font-size: var(--fc-t-legenda); }
+.cir-chip .num { font-size: 22px; }
+td.txt small.sv { white-space: nowrap; }
+
 @media (prefers-reduced-motion: reduce) {
   .barra-carga span { width: 100%; animation: none; }
   .btn svg, .acc svg { transition: none; }
@@ -208,6 +216,10 @@ small.sv { display: block; color: var(--fc-ink-3); font-size: var(--fc-t-rotulo)
       </svg>
       <h1 class="fc-h2">Funil</h1>
     </div>
+    <div class="seg" id="nav-pagina" role="group" aria-label="Página" hidden>
+      <button type="button" id="pag-funil" data-pagina="funil" aria-pressed="true">Funil</button>
+      <button type="button" id="pag-cirurgias" data-pagina="cirurgias" aria-pressed="false">Cirurgias</button>
+    </div>
     <div class="topo-campo">
       <label class="fc-rotulo" for="c-tenant">Cliente</label>
       <select class="campo" id="c-tenant" disabled></select>
@@ -229,6 +241,7 @@ small.sv { display: block; color: var(--fc-ink-3); font-size: var(--fc-t-rotulo)
     </section>
 
     <section id="painel" hidden>
+      <div id="pg-funil">
       <div class="controles">
         <div class="seg" role="group" aria-label="Base da data">
           <button type="button" id="aba-event" data-basis="event" aria-pressed="true">Data do evento</button>
@@ -299,6 +312,24 @@ small.sv { display: block; color: var(--fc-ink-3); font-size: var(--fc-t-rotulo)
           <div class="lista-corpo" id="corpo-marcacoes" hidden><div class="rolagem" tabindex="0"></div><div class="pag"></div></div>
         </section>
       </div>
+      </div>
+
+      <section id="pg-cirurgias" aria-labelledby="t-cirurgias" hidden>
+        <div class="cir-cab">
+          <h2 class="fc-h2" id="t-cirurgias">Acompanhamento de cirurgia</h2>
+          <p class="sub" id="cir-sub"></p>
+        </div>
+        <div class="aviso" id="cir-aviso" hidden></div>
+        <div class="erro" id="cir-erro" hidden></div>
+        <div class="cir-resumo" id="cir-resumo"></div>
+        <section class="bloco fc-cartao" id="bloco-cirurgias">
+          <div class="rolagem" tabindex="0"></div>
+        </section>
+        <p class="nota">
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 7.2v4M8 4.6v.1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <span>Só leitura. Esta lista é para revisão: ninguém recebe mensagem por causa dela. A escolha de quem acompanhar é registrada pelo Felipe e aparece na lista seguinte.</span>
+        </p>
+      </section>
     </section>
   </main>
 </div>

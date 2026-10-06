@@ -1,0 +1,348 @@
+{
+ "schema": {
+  "fields": [
+   {
+    "name": "snapshot_date",
+    "type": "STRING"
+   },
+   {
+    "name": "first_name",
+    "type": "STRING"
+   },
+   {
+    "name": "phone_last4",
+    "type": "STRING"
+   },
+   {
+    "name": "consult_date",
+    "type": "DATE"
+   },
+   {
+    "name": "procedure",
+    "type": "STRING"
+   },
+   {
+    "name": "status",
+    "type": "STRING"
+   },
+   {
+    "name": "origin",
+    "type": "STRING"
+   },
+   {
+    "name": "last_interaction_date",
+    "type": "DATE"
+   },
+   {
+    "name": "last_interaction_kind",
+    "type": "STRING"
+   },
+   {
+    "name": "follow_up",
+    "type": "STRING"
+   },
+   {
+    "name": "follow_up_decided_on",
+    "type": "DATE"
+   }
+  ]
+ },
+ "rows": [
+  {
+   "f": [
+    {
+     "v": "2026-10-06"
+    },
+    {
+     "v": "Paciente A"
+    },
+    {
+     "v": "0001"
+    },
+    {
+     "v": "2026-08-13"
+    },
+    {
+     "v": "Fistulectomia"
+    },
+    {
+     "v": "indicated"
+    },
+    {
+     "v": "funnel"
+    },
+    {
+     "v": "2026-08-13"
+    },
+    {
+     "v": "Consulta em consultório · atendido"
+    },
+    {
+     "v": "yes"
+    },
+    {
+     "v": "2026-10-06"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-10-06"
+    },
+    {
+     "v": "Paciente B"
+    },
+    {
+     "v": "0002"
+    },
+    {
+     "v": "2026-06-08"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "indicated"
+    },
+    {
+     "v": "funnel"
+    },
+    {
+     "v": "2026-07-06"
+    },
+    {
+     "v": "Consulta retorno · cancelado"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-10-06"
+    },
+    {
+     "v": "Paciente C"
+    },
+    {
+     "v": "0003"
+    },
+    {
+     "v": "2026-09-21"
+    },
+    {
+     "v": "Ligadura"
+    },
+    {
+     "v": "indicated"
+    },
+    {
+     "v": "clinic"
+    },
+    {
+     "v": "2026-09-21"
+    },
+    {
+     "v": "Consulta em consultório · atendido"
+    },
+    {
+     "v": "no"
+    },
+    {
+     "v": "2026-10-06"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-10-06"
+    },
+    {
+     "v": "Paciente D"
+    },
+    {
+     "v": "0004"
+    },
+    {
+     "v": "2026-07-01"
+    },
+    {
+     "v": "Fissurectomia"
+    },
+    {
+     "v": "scheduled"
+    },
+    {
+     "v": "funnel"
+    },
+    {
+     "v": "2026-10-20"
+    },
+    {
+     "v": "Consulta retorno · marcado"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-10-06"
+    },
+    {
+     "v": "Paciente E"
+    },
+    {
+     "v": "0005"
+    },
+    {
+     "v": "2026-07-01"
+    },
+    {
+     "v": "Fissurectomia"
+    },
+    {
+     "v": "operated"
+    },
+    {
+     "v": "funnel"
+    },
+    {
+     "v": "2026-09-24"
+    },
+    {
+     "v": "Consulta retorno · atendido"
+    },
+    {
+     "v": "yes"
+    },
+    {
+     "v": "2026-10-06"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-10-06"
+    },
+    {
+     "v": "Paciente F"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "monitoring"
+    },
+    {
+     "v": "funnel"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    },
+    {
+     "v": null
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-10-06"
+    },
+    {
+     "v": "Paciente G"
+    },
+    {
+     "v": "0007"
+    },
+    {
+     "v": "2026-05-28"
+    },
+    {
+     "v": "Ligadura"
+    },
+    {
+     "v": "dropped"
+    },
+    {
+     "v": "funnel"
+    },
+    {
+     "v": "2026-05-28"
+    },
+    {
+     "v": "Consulta em consultório · atendido"
+    },
+    {
+     "v": "no"
+    },
+    {
+     "v": "2026-10-06"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-10-06"
+    },
+    {
+     "v": "Paciente H"
+    },
+    {
+     "v": "0008"
+    },
+    {
+     "v": "2026-09-03"
+    },
+    {
+     "v": "Fistulectomia"
+    },
+    {
+     "v": "in_conversation"
+    },
+    {
+     "v": "clinic"
+    },
+    {
+     "v": "2026-10-05"
+    },
+    {
+     "v": "Consulta retorno · marcado"
+    },
+    {
+     "v": "Consulta retorno · atendido"
+    },
+    {
+     "v": null
+    }
+   ]
+  }
+ ]
+}
