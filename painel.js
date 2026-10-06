@@ -5,7 +5,7 @@
 
   const CFG = window.PAINEL_CONFIG;
   const FIXTURE = new URLSearchParams(location.search).get('fixture') === '1';
-  const SCOPE = 'https://www.googleapis.com/auth/bigquery.readonly';
+  const SCOPE = 'https://www.googleapis.com/auth/bigquery.readonly email'; // email: o servidor do check-in confere quem clicou
   const TOKEN_KEY = 'painel_token';
   const RENOVA_ANTES_MS = 5 * 60 * 1000; // tenta renovar o token 5 min antes de vencer
   const PAGE_SIZE = 25;
@@ -296,6 +296,32 @@
       throw new Error(`BigQuery ${r.status}: ${detalhe}`);
     }
     return r.json();
+  }
+
+  // Check-in pela Júlia. O servidor confere o token (app do painel, e-mail na lista do cliente) e a trava de 1 por dia.
+  // Devolve 'enviado' | 'ja_enviado_hoje' | 'sem_whatsapp' | 'sem_permissao' | 'falha' | 'sem_login' (token vencido ou recusado: já voltou pro login).
+  async function enviaCheckin(telefone, nome) {
+    if (!token || token.exp <= Date.now() + 30000) {
+      token = null;
+      mostraLogin('Sua sessão expirou. Entre de novo.');
+      return 'sem_login';
+    }
+    let r;
+    try {
+      r = await fetch(CFG.CHECKIN_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tenant: state.tenant, phone: telefone, name: nome, access_token: token.value }) });
+    } catch (e) {
+      return 'falha';
+    }
+    if (r.status === 401) {
+      limpaToken();
+      mostraLogin('Entre de novo para liberar o envio do check-in.');
+      return 'sem_login';
+    }
+    if (r.status === 403) return 'sem_permissao';
+    let corpo = {};
+    try { corpo = await r.json(); } catch (e) { /* resposta sem corpo: falha */ }
+    if (r.ok && (corpo.status === 'enviado' || corpo.status === 'ja_enviado_hoje')) return corpo.status;
+    return corpo.motivo === 'sem_whatsapp' ? 'sem_whatsapp' : 'falha';
   }
 
   async function textoSql(nome) {
@@ -649,7 +675,7 @@
   let seqCir = 0;
   const hojeIso = () => isoLocal(new Date());
   const diasEntre = (deIso, ateIso) => Math.round((dataDeISO(ateIso) - dataDeISO(deIso)) / 86400000);
-  const ctxCir = () => ({ esc, fmtData, nf0: NF0, hoje: hojeIso(), diasEntre, esqueleto: ESQUELETO_TABELA });
+  const ctxCir = () => ({ esc, fmtData, nf0: NF0, hoje: hojeIso(), diasEntre, esqueleto: ESQUELETO_TABELA, tenant: state.tenant, enviaCheckin });
 
   async function carregaCirurgias() {
     const meu = ++seqCir;
