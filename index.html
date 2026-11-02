@@ -10,8 +10,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Schibsted+Grotesk:wght@300;400;500&display=swap">
 <!-- Fonte única de cor, fonte, espaço e forma (marca da casa). Não copiar valores: o publicar.sh copia o tokens.css canônico. -->
-<link rel="stylesheet" href="tokens.css">
-<link rel="stylesheet" href="cirurgias.css">
+<link rel="stylesheet" href="tokens.css?v=785b0b14a7">
+<link rel="stylesheet" href="cirurgias.css?v=785b0b14a7">
 <style>
 body { margin: 0; }
 :focus-visible { outline: 3px solid var(--fc-accent); outline-offset: 2px; }
@@ -134,15 +134,15 @@ h1, h2, h3, p { margin: 0; }
 .spark.escuro .ponta.parcial { background: var(--fc-surface); border-color: var(--fc-ink); }
 .spark .eixo { display: flex; justify-content: space-between; font-size: var(--fc-t-rotulo); color: var(--fc-ink-3); }
 
-/* faixa Gasto, CPA, ROAS */
-.faixa { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr)); gap: var(--fc-e-2); }
+/* faixa Gasto, CPA, ROAS, ROI */
+.faixa { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: var(--fc-e-2); }
 .faixa-cartao { padding: var(--fc-e-3); display: flex; flex-wrap: wrap; gap: var(--fc-e-2) var(--fc-e-3); align-items: flex-end; justify-content: space-between; min-width: 0; }
 .faixa-cartao .txt { display: flex; flex-direction: column; gap: var(--fc-e-1); }
-.faixa-cartao .num { font-size: 40px; white-space: nowrap; }
-.faixa-cartao .num .un { font-size: 26px; }
+.faixa-cartao .num { font-size: 32px; white-space: nowrap; }
+.faixa-cartao .num .un { font-size: 22px; }
 .faixa-cartao .linha { display: flex; flex-wrap: wrap; gap: 0 var(--fc-e-1); font-size: var(--fc-t-legenda); }
 .faixa-cartao .peq { font-size: var(--fc-t-rotulo); color: var(--fc-ink-3); }
-.faixa-cartao .spark { flex: 1 1 120px; min-width: 100px; max-width: 200px; margin-top: 0; padding-top: 0; }
+.faixa-cartao .spark { flex: 1 1 80px; min-width: 80px; max-width: 200px; margin-top: 0; padding-top: 0; }
 
 /* detalhe */
 .bloco { padding: var(--fc-e-3); display: flex; flex-direction: column; gap: var(--fc-e-2); min-width: 0; }
@@ -283,6 +283,13 @@ td.txt small.sv { white-space: nowrap; }
       <div class="faixa" id="faixa"></div>
 
       <div id="blocos">
+        <section class="bloco fc-cartao" id="bloco-canais">
+          <div class="cab">
+            <h2 class="fc-h3" id="t-canais">Por canal</h2>
+          </div>
+          <div class="rolagem" tabindex="0"></div>
+          <p class="nota" id="nota-canais"></p>
+        </section>
         <section class="bloco fc-cartao" id="bloco-detalhe">
           <div class="cab">
             <h2 class="fc-h3" id="t-detalhe">Detalhe por semana</h2>
@@ -346,8 +353,8 @@ td.txt small.sv { white-space: nowrap; }
     </section>
   </main>
 </div>
-<script src="config.js"></script>
-<script src="cirurgias.js"></script>
-<script src="painel.js"></script>
+<script src="config.js?v=785b0b14a7"></script>
+<script src="cirurgias.js?v=785b0b14a7"></script>
+<script src="painel.js?v=785b0b14a7"></script>
 </body>
 </html>
