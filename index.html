@@ -10,8 +10,8 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Schibsted+Grotesk:wght@300;400;500&display=swap">
 <!-- Fonte única de cor, fonte, espaço e forma (marca da casa). Não copiar valores: o publicar.sh copia o tokens.css canônico. -->
-<link rel="stylesheet" href="tokens.css?v=d8074a0eea">
-<link rel="stylesheet" href="cirurgias.css?v=d8074a0eea">
+<link rel="stylesheet" href="tokens.css?v=d50d5b137d">
+<link rel="stylesheet" href="cirurgias.css?v=d50d5b137d">
 <style>
 body { margin: 0; }
 :focus-visible { outline: 3px solid var(--fc-accent); outline-offset: 2px; }
@@ -136,13 +136,12 @@ h1, h2, h3, p { margin: 0; }
 
 /* faixa Gasto, CPA, ROAS, ROI */
 .faixa { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: var(--fc-e-2); }
-.faixa-cartao { padding: var(--fc-e-3); display: flex; flex-wrap: wrap; gap: var(--fc-e-2) var(--fc-e-3); align-items: flex-end; justify-content: space-between; min-width: 0; }
+.faixa-cartao { padding: var(--fc-e-3); display: flex; flex-direction: column; gap: var(--fc-e-2); min-width: 0; }
 .faixa-cartao .txt { display: flex; flex-direction: column; gap: var(--fc-e-1); }
 .faixa-cartao .num { font-size: 32px; white-space: nowrap; }
 .faixa-cartao .num .un { font-size: 22px; }
 .faixa-cartao .linha { display: flex; flex-wrap: wrap; gap: 0 var(--fc-e-1); font-size: var(--fc-t-legenda); }
 .faixa-cartao .peq { font-size: var(--fc-t-rotulo); color: var(--fc-ink-3); }
-.faixa-cartao .spark { flex: 1 1 80px; min-width: 80px; max-width: 200px; margin-top: 0; padding-top: 0; }
 
 /* detalhe */
 .bloco { padding: var(--fc-e-3); display: flex; flex-direction: column; gap: var(--fc-e-2); min-width: 0; }
@@ -353,8 +352,8 @@ td.txt small.sv { white-space: nowrap; }
     </section>
   </main>
 </div>
-<script src="config.js?v=d8074a0eea"></script>
-<script src="cirurgias.js?v=d8074a0eea"></script>
-<script src="painel.js?v=d8074a0eea"></script>
+<script src="config.js?v=d50d5b137d"></script>
+<script src="cirurgias.js?v=d50d5b137d"></script>
+<script src="painel.js?v=d50d5b137d"></script>
 </body>
 </html>

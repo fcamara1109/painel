@@ -523,8 +523,10 @@
   // menos de 3 pontos não forma tendência, então não há linha; o último período, se a data final o corta, vai tracejado.
   function spark(campo, escuro) {
     const per = periodosFunil();
-    const pts = per.map((r, i) => [i, r[campo]]).filter(([, v]) => v !== null && v !== undefined);
-    if (pts.length < 3) return '<div class="spark"></div>';
+    const brutos = per.map((r, i) => [i, r[campo]]).filter(([, v]) => v !== null && v !== undefined);
+    if (brutos.length < 3) return '<div class="spark"></div>';
+    const piso = Math.min(0, ...brutos.map(([, v]) => v)); // ROI pode ficar negativo: o piso desce até o menor valor; sem negativo, o piso é o zero
+    const pts = brutos.map(([i, v]) => [i, v - piso]);
     const hi = Math.max(...pts.map(([, v]) => v));
     const i0 = pts[0][0], i1 = pts[pts.length - 1][0];
     const xy = pts.map(([i, v]) => [((i - i0) / (i1 - i0)) * 100, 8 + (hi > 0 ? v / hi : 0) * 84]);
@@ -570,7 +572,7 @@
     const nota = semMidia() && FAIXA_DE_MIDIA.includes(campo) ? '<p class="fc-legenda">sem dado de mídia</p>' : '';
     const dlt = total && valor !== null && valor !== undefined ? `<span class="linha">${contraAnterior(total[`${campo}_${variacaoEm || 'chg'}`], bomSobe, variacaoEm)}</span>` : '';
     const un = unidade && valor !== null && valor !== undefined ? `<span class="un">${esc(unidade)}</span>` : '';
-    return `<div class="faixa-cartao fc-cartao" data-card="${campo}"><div class="txt"><p class="fc-rotulo">${esc(rotulo)}</p><p class="num"><span class="v">${esc(fmt(valor, tipo))}</span>${un}</p>${dlt}${nota}</div>${campo === 'roi' ? '' : spark(campo, true)}</div>`; // ROI cruza o zero: a linha do tempo "a partir do zero" não vale
+    return `<div class="faixa-cartao fc-cartao" data-card="${campo}"><div class="txt"><p class="fc-rotulo">${esc(rotulo)}</p><p class="num"><span class="v">${esc(fmt(valor, tipo))}</span>${un}</p>${dlt}${nota}</div>${spark(campo, true)}</div>`;
   }
 
   function renderCartoes(esperando) {
