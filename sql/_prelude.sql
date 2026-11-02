@@ -39,12 +39,6 @@ CREATE TEMP FUNCTION label_ad_group(x STRING) AS (COALESCE(NULLIF(TRIM(x), ''), 
 CREATE TEMP FUNCTION is_return(visit_type STRING) AS (COALESCE(visit_type = 'return', FALSE));
 CREATE TEMP FUNCTION counts_in_funnel(visit_type STRING) AS (NOT is_return(visit_type));
 
--- Canal de mídia (dado, não código): o canal de um gasto de mídia é a plataforma dele mais '_ads' ('google' vira
--- 'google_ads', 'meta' vira 'meta_ads'). Plataforma ausente = a padrão (Google). Evento de paciente sem marca de
--- canal cai no canal de mídia padrão. Cliente com Meta Ads entra gravando ad_spend com platform = 'meta'.
-CREATE TEMP FUNCTION default_platform() AS ('google');
-CREATE TEMP FUNCTION media_channel(platform STRING) AS (CONCAT(COALESCE(NULLIF(LOWER(TRIM(platform)), ''), default_platform()), '_ads'));
-
 -- Início do período: dia, semana (segunda) ou mês.
 CREATE TEMP FUNCTION bucket(d DATE, grain STRING) AS (
   CASE grain

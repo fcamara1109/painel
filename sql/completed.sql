@@ -2,7 +2,7 @@
 -- Retorno fica fora (ver is_return em _prelude.sql).
 -- Fonte: analytics.completed_procedures (faturado e honorário, de clean.honorarios).
 -- Campanha e grupo do lead vêm de funnel_events_attributed (completed_procedures não os traz).
--- Canal: event_channel, de sql/_channel.sql (colado na frente). Parâmetros: os mesmos do funnel.sql.
+-- Parâmetros: os mesmos do funnel.sql.
 WITH visit_types AS (
   SELECT event_id, JSON_VALUE(body, '$.visit_type') AS visit_type
   FROM `raw.events`
@@ -23,14 +23,12 @@ SELECT
   label_ad_group(e.lead_ad_group_name) AS lead_ad_group,
   c.billed_amount,
   c.physician_fee,
-  c.event_id,
-  COALESCE(ch.channel, media_channel(NULL)) AS channel
+  c.event_id
 FROM `analytics.completed_procedures` AS c
 JOIN `analytics.funnel_events_attributed` AS e
   ON e.tenant = c.tenant
  AND e.event_id = c.event_id
 LEFT JOIN visit_types AS v ON v.event_id = e.event_id
-LEFT JOIN event_channel AS ch ON ch.event_id = e.event_id
 WHERE c.tenant = @tenant
   AND counts_in_funnel(v.visit_type)
   AND IF(@basis = 'lead', c.cohort_date, c.event_date) BETWEEN @start_date AND @end_date

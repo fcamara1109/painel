@@ -1,7 +1,7 @@
 -- Lista de marcações (scheduled sem upsell + referral), com os mesmos filtros e a mesma base de data do funnel.sql.
 -- Retorno fica fora (ver is_return em _prelude.sql).
 -- Fonte: analytics.marked_patient_detail (marking_type = 'scheduled' ou 'referral').
--- Campanha e grupo do lead vêm de funnel_events_attributed. Canal: event_channel, de sql/_channel.sql (colado na frente). Parâmetros: os mesmos do funnel.sql.
+-- Campanha e grupo do lead vêm de funnel_events_attributed. Parâmetros: os mesmos do funnel.sql.
 WITH visit_types AS (
   SELECT event_id, JSON_VALUE(body, '$.visit_type') AS visit_type
   FROM `raw.events`
@@ -24,14 +24,12 @@ SELECT
   m.source,
   m.referred_to,
   m.reason,
-  m.event_id,
-  COALESCE(ch.channel, media_channel(NULL)) AS channel
+  m.event_id
 FROM `analytics.marked_patient_detail` AS m
 JOIN `analytics.funnel_events_attributed` AS e
   ON e.tenant = m.tenant
  AND e.event_id = m.event_id
 LEFT JOIN visit_types AS v ON v.event_id = e.event_id
-LEFT JOIN event_channel AS ch ON ch.event_id = e.event_id
 WHERE m.tenant = @tenant
   AND counts_in_funnel(v.visit_type)
   AND IF(@basis = 'lead', m.cohort_date, m.event_date) BETWEEN @start_date AND @end_date
