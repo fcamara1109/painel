@@ -25,10 +25,10 @@
   const FILTROS_SEM_CUSTO = ['procedure', 'location', 'modality', 'event_type'];
 
   // Canais de aquisição são DADO, não código: 'all' é o painel inteiro e o SQL devolve uma visão por canal que existe nos dados
-  // (coluna channel: google_ads, meta_ads, doctoralia...). Canal novo (outra plataforma de mídia, outro custo fixo) aparece sozinho.
+  // (coluna channel: google_ads, meta_ads, doctoralia...) e, numa seleção parcial de canais, a visão 'selected'. Canal novo (outra plataforma de mídia, outro custo fixo) aparece sozinho.
   // O texto na tela vem do id: google_ads vira "Google Ads".
   function rotuloCanal(id) {
-    if (id === 'all') return 'Total';
+    if (id === 'all' || id === 'selected') return 'Total';
     return String(id).split('_').map((w) => (w === 'ads' ? 'Ads' : w.charAt(0).toUpperCase() + w.slice(1))).join(' ');
   }
 
@@ -134,7 +134,7 @@
     cirurgias: [], // linhas do surgeries.sql (último snapshot do radar)
     tenants: null, // [{tenant, n, spend_rows}] do tenants.sql, carregado uma vez
     basis: 'event',
-    canal: 'all', // 'all' ou o id de um canal dos dados: escolhe a visão do funnel.sql, sem nova consulta
+    canal: [], // ids dos canais marcados no filtro Canal (vazio = Todos): escolhe a visão do funnel.sql (ver visaoDoCanal)
     aba: 'custo',
     start: periodoPadrao()[0],
     end: periodoPadrao()[1],
@@ -146,6 +146,7 @@
     lists: { completed: { rows: [], page: 0 }, marked: { rows: [], page: 0 } },
   };
   let seq = 0;
+  let canaisConsultados = null; // @channels da última consulta do funil: a seleção parcial só consulta de novo quando muda
   let token = null;
   let tokenClient = null;
   let modoPedido = null; // por que o último requestAccessToken saiu: 'clique' | 'silencioso' | 'renovacao'
@@ -418,9 +419,9 @@
     }
   }
 
-  // Mesmos parâmetros em todas as consultas; os 7 arrays vão sempre, mesmo vazios. O custo fixo não vai aqui: vem do BigQuery (evento fixed_cost).
+  // Mesmos parâmetros em todas as consultas; os 7 arrays e os canais da seleção parcial (@channels) vão sempre, mesmo vazios. O custo fixo não vai aqui: vem do BigQuery (evento fixed_cost).
   function parametros() {
-    return { tenant: state.tenant, start_date: state.start, end_date: state.end, grain: state.grain, basis: state.basis, ...state.filters };
+    return { tenant: state.tenant, start_date: state.start, end_date: state.end, grain: state.grain, basis: state.basis, channels: canaisParaSql(), ...state.filters };
   }
 
   // ------------------------------------------------------------ tela
@@ -637,19 +638,22 @@
 
   // Os canais que existem nos dados do período (sem 'all'), em ordem alfabética do nome na tela.
   function canaisDosDados() {
-    const ids = [...new Set(state.canais.map((r) => r.channel).filter((c) => c && c !== 'all'))];
+    const ids = [...new Set(state.canais.map((r) => r.channel).filter((c) => c && c !== 'all' && c !== 'selected'))];
     return ids.sort((a, b) => rotuloCanal(a).localeCompare(rotuloCanal(b), 'pt-BR'));
   }
 
   // "Por canal": uma linha por canal que existe nos dados e o Total, com a linha 'total' de cada um no funnel.sql.
   // Nenhuma linha inventada: canal sem dado no período não aparece, e campo sem valor aparece com "-".
+  // Com o filtro Canal: só as linhas dos canais marcados; um canal não tem Total, 2 ou mais têm o Total deles (visaoDoCanal).
   function renderCanais() {
     const total = (canal) => state.canais.find((r) => (r.channel || 'all') === canal && r.period === 'total') || null;
     const cab = COLS_CANAIS.map((c) => `<th>${esc(c[1])}</th>`).join('');
-    const corpo = canaisDosDados().concat(['all']).map((canal) => {
+    const marcados = state.canal.slice().sort((a, b) => rotuloCanal(a).localeCompare(rotuloCanal(b), 'pt-BR'));
+    const linhas = !marcados.length ? canaisDosDados().concat(['all']) : marcados.length === 1 ? marcados : marcados.concat([visaoDoCanal()]);
+    const corpo = linhas.map((canal) => {
       const r = total(canal);
       const cels = COLS_CANAIS.map(([campo, , tipo]) => celula(r ? r[campo] : null, tipo, campo)).join('');
-      return `<tr${canal === 'all' ? ' class="total"' : ''} data-linha-canal="${esc(canal)}"><td data-col="channel">${esc(rotuloCanal(canal))}</td>${cels}</tr>`;
+      return `<tr${canal === 'all' || canal === 'selected' ? ' class="total"' : ''} data-linha-canal="${esc(canal)}"><td data-col="channel">${esc(rotuloCanal(canal))}</td>${cels}</tr>`;
     }).join('');
     document.querySelector('#bloco-canais .rolagem').innerHTML = `<table data-tabela="canais"><thead><tr><th>Canal</th>${cab}</tr></thead><tbody>${corpo}</tbody></table>`;
     $('nota-canais').textContent = 'Gasto = mídia + custo fixo do canal (o valor do mês, rateado por dia). ROI = (honorário - gasto) ÷ gasto.';
@@ -687,7 +691,7 @@
   }
 
   // A lista de cada canal é a mesma consulta, filtrada pela coluna channel (como o funil).
-  const linhasDaLista = (chave) => state.lists[chave].rows.filter((r) => state.canal === 'all' || r.channel === state.canal);
+  const linhasDaLista = (chave) => state.lists[chave].rows.filter((r) => !state.canal.length || state.canal.includes(r.channel));
 
   function renderLista(chave) {
     const def = LISTAS[chave];
@@ -710,9 +714,22 @@
       : '';
   }
 
-  // O funil e as tabelas mostram um canal por vez (o do filtro Canal); o bloco "Por canal" mostra todos.
+  // Seleção parcial (2 ou mais canais, nem todos): paciente distinto e taxa não somam, então o SQL calcula a visão 'selected' (@channels, ver
+  // sql/funnel.sql) e a página consulta de novo quando ela muda. Nenhum canal ou todos = 'all'; um canal = a visão dele, sem nova consulta.
+  function canaisParaSql() {
+    const todos = (state.options.channel || []).map((o) => o.value);
+    const cobreTodos = todos.length > 0 && todos.every((c) => state.canal.includes(c));
+    return state.canal.length >= 2 && !cobreTodos ? state.canal.slice().sort() : [];
+  }
+
+  function visaoDoCanal() {
+    if (canaisParaSql().length) return 'selected';
+    return state.canal.length === 1 ? state.canal[0] : 'all';
+  }
+
+  // O funil, as tabelas e o bloco "Por canal" mostram os canais do filtro Canal (Todos: todos os canais e o Total).
   function aplicaCanal() {
-    state.funnel = state.canais.filter((r) => (r.channel || 'all') === state.canal);
+    state.funnel = state.canais.filter((r) => (r.channel || 'all') === visaoDoCanal());
   }
 
   function renderTudo() {
@@ -778,32 +795,34 @@
   const CHEVRON = '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
   function resumoFiltro(chave) {
-    const sel = state.filters[chave];
-    if (!sel.length) return FILTROS.find((f) => f[0] === chave)[2];
-    return sel.length === 1 ? sel[0] : `${sel.length} selecionados`;
+    const sel = chave === 'canal' ? state.canal : state.filters[chave];
+    if (!sel.length) return chave === 'canal' ? 'Todos' : FILTROS.find((f) => f[0] === chave)[2];
+    if (sel.length === 1) return chave === 'canal' ? rotuloCanal(sel[0]) : sel[0];
+    return `${sel.length} selecionados`;
   }
 
   function renderFiltros() {
     const caixa = $('filtros');
     const abertos = new Set([...caixa.querySelectorAll('details[open]')].map((d) => d.dataset.filtro));
-    // Canal: um só por vez (o funil troca de visão sem nova consulta); a lista vem dos canais que existem nos dados do período.
-    const canais = (state.options.channel || []).map((o) => o.value);
-    if (state.canal !== 'all' && !canais.includes(state.canal)) canais.push(state.canal);
-    const canal = `<div class="filtro-campo"><label class="fc-rotulo" for="f-canal">Canal</label><select class="campo" id="f-canal"><option value="all">Todos</option>${canais.map((c) => `<option value="${esc(c)}"${c === state.canal ? ' selected' : ''}>${esc(rotuloCanal(c))}</option>`).join('')}</select></div>`;
-    caixa.innerHTML = canal + FILTROS.map(([chave, rotulo]) => {
-      const opcoes = (state.options[chave] || []).slice();
-      for (const v of state.filters[chave]) if (!opcoes.some((o) => o.value === v)) opcoes.push({ value: v, n: 0 });
-      const marcados = new Set(state.filters[chave]);
+    // Canal: múltipla escolha como os outros filtros, sem marcação = Todos; a lista vem dos canais que existem nos dados do período.
+    const canais = (state.options.channel || []).map((o) => ({ value: o.value, n: o.n }));
+    for (const c of state.canal) if (!canais.some((o) => o.value === c)) canais.push({ value: c, n: 0 });
+    const campo = (chave, rotulo, opcoes, marcados, rotuloValor) => {
       const itens = opcoes.length
-        ? opcoes.map((o) => `<label><input type="checkbox" value="${esc(o.value)}" ${marcados.has(o.value) ? 'checked' : ''}> <span>${esc(o.value)}</span><span class="n">${NF0.format(o.n)}</span></label>`).join('')
+        ? opcoes.map((o) => `<label><input type="checkbox" value="${esc(o.value)}" ${marcados.has(o.value) ? 'checked' : ''}> <span>${esc(rotuloValor(o.value))}</span><span class="n">${NF0.format(o.n)}</span></label>`).join('')
         : '<div class="vazio">Sem valores no período.</div>';
       return `<div class="filtro-campo"><span class="fc-rotulo">${esc(rotulo)}</span><details class="filtro" id="f-${chave}" data-filtro="${chave}" ${abertos.has(chave) ? 'open' : ''}><summary><span class="val">${esc(resumoFiltro(chave))}</span>${CHEVRON}</summary><div class="opcoes">${itens}</div></details></div>`;
+    };
+    caixa.innerHTML = campo('canal', 'Canal', canais, new Set(state.canal), rotuloCanal) + FILTROS.map(([chave, rotulo]) => {
+      const opcoes = (state.options[chave] || []).slice();
+      for (const v of state.filters[chave]) if (!opcoes.some((o) => o.value === v)) opcoes.push({ value: v, n: 0 });
+      return campo(chave, rotulo, opcoes, new Set(state.filters[chave]), (v) => v);
     }).join('');
     atualizaContadorFiltros();
   }
 
   function atualizaContadorFiltros() {
-    const n = FILTROS.filter(([k]) => state.filters[k].length > 0).length + (state.canal !== 'all' ? 1 : 0);
+    const n = FILTROS.filter(([k]) => state.filters[k].length > 0).length + (state.canal.length ? 1 : 0);
     $('filtros-ativos').textContent = n ? ` · ${n} ativo${n === 1 ? '' : 's'}` : '';
   }
 
@@ -838,6 +857,7 @@
       if (!state.tenants) await carregaClientes();
       if (meu !== seq) return;
       const p = parametros();
+      canaisConsultados = p.channels.join();
       const [funil, realizados, marcacoes, opcoes] = await Promise.all([
         consulta('funnel', p),
         consulta('completed', p),
@@ -860,6 +880,7 @@
         mostraErro(e.message);
         // o esqueleto não pode ficar para sempre, e o número velho não volta como se fosse deste período
         state.canais = [];
+        canaisConsultados = null;
         state.lists = { completed: { rows: [], page: 0 }, marked: { rows: [], page: 0 } };
         renderTudo();
       }
@@ -926,7 +947,7 @@
       state.tenant = e.target.value;
       guardaTenantNaUrl();
       for (const k of Object.keys(state.filters)) state.filters[k] = []; // as opções mudam por cliente
-      state.canal = 'all';
+      state.canal = [];
       state.options = {};
       renderFiltros();
       recarrega(true);
@@ -936,18 +957,19 @@
     $('c-fim').addEventListener('change', (e) => { state.end = e.target.value; agenda(true); });
 
     $('filtros').addEventListener('change', (e) => {
-      if (e.target.id === 'f-canal') {
-        if (state.canal === e.target.value) return;
-        state.canal = e.target.value;
-        for (const chave of Object.keys(LISTAS)) state.lists[chave].page = 0;
-        atualizaContadorFiltros();
+      const caixa = e.target.closest('details');
+      if (!caixa || e.target.type !== 'checkbox') return;
+      const chave = caixa.dataset.filtro;
+      if (chave === 'canal') {
+        state.canal = [...caixa.querySelectorAll('input:checked')].map((i) => i.value);
+        for (const l of Object.keys(LISTAS)) state.lists[l].page = 0;
+        atualizaResumoFiltro('canal');
+        const sql = canaisParaSql().join();
+        if (sql && sql !== canaisConsultados) return agenda(false); // seleção parcial nova: a visão 'selected' vem de uma consulta
         if ($('painel').classList.contains('carregando')) aplicaCanal(); // a tela vem com a resposta
         else renderTudo();
         return;
       }
-      const caixa = e.target.closest('details');
-      if (!caixa || e.target.type !== 'checkbox') return;
-      const chave = caixa.dataset.filtro;
       state.filters[chave] = [...caixa.querySelectorAll('input:checked')].map((i) => i.value);
       atualizaResumoFiltro(chave);
       atualizaAvisos();

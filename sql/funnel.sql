@@ -4,7 +4,7 @@
 -- paciente é contado DISTINTO dentro do período (as views contam por dia), e o total é
 -- distinto no intervalo inteiro (ROLLUP), nunca a soma das linhas.
 -- Parâmetros: @tenant, @start_date, @end_date, @grain, @basis ('event'|'lead') e os arrays
--- @attribution, @procedure, @location, @modality, @event_type, @campaign, @ad_group.
+-- @attribution, @procedure, @location, @modality, @event_type, @campaign, @ad_group, e @channels (canais marcados no filtro Canal, só quando a seleção é parcial).
 -- Base 'lead': eventos de paciente caem na cohort_date; gasto, impressões e cliques ficam na data deles.
 -- Retorno fica fora (visit_type 'return' do BQ): ver is_return em _prelude.sql.
 -- Filtro de procedimento, local, modalidade ou tipo de evento não se aplica ao gasto: com
@@ -23,6 +23,10 @@
 -- e entra no gasto (spend = mídia + custo fixo; media_spend e fixed_spend saem separados). CPM, CPC e CTR seguem só a mídia.
 -- O custo fixo vale só sem filtro de atribuição, campanha ou grupo (não se atribui a um grupo de anúncio) e, como a mídia, sai NULL
 -- com filtro de procedimento, local, modalidade ou tipo de evento. ROI = (honorário - gasto) / gasto, NULL nas mesmas condições do ROAS.
+-- Seleção parcial de canais (2 ou mais, mas nem todos; só existe com 3 canais ou mais): paciente distinto e taxa não somam entre canais, então o
+-- JS nunca soma linhas de canal. Com @channels preenchido, cada evento desses canais sai também na visão 'selected' (mesmas contas, mesmo ROLLUP e
+-- mesma comparação com o período anterior das demais visões). @channels vazio: não existe visão 'selected'. Nenhum canal marcado ou todos os canais
+-- = visão 'all'; um canal = a visão dele; a página só consulta de novo quando a seleção parcial muda.
 -- Gasto zero (canal ou dia sem custo) deixa os custos por etapa (CPL, CPA, CPR, custo por agendamento) NULL: nunca R$ 0,00 que pareça real.
 WITH
 -- @event_channel
@@ -102,7 +106,7 @@ joined AS (
     dated.*,
     completed.physician_fee
   FROM dated
-  CROSS JOIN UNNEST(['all', dated.channel]) AS channel_view
+  CROSS JOIN UNNEST(ARRAY_CONCAT(['all', dated.channel], IF(dated.channel IN UNNEST(@channels), ['selected'], ARRAY<STRING>[]))) AS channel_view
   CROSS JOIN win
   LEFT JOIN `analytics.completed_procedures` AS completed
     ON completed.tenant = @tenant
