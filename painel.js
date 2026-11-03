@@ -185,6 +185,21 @@
     agendaRenovacao();
   }
 
+  // Com várias contas Google no navegador, o seletor abria a cada renovação. Guardado o e-mail da conta que entrou,
+  // o pedido seguinte leva login_hint e o Google renova sem perguntar. Falhou ao descobrir: segue sem e-mail, o login não depende dele.
+  function emailConhecido() {
+    return (token || lerRegistro() || {}).email; // vencido também vale: o registro fica no localStorage
+  }
+
+  async function descobreEmail(valor) {
+    try {
+      const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: `Bearer ${valor}` } });
+      if (!r.ok) return;
+      const { email } = await r.json();
+      if (email && token && token.value === valor) guardaToken({ ...token, email });
+    } catch (e) { /* sem e-mail: a renovação volta a abrir o seletor de contas */ }
+  }
+
   function limpaToken() {
     token = null;
     clearTimeout(timerRenova);
@@ -256,7 +271,10 @@
             return;
           }
           const jaNoPainel = !$('painel').hidden;
-          guardaToken({ value: resp.access_token, exp: Date.now() + Number(resp.expires_in || 3600) * 1000 });
+          // renovação mantém o e-mail se a descoberta falhar; o clique pode ser outra conta, então só vale o que o userinfo disser
+          const email = modoPedido === 'clique' ? undefined : emailConhecido();
+          guardaToken({ value: resp.access_token, exp: Date.now() + Number(resp.expires_in || 3600) * 1000, ...(email && { email }) });
+          descobreEmail(resp.access_token);
           mostraPainel();
           if (!jaNoPainel) recarrega(true);
         },
@@ -269,7 +287,8 @@
   function pedeToken(modo) {
     if (!tokenClient) { iniciaLogin(modo); return; }
     modoPedido = modo;
-    tokenClient.requestAccessToken({ prompt: '' });
+    const email = emailConhecido();
+    tokenClient.requestAccessToken(email ? { prompt: '', login_hint: email } : { prompt: '' });
   }
 
   function pedeLogin() {
