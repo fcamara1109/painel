@@ -1,7 +1,9 @@
-// Página Setup: o quadro de setup dos clientes, com edição. Só do Felipe (?pagina=setup; o botão não aparece no menu).
+// Página Setup: o quadro de setup dos clientes, com edição (botão Setup no topo do painel; ?pagina=setup abre direto).
 // O painel.js carrega o dado (login, token, consulta ao BigQuery) e chama PainelSetup.render(foto, sobre, ctx):
 //   foto  = a linha de analytics.setup_board: { generated_at, events_until, html, body }. O html vem SEM script; entra num iframe
 //           sem permissão de rodar script (sandbox), então nada que venha do BigQuery executa. `body` é o JSON do quadro.
+//           O iframe tem a altura do conteúdo (medida aqui): quem rola na vertical é a página. O título do hero da foto é tirado (a página
+//           já tem o dela); gaveta e aviso, que são fixos no iframe, são encostados na parte visível da janela (ancora).
 //   sobre = o último de cada campo dos seis eventos setup_* (planejado, estágio, nota, prioridade, tipo, nome), em todo o raw.events, sem
 //           corte por horário (a consulta é idempotente: o que a foto já tem volta com o mesmo valor). Pintados por cima da foto.
 //           Cobertura: células, totais, resumo por cliente, nome, tipo (chip), nota e prioridade (gaveta). Fica pra próxima foto: a ordem e os
@@ -22,6 +24,10 @@
   };
 
   let ctxAtual = null;
+  let obs = null; // o ResizeObserver do quadro de agora (do painel: dentro do iframe sem script nada roda)
+  let reancora = null; // encosta gaveta e aviso na janela, se abertos; o painel rola, a janela muda de tamanho: chama de novo
+  window.addEventListener('scroll', () => { if (reancora) reancora(); }, { passive: true });
+  window.addEventListener('resize', () => { if (reancora) reancora(); });
 
   function el(doc, tag, txt) { const e = doc.createElement(tag); if (txt !== undefined) e.textContent = txt; return e; }
   function limpa(n) { while (n.firstChild) n.removeChild(n.firstChild); }
@@ -34,6 +40,8 @@
     const aviso = doc.getElementById('aviso');
     const gaveta = doc.getElementById('painel');
     if (!ed || !aviso || !gaveta) return;
+    const titulo = doc.querySelector('.topo h1'); // o título e a hora da foto já estão na página (h2 e subtítulo): do hero ficam os totais
+    if (titulo) titulo.parentNode.remove();
     const ops = Array.prototype.slice.call(ed.querySelectorAll('.ed-op'));
     const TINTAS = D.tintas;
     const cels = {};
@@ -195,8 +203,27 @@
       recalcula();
     }
 
+    // O iframe tem a altura do conteúdo: quem rola é a página. Mede o corpo (o que é fixo ou absoluto não conta), mais o menu se estiver
+    // aberto (ele pode passar do fim da tabela) e a barra de rolagem de lado do iframe, se houver (tabela larga rola na horizontal).
+    function ajusta() {
+      const barra = Math.max(0, win.innerHeight - doc.documentElement.clientHeight);
+      const menu = ed.hidden ? 0 : ed.getBoundingClientRect().bottom;
+      quadro.style.height = (Math.ceil(Math.max(doc.body.getBoundingClientRect().height, menu)) + barra) + 'px';
+    }
+
+    // Gaveta e aviso são fixos NO IFRAME, que agora é do tamanho do quadro: sem isto ficariam no fim da página, longe de quem clicou.
+    // Encosta os dois no fim da parte visível da janela (e a altura máxima da gaveta passa a ser 70% da janela, não do iframe).
+    function ancora() {
+      const fora = Math.max(0, quadro.getBoundingClientRect().bottom - window.innerHeight); // quanto do quadro passa do fim da janela
+      gaveta.style.bottom = fora + 'px';
+      gaveta.style.maxHeight = Math.round(window.innerHeight * 0.7) + 'px';
+      aviso.style.bottom = 'calc(' + fora + 'px + var(--fc-e-3))';
+    }
+    reancora = () => { if (!gaveta.hidden || !aviso.hidden) ancora(); };
+
     function mostra(txt) {
       aviso.textContent = txt;
+      ancora();
       aviso.hidden = false;
       window.clearTimeout(timer); // o timer é do painel: no iframe sem script ele nunca dispararia
       timer = window.setTimeout(() => { aviso.hidden = true; }, 4500);
@@ -205,6 +232,7 @@
     function fechaEditor() {
       const td = alvo ? alvo.td : null;
       ed.hidden = true;
+      ajusta();
       alvo = null;
       const b = td ? td.querySelector('button') : null;
       if (b) b.focus();
@@ -229,6 +257,7 @@
       const esquerda = Math.max(8, Math.min(r.left, win.innerWidth - ed.offsetWidth - 8));
       ed.style.left = (esquerda + win.pageXOffset) + 'px';
       ed.style.top = (r.bottom + win.pageYOffset + 4) + 'px';
+      ajusta();
       if (foco) foco.focus();
     }
 
@@ -297,8 +326,9 @@
       doc.getElementById('p-precisa').textContent = x.precisa ? 'O que precisa: ' + x.precisa : '';
       lista('p-tarefas', x.tarefas.map((t) => '#' + t.numero + ' ' + t.nome), 'Nenhuma tarefa aberta.');
       lista('p-hist', x.historico.map((h) => h.quando + ' · ' + h.texto), 'Sem histórico.');
+      ancora();
       gaveta.hidden = false;
-      gaveta.focus();
+      gaveta.focus({ preventScroll: true });
     }
 
     function fechaGaveta() {
@@ -323,6 +353,10 @@
       else if (!gaveta.hidden) fechaGaveta();
     });
     Object.keys(cels).forEach(desenha); // nome novo, estado novo e totais refeitos antes de o gabarito (e a pessoa) mexerem
+    ajusta();
+    if (obs) obs.disconnect();
+    obs = window.ResizeObserver ? new ResizeObserver(ajusta) : null; // largura da janela, fonte que chega: o corpo muda de altura
+    if (obs) obs.observe(doc.body);
     quadro.dataset.pronto = 'sim'; // o quadro está desenhado e os cliques ligados (o gabarito espera por isto)
   }
 
@@ -331,6 +365,8 @@
     const vazio = document.getElementById('set-vazio');
     const sub = document.getElementById('set-sub');
     ctxAtual = ctx;
+    if (obs) { obs.disconnect(); obs = null; }
+    reancora = null;
     if (!foto) {
       // sem foto (ainda não rodou, ou passou de 7 dias): não desenha quadro velho nem em branco
       quadro.hidden = true;

@@ -127,7 +127,7 @@
     return [isoLocal(new Date(h.getFullYear(), h.getMonth() - 1, 1)), isoLocal(new Date(h.getFullYear(), h.getMonth(), 0))];
   }
 
-  // 'setup' só se abre pela URL (?pagina=setup): o quadro é do Felipe e não aparece no menu de quem recebe o painel.
+  // 'setup' tem botão próprio no topo (à esquerda do seletor de cliente), fora do grupo Funil | Cirurgias | Pacientes. Na página Setup o seletor de cliente some (o quadro é de todos).
   function paginaDaUrl() {
     const p = new URLSearchParams(location.search).get('pagina');
     return p === 'cirurgias' || p === 'setup' || p === 'pacientes' ? p : 'funil';
@@ -219,6 +219,7 @@
     $('login').hidden = false;
     $('btn-sair').hidden = true;
     $('nav-pagina').hidden = true;
+    $('nav-setup').hidden = true;
     $('estado-login').textContent = 'Sem login';
     $('login-msg').textContent = msg || 'Entre com a conta Google que tem acesso ao BigQuery.';
   }
@@ -228,6 +229,7 @@
     $('painel').hidden = false;
     $('btn-sair').hidden = false;
     $('nav-pagina').hidden = false;
+    $('nav-setup').hidden = false;
     $('estado-login').textContent = 'Login ativo';
   }
 
