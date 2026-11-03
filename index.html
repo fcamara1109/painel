@@ -10,8 +10,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Schibsted+Grotesk:wght@300;400;500&display=swap">
 <!-- Fonte única de cor, fonte, espaço e forma (marca da casa). Não copiar valores: o publicar.sh copia o tokens.css canônico. -->
-<link rel="stylesheet" href="tokens.css?v=d50d5b137d">
-<link rel="stylesheet" href="cirurgias.css?v=d50d5b137d">
+<link rel="stylesheet" href="tokens.css?v=4efcc66be8">
+<link rel="stylesheet" href="cirurgias.css?v=4efcc66be8">
+<link rel="stylesheet" href="pacientes.css?v=4efcc66be8">
 <style>
 body { margin: 0; }
 :focus-visible { outline: 3px solid var(--fc-accent); outline-offset: 2px; }
@@ -215,6 +216,7 @@ td.txt small.sv { white-space: nowrap; }
     <div class="seg" id="nav-pagina" role="group" aria-label="Página" hidden>
       <button type="button" id="pag-funil" data-pagina="funil" aria-pressed="true">Funil</button>
       <button type="button" id="pag-cirurgias" data-pagina="cirurgias" aria-pressed="false">Cirurgias</button>
+      <button type="button" id="pag-pacientes" data-pagina="pacientes" aria-pressed="false">Pacientes</button>
     </div>
     <div class="topo-campo">
       <label class="fc-rotulo" for="c-tenant">Cliente</label>
@@ -349,11 +351,30 @@ td.txt small.sv { white-space: nowrap; }
           <span>Só leitura. Esta lista é para revisão: ninguém recebe mensagem por causa dela. Quando o Felipe registra que um paciente deve ser acompanhado, a linha dele passa a mostrar "Acompanhar: sim" na próxima atualização da lista.</span>
         </p>
       </section>
+
+      <section id="pg-pacientes" aria-labelledby="t-pacientes" hidden>
+        <div class="pc-cab">
+          <h2 class="fc-h2" id="t-pacientes">Acompanhamento de pacientes</h2>
+          <p class="pc-contador" id="pc-contador" aria-live="polite"></p>
+        </div>
+        <div class="erro" id="pc-erro" hidden></div>
+        <nav class="pc-seg pc-nav-m" id="pc-nav-m" aria-label="Partes da tela"></nav>
+        <div class="pc-grade" id="pc-grade" data-pane="conversa">
+          <section class="pc-col pc-col-lista" aria-label="Lista de pacientes"><div class="pc-lista fc-cartao" id="pc-lista"></div></section>
+          <section class="pc-col pc-col-meio" aria-label="Conversa e ação" id="pc-meio"></section>
+          <section class="pc-col pc-col-dir" aria-label="Prontuário e perfil" id="pc-dir"></section>
+        </div>
+        <footer class="pc-logbar" id="pc-logbar" aria-label="Log desta sessão"></footer>
+        <div class="pc-toast" id="pc-toast" role="status" aria-live="polite"></div>
+      </section>
+
     </section>
   </main>
 </div>
-<script src="config.js?v=d50d5b137d"></script>
-<script src="cirurgias.js?v=d50d5b137d"></script>
-<script src="painel.js?v=d50d5b137d"></script>
+<script src="config.js?v=4efcc66be8"></script>
+<script src="followup.js?v=4efcc66be8"></script>
+<script src="cirurgias.js?v=4efcc66be8"></script>
+<script src="pacientes.js?v=4efcc66be8"></script>
+<script src="painel.js?v=4efcc66be8"></script>
 </body>
 </html>

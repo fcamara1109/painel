@@ -16,7 +16,8 @@ SELECT
   last_interaction_kind,
   follow_up,
   follow_up_decided_on,
-  phone
+  phone,
+  diagnosis
 FROM `clean.surgery_followup`
 WHERE tenant = @tenant
   AND snapshot_at = (

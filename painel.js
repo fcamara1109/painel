@@ -127,10 +127,15 @@
     return [isoLocal(new Date(h.getFullYear(), h.getMonth() - 1, 1)), isoLocal(new Date(h.getFullYear(), h.getMonth(), 0))];
   }
 
+  function paginaDaUrl() {
+    const p = new URLSearchParams(location.search).get('pagina');
+    return p === 'cirurgias' || p === 'pacientes' ? p : 'funil';
+  }
+
   // ------------------------------------------------------------ estado
   const state = {
     tenant: new URLSearchParams(location.search).get('tenant') || CFG.TENANT,
-    pagina: new URLSearchParams(location.search).get('pagina') === 'cirurgias' ? 'cirurgias' : 'funil',
+    pagina: paginaDaUrl(),
     cirurgias: [], // linhas do surgeries.sql (último snapshot do radar)
     tenants: null, // [{tenant, n, spend_rows}] do tenants.sql, carregado uma vez
     basis: 'event',
@@ -391,10 +396,14 @@
     return linhasDoResultado(resp, linhas);
   }
 
-  async function fixture(nome) {
+  async function fixtureBruto(nome) {
     const r = await fetch(`fixtures/${nome}.json?v=${CFG.VERSION}`);
     if (!r.ok) throw new Error(`Não achei fixtures/${nome}.json`);
-    const resp = await r.json();
+    return r.json();
+  }
+
+  async function fixture(nome) {
+    const resp = await fixtureBruto(nome);
     return linhasDoResultado(resp, resp.rows || []);
   }
 
@@ -411,6 +420,9 @@
     try {
       if (FIXTURE) {
         window.__consultas.push({ nome, params: JSON.parse(JSON.stringify(params)) });
+        // Pacientes e mensagens são listas simples (fixtures/README_pacientes.md), não o formato do BigQuery; as mensagens são só as do telefone pedido.
+        if (nome === 'patients') return await fixtureBruto('patients');
+        if (nome === 'messages') return (await fixtureBruto('messages')).filter((m) => m.phone_key === params.phone_key).sort((a, b) => (a.sent_at || '').localeCompare(b.sent_at || '') || a.seq - b.seq);
         return await fixture(['completed', 'marked', 'options', 'tenants', 'surgeries'].includes(nome) ? nome : 'funnel');
       }
       return await bqQuery(nome, params);
@@ -781,10 +793,92 @@
     }
   }
 
+  // ------------------------------------------------------------ página Pacientes (acompanhamento pelo WhatsApp da Júlia)
+  // O desenho e a regra moram em pacientes.js e _shared/followup.js. Aqui: a lista (analytics.patient_followup), a conversa de um telefone
+  // por vez (analytics.messages), o estado do dia e o ÚNICO ponto de ação (acaoPaciente), que vai ao servidor.
+  let seqPac = 0;
+  const FIXTURE_ACAO_URL = 'https://acao.fixture.invalid/pacientes'; // literal-ok: só no ?fixture=1; o gabarito intercepta esta URL, nada sai da máquina
+  const mensagensPaciente = async (phoneKey) => {
+    try {
+      return await consulta('messages', { tenant: state.tenant, phone_key: phoneKey });
+    } catch (e) {
+      if (e instanceof AuthError) return null; // a sessão caiu: o login já apareceu
+      throw e;
+    }
+  };
+
+  // Regras do cliente, agendados ativos, modelos de mensagem, teto do dia e telefone de teste. Quem entrega é o servidor: action=state do mesmo
+  // webhook do check-in (contrato em _shared/fixtures/painel_acao/contrato.md). Sem resposta boa devolve null: a página mostra tudo, ações desligadas.
+  async function estadoPacientes() {
+    const r = await acaoPaciente('state', {});
+    return r.resp && r.resp.status === 'ok' ? r.resp : null;
+  }
+
+  // Devolve { ok, resp } (resp = o corpo que o servidor respondeu; ok = a ação valeu), { semLogin: true } quando a sessão caiu, ou { ok: false, message }
+  // quando nem houve resposta (sem rede, sem permissão, demora). Quem escolhe o texto de cada status é a página (pacientes.js).
+  const ACAO_ESPERA_MS = 75000; // o servidor leva 22 a 35 s por ação com telefone (contrato.md); passou disso a resposta não vem mais
+  const ACAO_VALEU = ['ok', 'enviado', 'agendado', 'cancelado'];
+  async function acaoPaciente(nome, corpo) {
+    const url = FIXTURE ? FIXTURE_ACAO_URL : CFG.CHECKIN_URL;
+    if (!url) return { ok: false, message: 'As ações ainda não estão ligadas.' };
+    if (!FIXTURE && (!token || token.exp <= Date.now() + 30000)) {
+      token = null;
+      mostraLogin('Sua sessão expirou. Entre de novo.');
+      return { semLogin: true };
+    }
+    let r;
+    try {
+      r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: nome, tenant: state.tenant, access_token: token ? token.value : null, ...corpo }), signal: AbortSignal.timeout(ACAO_ESPERA_MS) });
+    } catch (e) {
+      if (e && e.name === 'TimeoutError') return { ok: false, message: 'O servidor demorou demais. A ação pode ter valido: confira o Log antes de repetir.' };
+      return { ok: false, message: 'Não consegui falar com o servidor. Tente de novo.' };
+    }
+    if (r.status === 401) {
+      limpaToken();
+      mostraLogin('Entre de novo para liberar as ações.');
+      return { semLogin: true };
+    }
+    if (r.status === 403) return { ok: false, message: 'Sem permissão para esta ação.' };
+    let resp = {};
+    try { resp = await r.json(); } catch (e) { /* resposta sem corpo: falha */ }
+    return { ok: r.ok && ACAO_VALEU.indexOf(resp.status) >= 0, resp };
+  }
+
+  const ctxPac = () => ({ esc, fmtData, nf0: NF0, hoje: hojeIso(), esqueleto: ESQUELETO_TABELA, tenant: state.tenant, mensagens: mensagensPaciente, acao: acaoPaciente, recarrega: () => carregaPacientes(true) });
+
+  async function carregaPacientes(silencioso) {
+    const meu = ++seqPac;
+    $('pc-erro').hidden = true;
+    if (!silencioso) window.PainelPacientes.render(null, ctxPac());
+    const app = $('painel');
+    app.classList.add('carregando');
+    app.setAttribute('aria-busy', 'true');
+    try {
+      if (!state.tenants) await carregaClientes();
+      if (meu !== seqPac) return;
+      const [linhas, estado] = await Promise.all([consulta('patients', { tenant: state.tenant }), estadoPacientes()]);
+      if (meu !== seqPac) return;
+      window.PainelPacientes.render({ linhas, estado }, ctxPac());
+    } catch (e) {
+      if (e instanceof AuthError) return;
+      if (meu === seqPac) {
+        $('pc-erro').textContent = 'Não consegui carregar os pacientes. Tente de novo em alguns minutos.';
+        $('pc-erro').hidden = false;
+        window.PainelPacientes.render(false, ctxPac()); // limpa a tela sem desenhar "lista vazia" em cima do erro
+      }
+    } finally {
+      if (meu === seqPac) {
+        app.classList.remove('carregando');
+        app.removeAttribute('aria-busy');
+      }
+    }
+  }
+
   function mudaPagina(pagina) {
     state.pagina = pagina;
     $('pg-funil').hidden = pagina !== 'funil';
     $('pg-cirurgias').hidden = pagina !== 'cirurgias';
+    $('pg-pacientes').hidden = pagina !== 'pacientes';
     document.querySelectorAll('[data-pagina]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.pagina === pagina)));
     const q = new URLSearchParams(location.search);
     if (pagina === 'funil') q.delete('pagina'); else q.set('pagina', pagina);
@@ -843,6 +937,7 @@
   async function recarrega(comOpcoes) {
     if (!FIXTURE && !token) return;
     if (state.pagina === 'cirurgias') return carregaCirurgias();
+    if (state.pagina === 'pacientes') return carregaPacientes();
     if (state.start > state.end) {
       mostraErro('A data inicial vem depois da final.');
       return;
