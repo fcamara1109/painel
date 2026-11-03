@@ -127,9 +127,10 @@
     return [isoLocal(new Date(h.getFullYear(), h.getMonth() - 1, 1)), isoLocal(new Date(h.getFullYear(), h.getMonth(), 0))];
   }
 
+  // 'setup' só se abre pela URL (?pagina=setup): o quadro é do Felipe e não aparece no menu de quem recebe o painel.
   function paginaDaUrl() {
     const p = new URLSearchParams(location.search).get('pagina');
-    return p === 'cirurgias' || p === 'pacientes' ? p : 'funil';
+    return p === 'cirurgias' || p === 'setup' || p === 'pacientes' ? p : 'funil';
   }
 
   // ------------------------------------------------------------ estado
@@ -346,6 +347,31 @@
     return corpo.motivo === 'sem_whatsapp' ? 'sem_whatsapp' : 'falha';
   }
 
+  // Grava eventos do quadro de setup (webhook setup-anotar). O servidor confere o token (app do painel, e-mail do Felipe) e só responde
+  // 'ok' depois de gravar no BigQuery. Devolve 'ok' | 'sem_permissao' | 'falha' | 'sem_login' (token vencido ou recusado: já voltou pro login).
+  async function anotaSetup(eventos) {
+    if (!token || token.exp <= Date.now() + 30000) {
+      token = null;
+      mostraLogin('Sua sessão expirou. Entre de novo.');
+      return 'sem_login';
+    }
+    let r;
+    try {
+      r = await fetch(CFG.SETUP_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ access_token: token.value, events: eventos }) });
+    } catch (e) {
+      return 'falha';
+    }
+    if (r.status === 401) {
+      limpaToken();
+      mostraLogin('Entre de novo para gravar no quadro.');
+      return 'sem_login';
+    }
+    if (r.status === 403) return 'sem_permissao';
+    let corpo = {};
+    try { corpo = await r.json(); } catch (e) { /* resposta sem corpo: falha */ }
+    return r.ok && corpo.status === 'ok' ? 'ok' : 'falha';
+  }
+
   async function textoSql(nome) {
     if (!sqlCache[nome]) {
       sqlCache[nome] = fetch(`sql/${nome}.sql?v=${CFG.VERSION}`).then((r) => {
@@ -423,7 +449,7 @@
         // Pacientes e mensagens são listas simples (fixtures/README_pacientes.md), não o formato do BigQuery; as mensagens são só as do telefone pedido.
         if (nome === 'patients') return await fixtureBruto('patients');
         if (nome === 'messages') return (await fixtureBruto('messages')).filter((m) => m.phone_key === params.phone_key).sort((a, b) => (a.sent_at || '').localeCompare(b.sent_at || '') || a.seq - b.seq);
-        return await fixture(['completed', 'marked', 'options', 'tenants', 'surgeries'].includes(nome) ? nome : 'funnel');
+        return await fixture(['completed', 'marked', 'options', 'tenants', 'surgeries', 'setup_board', 'setup_events'].includes(nome) ? nome : 'funnel');
       }
       return await bqQuery(nome, params);
     } finally {
@@ -874,11 +900,44 @@
     }
   }
 
+  // ------------------------------------------------------------ página Setup (quadro de setup, só do Felipe)
+  // O desenho e a edição moram em setup.js. Aqui: a foto (analytics.setup_board) e o que veio depois dela (raw.events), pelo login.
+  let seqSet = 0;
+
+  async function carregaSetup() {
+    const meu = ++seqSet;
+    $('set-erro').hidden = true;
+    const app = $('painel');
+    app.classList.add('carregando');
+    app.setAttribute('aria-busy', 'true');
+    try {
+      const [foto] = await consulta('setup_board', {});
+      if (meu !== seqSet) return;
+      const sobre = foto ? await consulta('setup_events', { events_until: foto.events_until }) : [];
+      if (meu !== seqSet) return;
+      window.PainelSetup.render(foto || null, sobre, { anota: anotaSetup });
+    } catch (e) {
+      if (e instanceof AuthError) return;
+      if (meu === seqSet) {
+        $('set-erro').textContent = 'Não consegui carregar o quadro de setup. Tente de novo em alguns minutos.';
+        $('set-erro').hidden = false;
+        window.PainelSetup.render(null, [], { anota: anotaSetup });
+      }
+    } finally {
+      if (meu === seqSet) {
+        app.classList.remove('carregando');
+        app.removeAttribute('aria-busy');
+      }
+    }
+  }
+
   function mudaPagina(pagina) {
     state.pagina = pagina;
     $('pg-funil').hidden = pagina !== 'funil';
     $('pg-cirurgias').hidden = pagina !== 'cirurgias';
     $('pg-pacientes').hidden = pagina !== 'pacientes';
+    $('pg-setup').hidden = pagina !== 'setup';
+    document.querySelector('.topo-campo').hidden = pagina === 'setup'; // o quadro é de todos os clientes: sem seletor
     document.querySelectorAll('[data-pagina]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.pagina === pagina)));
     const q = new URLSearchParams(location.search);
     if (pagina === 'funil') q.delete('pagina'); else q.set('pagina', pagina);
@@ -938,6 +997,7 @@
     if (!FIXTURE && !token) return;
     if (state.pagina === 'cirurgias') return carregaCirurgias();
     if (state.pagina === 'pacientes') return carregaPacientes();
+    if (state.pagina === 'setup') return carregaSetup();
     if (state.start > state.end) {
       mostraErro('A data inicial vem depois da final.');
       return;

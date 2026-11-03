@@ -10,9 +10,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Schibsted+Grotesk:wght@300;400;500&display=swap">
 <!-- Fonte única de cor, fonte, espaço e forma (marca da casa). Não copiar valores: o publicar.sh copia o tokens.css canônico. -->
-<link rel="stylesheet" href="tokens.css?v=4efcc66be8">
-<link rel="stylesheet" href="cirurgias.css?v=4efcc66be8">
-<link rel="stylesheet" href="pacientes.css?v=4efcc66be8">
+<link rel="stylesheet" href="tokens.css?v=9cb27e6bc0">
+<link rel="stylesheet" href="cirurgias.css?v=9cb27e6bc0">
+<link rel="stylesheet" href="pacientes.css?v=9cb27e6bc0">
 <style>
 body { margin: 0; }
 :focus-visible { outline: 3px solid var(--fc-accent); outline-offset: 2px; }
@@ -184,7 +184,9 @@ small.sv { display: block; color: var(--fc-ink-3); font-size: var(--fc-t-rotulo)
 .esq-linha { height: 22px; }
 
 /* página Cirurgias: o estilo da fila está em cirurgias.css */
-#pg-funil, #pg-cirurgias { display: flex; flex-direction: column; gap: var(--fc-e-3); }
+#pg-funil, #pg-cirurgias, #pg-setup { display: flex; flex-direction: column; gap: var(--fc-e-3); }
+/* página Setup: o quadro vive num iframe sem script (setup.js); o estilo dele é o do arquivo gerado pelo ops_log.py */
+#set-quadro { width: 100%; height: calc(100vh - 220px); min-height: 480px; border: 1px solid var(--fc-hair); border-radius: var(--fc-r-cartao); background: var(--fc-paper); }
 td.txt small.sv { white-space: nowrap; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -368,13 +370,23 @@ td.txt small.sv { white-space: nowrap; }
         <div class="pc-toast" id="pc-toast" role="status" aria-live="polite"></div>
       </section>
 
+      <section id="pg-setup" aria-labelledby="t-setup" hidden>
+        <div class="cir-cab">
+          <h2 class="fc-h2" id="t-setup">Setup dos clientes</h2>
+          <p class="sub" id="set-sub"></p>
+        </div>
+        <div class="erro" id="set-erro" hidden></div>
+        <p class="nota" id="set-vazio" hidden>Ainda não há foto do quadro. Ela é gerada a cada 30 minutos; se passou disso, avise o Felipe.</p>
+        <iframe id="set-quadro" title="Quadro de setup dos clientes" sandbox="allow-same-origin" hidden></iframe>
+      </section>
     </section>
   </main>
 </div>
-<script src="config.js?v=4efcc66be8"></script>
-<script src="followup.js?v=4efcc66be8"></script>
-<script src="cirurgias.js?v=4efcc66be8"></script>
-<script src="pacientes.js?v=4efcc66be8"></script>
-<script src="painel.js?v=4efcc66be8"></script>
+<script src="config.js?v=9cb27e6bc0"></script>
+<script src="followup.js?v=9cb27e6bc0"></script>
+<script src="cirurgias.js?v=9cb27e6bc0"></script>
+<script src="pacientes.js?v=9cb27e6bc0"></script>
+<script src="setup.js?v=9cb27e6bc0"></script>
+<script src="painel.js?v=9cb27e6bc0"></script>
 </body>
 </html>

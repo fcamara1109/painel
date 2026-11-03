@@ -1,0 +1,66 @@
+{
+ "schema": {
+  "fields": [
+   {
+    "name": "tenant",
+    "type": "STRING"
+   },
+   {
+    "name": "module",
+    "type": "STRING"
+   },
+   {
+    "name": "event_name",
+    "type": "STRING"
+   },
+   {
+    "name": "value",
+    "type": "STRING"
+   },
+   {
+    "name": "seq",
+    "type": "INTEGER"
+   }
+  ]
+ },
+ "rows": [
+  {
+   "f": [
+    {
+     "v": "exemplo_a"
+    },
+    {
+     "v": "scheduling"
+    },
+    {
+     "v": "setup_stage"
+    },
+    {
+     "v": "no ar"
+    },
+    {
+     "v": "1793631660001"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "exemplo_c"
+    },
+    {
+     "v": "ai_attendant"
+    },
+    {
+     "v": "setup_planned"
+    },
+    {
+     "v": "sim"
+    },
+    {
+     "v": "1793631670002"
+    }
+   ]
+  }
+ ]
+}

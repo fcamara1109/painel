@@ -74,6 +74,8 @@
 #pg-pacientes .pc-lista { display: flex; flex-direction: column; gap: var(--fc-e-2); padding: var(--fc-e-2); flex: 1; min-height: 0; }
 #pg-pacientes .pc-filtros { display: flex; flex-direction: column; gap: var(--fc-e-1); }
 #pg-pacientes .pc-filtros select.pc-campo { padding-right: var(--fc-e-1); }
+#pg-pacientes .pc-busca { caret-color: var(--fc-accent-forte); }
+#pg-pacientes .pc-busca::placeholder { color: var(--fc-ink-2); opacity: 1; }
 #pg-pacientes .pc-btn-alerta { display: flex; align-items: center; justify-content: center; gap: calc(var(--fc-e-1) / 2); width: 100%; min-height: var(--fc-toque); padding: 0 var(--fc-e-1); white-space: nowrap; border: 1px solid var(--fc-erro); border-radius: var(--fc-r-pilula); background: color-mix(in srgb, var(--fc-erro) 10%, var(--fc-surface)); color: var(--fc-erro); font-size: var(--fc-t-legenda); font-weight: 600;
   transition: background var(--fc-dur) var(--fc-curva); }
 #pg-pacientes .pc-btn-alerta:hover { background: color-mix(in srgb, var(--fc-erro) 18%, var(--fc-surface)); }

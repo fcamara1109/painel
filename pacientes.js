@@ -29,7 +29,7 @@
   const COMANDOS = [['send', 'Enviar agora', 'E'], ['schedule', 'Agendar', 'A'], ['skip', 'Pular hoje', 'P'], ['snooze', 'Soneca', 'S'], ['discard', 'Descartar', 'D'], ['convert', 'Converteu', 'C']];
   const DIA_MAX = 4;
 
-  const ui = { tenant: null, view: 'due_today', aud: '', closedOpen: false, diasAbertos: {}, sel: null, panel: null, pane: 'conversa', pendente: null, logOpen: false };
+  const ui = { tenant: null, view: 'due_today', aud: '', busca: '', closedOpen: false, diasAbertos: {}, sel: null, panel: null, pane: 'conversa', pendente: null, logOpen: false };
   const conversas = {}; // phone_key -> { estado: 'carregando' | 'ok' | 'erro', msgs }, só desta sessão
   const rascunhos = {}; // phone_key -> texto editado antes de enviar
   const emCurso = {}; // phone_key -> { nome, id }: ação esperando o servidor (22 a 35 s com telefone); o paciente fica "processando" e a fila segue
@@ -104,7 +104,17 @@
     out.push({ key: 'closed', list: FECHADOS.reduce((acc, k) => acc.concat(listaGrupo(k)), []) });
     return out;
   }
+  // busca por cima dos filtros: com texto, olha TODOS os pacientes (ignora a visão e a audiência). Só dígitos = trecho do telefone; texto = primeiro nome
+  const semAcento = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  function buscados() {
+    const bruto = ui.busca.trim(), digitos = bruto.replace(/[\s()\-+.]/g, '');
+    if (/^\d+$/.test(digitos)) return S.todos.filter((p) => String(p.phone || '').replace(/\D/g, '').indexOf(digitos) >= 0);
+    const nome = semAcento(bruto);
+    return S.todos.filter((p) => semAcento(p.first_name).indexOf(nome) >= 0);
+  }
+  const buscando = () => ui.busca.trim() !== '';
   function listaAtual() {
+    if (buscando()) return buscados();
     if (ui.view !== 'all') return listaGrupo(ui.view);
     return gruposTodos().reduce((acc, g) => (g.key !== 'closed' || fechadosAbertos() ? acc.concat(g.list) : acc), []);
   }
@@ -166,7 +176,8 @@
       const n = base.filter((p) => p.audience === k).length;
       return `<option value="${k}"${ui.aud === k ? ` selected>${esc(FU_AUDIENCE_LABEL[k])}` : `>${esc(FU_AUDIENCE_LABEL[k])} (${n})`}</option>`;
     }).join('')}`;
-    return `<div class="pc-filtros"><label class="pc-so-leitor" for="pc-f-view">Quem mostrar</label><select class="pc-campo" id="pc-f-view" data-filter="view">${visoes}</select>`
+    return `<div class="pc-filtros"><label class="pc-so-leitor" for="pc-busca">Buscar por telefone ou nome</label><input class="pc-campo pc-busca" id="pc-busca" type="search" autocomplete="off" inputmode="search" placeholder="Telefone ou nome" value="${esc(ui.busca)}">`
+      + `<label class="pc-so-leitor" for="pc-f-view">Quem mostrar</label><select class="pc-campo" id="pc-f-view" data-filter="view">${visoes}</select>`
       + `<label class="pc-so-leitor" for="pc-f-aud">Audiência</label><select class="pc-campo" id="pc-f-aud" data-filter="aud"${ui.view === 'unsegmented' ? ' disabled' : ''}>${auds}</select>`
       + `${ui.view === 'julia_talking' ? '<p class="pc-dica">Pacientes que responderam. A Júlia está no meio da conversa, não precisa enviar.</p>' : ''}</div>`;
   }
@@ -186,7 +197,7 @@
     const cur = emCurso[p.phone_key], res = resultados[p.phone_key];
     const selo = cur ? `<span class="pc-selo pc-proc"><span class="pc-giro" aria-hidden="true"></span>${esc(ROTULO_CURSO[cur.nome])}</span>` : seloHtml(p, sit);
     return `<li><button type="button" class="pc-item" data-act="pick" data-id="${S.idx.get(p)}"${p.phone_key === ui.sel ? ' aria-current="true"' : ''}${cur ? ' aria-busy="true"' : ''}>`
-      + `<span class="pc-i-nome">${esc(nomeDe(p))} <small>final ${esc(final4(p))}</small></span>${selo}`
+      + `<span class="pc-i-nome">${esc(nomeDe(p))} <small>final ${esc(final4(p))}</small></span>${selo || (buscando() ? `<span class="pc-selo">${esc(SIT[sit].label)}</span>` : '')}`
       + `<span class="pc-i-meta${sem ? ' pc-sem' : ''}">${sem ? ic('warn') : (travado(p) ? ic('lock') : '')}${umaAud ? esc(tentCurta(p)) : `<b>${esc(FU_AUDIENCE_LABEL[p.audience])}</b> · ${esc(tentCurta(p))}`}</span>`
       + (res && !cur ? `<span class="pc-i-fala pc-i-res">${esc(res.texto)}</span>` : `<span class="pc-i-fala">${esc(fala)}</span>`) + '</button></li>';
   }
@@ -195,6 +206,10 @@
     return `<span class="pc-gr-dot pc-s-${k === 'closed' ? 'discarded' : k}"></span><b>${S.ctx.esc(x.label)}</b>${n === null ? '' : ` <span class="pc-gr-n">${n}</span>`} <span class="pc-gr-ord">${S.ctx.esc(x.order)}</span>`;
   }
   function listaHtml(vazio) {
+    if (buscando()) {
+      const l = listaAtual();
+      return `<section class="pc-gr"><h3 class="pc-gr-t"><b>Resultado da busca</b> <span class="pc-gr-ord">em todos os pacientes, sem os filtros</span></h3><ul class="pc-gr-l">${l.map(itemHtml).join('') || `<li class="pc-vazio-lista">${S.ctx.esc(vazio)}</li>`}</ul></section>`;
+    }
     if (ui.view !== 'all') {
       const l = listaAtual();
       return `<section class="pc-gr"><h3 class="pc-gr-t">${grupoCab(ui.view, null)}</h3><ul class="pc-gr-l">${l.map(itemHtml).join('') || `<li class="pc-vazio-lista">${S.ctx.esc(vazio)}</li>`}</ul></section>`;
@@ -211,8 +226,8 @@
     const box = $('pc-lista'), antigo = box.querySelector('.pc-itens'), topo = antigo ? antigo.scrollTop : 0;
     const lista = listaAtual(), pos = fuQueuePosition(lista, ui.sel, 'phone_key');
     const cab = lista.length ? `Paciente ${pos} de ${lista.length}` : 'Nenhum paciente';
-    const fila0 = ui.view === 'due_today' && !ui.aud && !lista.length;
-    const vazio = ui.view === 'unsegmented' ? 'Zerou: nenhum telefone sem audiência.' : (ui.view === 'due_today' ? 'Ninguém está devido agora.' : 'Ninguém neste filtro.');
+    const fila0 = ui.view === 'due_today' && !ui.aud && !lista.length && !buscando();
+    const vazio = buscando() ? 'Ninguém com esse telefone ou nome.' : ui.view === 'unsegmented' ? 'Zerou: nenhum telefone sem audiência.' : (ui.view === 'due_today' ? 'Ninguém está devido agora.' : 'Ninguém neste filtro.');
     // fila vazia: o resumo do meio já traz a barra, então a lista não repete
     box.innerHTML = (fila0 ? '' : coberturaHtml(false)) + filtrosHtml()
       + (fila0 ? '' : `<div class="pc-posicao"><h2 class="fc-h3" id="pc-posicao">${S.ctx.esc(cab)}</h2></div>`)
@@ -329,7 +344,8 @@
     const box = $('pc-meio'), p = selecionado();
     if (!p) {
       const sem = ui.view === 'unsegmented';
-      box.innerHTML = ui.view === 'due_today' && !ui.aud ? fimDoDia()
+      box.innerHTML = buscando() ? '<section class="pc-fim-dia fc-cartao"><h2 class="fc-h2">Nenhum paciente encontrado</h2><p class="fc-corpo">Confira o telefone ou o primeiro nome. Apague a busca para voltar à lista.</p></section>'
+        : ui.view === 'due_today' && !ui.aud ? fimDoDia()
         : `<section class="pc-fim-dia fc-cartao"><h2 class="fc-h2">${S.ctx.esc(sem ? 'Nenhum telefone sem audiência' : 'Ninguém neste filtro')}</h2><p class="fc-corpo">${S.ctx.esc(sem ? 'O alerta está zerado. Quando um telefone chegar sem formulário nem agenda, ele aparece aqui.' : 'Escolha outra opção na lista.')}</p></section>`;
       return;
     }
@@ -406,9 +422,13 @@
     }
     if (ui.sel === chave && S && S.ctx === ctx) desenhaMeio();
   }
+  let timerBusca = null;
   function seleciona(chave) {
     ui.sel = chave;
-    if (chave) carregaConversa(chave);
+    if (!chave) return;
+    if (!buscando()) { carregaConversa(chave); return; }
+    clearTimeout(timerBusca); // digitando, o primeiro resultado muda a cada tecla: só lê a conversa de quem fica aberto
+    timerBusca = setTimeout(() => { if (S && ui.sel === chave) carregaConversa(chave); }, 300);
   }
   function desenha() {
     const lista = listaAtual();
@@ -423,7 +443,7 @@
     }
     ui.pendente = null;
     const ae = document.activeElement, foco = ae && ae.dataset ? (ae.dataset.cmd || null) : null, focoSel = ae && ae.dataset && ae.dataset.filter ? ae.id : null;
-    const campo = ae && (ae.id === 'pc-draft' || CAMPOS_PAINEL.indexOf(ae.id) >= 0) ? { id: ae.id, ini: ae.selectionStart, fim: ae.selectionEnd } : null;
+    const campo = ae && (ae.id === 'pc-draft' || ae.id === 'pc-busca' || CAMPOS_PAINEL.indexOf(ae.id) >= 0) ? { id: ae.id, ini: ae.selectionStart, fim: ae.selectionEnd } : null;
     const foiAct = !foco && !focoSel && ae && ae.dataset && ae.dataset.act ? { act: ae.dataset.act, val: ae.dataset.val } : null; // o redesenho troca o HTML: o teclado volta pro mesmo lugar
     desenhaTopo(); desenhaLista(); desenhaMeio(); desenhaDir(); desenhaLog();
     if (foiAct) {
@@ -614,8 +634,8 @@
     const a = el.dataset.act, v = el.dataset.val;
     const alvo = el.dataset.id !== undefined ? S.todos[Number(el.dataset.id)] : null;
     switch (a) {
-      case 'sit': ui.view = ui.view === v ? 'due_today' : v; ui.aud = ''; ui.panel = null; desenha(); break;
-      case 'pick_sit': if (alvo) { ui.view = situacao(alvo); ui.aud = ''; ui.panel = null; seleciona(alvo.phone_key); ui.pane = 'conversa'; desenha(); noTopo(); } break;
+      case 'sit': ui.view = ui.view === v ? 'due_today' : v; ui.aud = ''; ui.busca = ''; ui.panel = null; desenha(); break;
+      case 'pick_sit': if (alvo) { ui.view = situacao(alvo); ui.aud = ''; ui.busca = ''; ui.panel = null; seleciona(alvo.phone_key); ui.pane = 'conversa'; desenha(); noTopo(); } break;
       case 'dia_mais': ui.diasAbertos[v] = !ui.diasAbertos[v]; desenha(); break;
       case 'closed_toggle': ui.closedOpen = !ui.closedOpen; desenha(); break;
       case 'pick': if (alvo) { ui.panel = null; seleciona(alvo.phone_key); ui.pane = 'conversa'; desenha(); noTopo(); } break;
@@ -639,18 +659,21 @@
     if (t.dataset.filter) {
       if (t.dataset.filter === 'view') { ui.view = t.value; if (ui.view !== 'all' && (ui.aud === 'attended' || ui.aud === 'lost')) ui.aud = ''; }
       else { ui.aud = t.value; if (ui.aud === 'attended' || ui.aud === 'lost') ui.view = 'all'; else if (ui.view === 'unsegmented') ui.view = 'due_today'; }
+      ui.busca = ''; // escolher um filtro é pedir a lista dele: a busca sai
       ui.panel = null;
       desenha();
     }
   });
   document.addEventListener('input', (e) => { // a cada tecla: uma resposta que redesenha a tela no meio da digitação não apaga o texto
     const t = e.target;
+    if (aberta() && t.id === 'pc-busca') { ui.busca = t.value; ui.panel = null; desenha(); return; }
     if (!aberta() || t.id !== 'pc-draft') return;
     const p = selecionado();
     if (p) rascunhos[p.phone_key] = t.value;
   });
   document.addEventListener('keydown', (e) => {
     if (!aberta() || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (e.key === 'Escape' && e.target.id === 'pc-busca' && ui.busca) { e.preventDefault(); ui.busca = ''; ui.panel = null; desenha(); return; }
     if (e.key === 'Escape' && ui.panel) { ui.panel = null; desenhaMeio(); return; }
     if (['INPUT', 'TEXTAREA', 'SELECT'].indexOf(e.target.tagName) >= 0 || document.querySelector('dialog[open]')) return;
     const cmd = { e: 'send', a: 'schedule', p: 'skip', s: 'snooze', d: 'discard', c: 'convert' }[e.key.toLowerCase()];
@@ -663,7 +686,7 @@
   // entrada: null = carregando; false = falhou (o painel já mostra o erro); { linhas, estado } = pronto (estado null = ações desligadas)
   function render(entrada, ctx) {
     if (ui.tenant !== ctx.tenant) { // outro cliente: lista, seleção e conversas começam do zero
-      ui.tenant = ctx.tenant; ui.sel = null; ui.panel = null; ui.pendente = null; registro = []; travaAte = 0;
+      ui.tenant = ctx.tenant; ui.sel = null; ui.panel = null; ui.busca = ''; ui.pendente = null; registro = []; travaAte = 0;
       [conversas, rascunhos, emCurso, resultados, enviadosAgora].forEach((m) => Object.keys(m).forEach((k) => delete m[k]));
     }
     if (!entrada) {
