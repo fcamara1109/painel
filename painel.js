@@ -913,7 +913,7 @@
     try {
       const [foto] = await consulta('setup_board', {});
       if (meu !== seqSet) return;
-      const sobre = foto ? await consulta('setup_events', { events_until: foto.events_until }) : [];
+      const sobre = foto ? await consulta('setup_events', {}) : [];
       if (meu !== seqSet) return;
       window.PainelSetup.render(foto || null, sobre, { anota: anotaSetup });
     } catch (e) {

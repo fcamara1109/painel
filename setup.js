@@ -2,14 +2,17 @@
 // O painel.js carrega o dado (login, token, consulta ao BigQuery) e chama PainelSetup.render(foto, sobre, ctx):
 //   foto  = a linha de analytics.setup_board: { generated_at, events_until, html, body }. O html vem SEM script; entra num iframe
 //           sem permissão de rodar script (sandbox), então nada que venha do BigQuery executa. `body` é o JSON do quadro.
-//   sobre = os eventos setup_planned e setup_stage com hora depois de events_until (o último de cada célula): pintados por cima da foto.
+//   sobre = o último de cada campo dos seis eventos setup_* (planejado, estágio, nota, prioridade, tipo, nome), em todo o raw.events, sem
+//           corte por horário (a consulta é idempotente: o que a foto já tem volta com o mesmo valor). Pintados por cima da foto.
+//           Cobertura: células, totais, resumo por cliente, nome, tipo (chip), nota e prioridade (gaveta). Fica pra próxima foto: a ordem e os
+//           grupos das colunas por prioridade, e as linhas novas do histórico.
 //   ctx   = { anota(eventos) }: o POST no webhook setup-anotar (painel.js). Devolve 'ok' | 'sem_login' | 'sem_permissao' | 'falha'.
 // Cmd+clique (ou Ctrl+clique) numa célula abre o menu de estados. Escolher pinta na hora, grava e desfaz a pintura se a gravação falhar.
 // Clique simples abre o histórico da célula, do cliente ou do módulo.
 (function () {
   'use strict';
 
-  const EVENTO = { planned: 'setup_planned', stage: 'setup_stage' };
+  const EVENTO = { planned: 'setup_planned', stage: 'setup_stage', note: 'setup_note', priority: 'setup_priority', type: 'setup_type', name: 'setup_name' };
   const MSG = {
     ok: 'Gravado.',
     sem_login: 'Sua sessão expirou. Entre de novo; a mudança foi desfeita.',
@@ -36,7 +39,8 @@
     const cels = {};
     const orig = {};
     const doBq = {}; // k -> { planned, stage } do que veio depois da foto
-    const locais = {}; // k -> [{ id, planned, stage, pendente }] o que este navegador gravou ou está gravando
+    const locais = {}; // k -> [{ planned, stage, pendente }] o que este navegador gravou ou está gravando
+    const fila = {}; // k -> promessa da última gravação da célula: uma de cada vez, a seguinte só sai depois da anterior responder
     let alvo = null;
     let timer = null;
     let origem = null;
@@ -54,29 +58,107 @@
     const escopo = (k) => D.escopos['x:' + k.replace('|', ':')] || {};
     const semEstagio = (v) => (v === D.sem ? '' : v);
 
-    // O que veio depois da foto: o último planejado e o último estágio de cada célula.
+    // O nome novo do cliente: cabeçalho, título da gaveta e texto do leitor de tela das células dele.
+    function renomeia(tenant, nome) {
+      const c = D.escopos['c:' + tenant];
+      const antigo = c.titulo;
+      c.titulo = nome;
+      Object.keys(D.escopos).forEach((chave) => {
+        if (chave.indexOf('x:' + tenant + ':') === 0) D.escopos[chave].titulo = nome + D.escopos[chave].titulo.slice(antigo.length);
+      });
+      Object.keys(orig).forEach((k) => {
+        if (k.split('|')[0] === tenant) orig[k].aria = nome + orig[k].aria.slice(antigo.length);
+      });
+      const nm = doc.querySelector('th button.nm[data-k="c:' + tenant + '"]');
+      if (nm && nm.firstChild && nm.firstChild.nodeType === 3) nm.firstChild.nodeValue = nome;
+    }
+
+    // O tipo novo no chip do cabeçalho: o desenho é copiado de outro chip do mesmo tipo, se houver (o texto sempre muda).
+    function retipa(tenant, tipo) {
+      const nm = doc.querySelector('th button.nm[data-k="c:' + tenant + '"]');
+      if (!nm) return;
+      const chave = tipo.replace(/ /g, '-');
+      let chip = nm.querySelector('.tp');
+      if (!chip) { chip = el(doc, 'span'); chip.className = 'tp'; nm.appendChild(chip); }
+      const igual = Array.prototype.filter.call(doc.querySelectorAll('.tp'), (c) => c !== chip && c.getAttribute('data-tipo') === chave && c.querySelector('svg'))[0];
+      limpa(chip);
+      chip.setAttribute('data-tipo', chave);
+      if (igual) chip.appendChild(igual.querySelector('svg').cloneNode(true));
+      chip.appendChild(doc.createTextNode(tipo));
+    }
+
+    // O que veio depois da foto: o último de cada campo. Planejado e estágio vão pra célula; nota, prioridade, tipo e nome, pro escopo deles.
     (sobre || []).forEach((r) => {
-      const k = r.tenant + '|' + r.module;
-      if (!cels[k]) return;
-      const o = doBq[k] = doBq[k] || {};
-      if (r.event_name === EVENTO.planned) o.planned = r.value;
-      if (r.event_name === EVENTO.stage) o.stage = semEstagio(r.value);
+      const mod = r.module || '';
+      if (r.event_name === EVENTO.planned || r.event_name === EVENTO.stage) {
+        const k = r.tenant + '|' + mod;
+        if (!cels[k]) return;
+        const o = doBq[k] = doBq[k] || {};
+        if (r.event_name === EVENTO.planned) o.planned = r.value;
+        if (r.event_name === EVENTO.stage) o.stage = semEstagio(r.value);
+        return;
+      }
+      if (r.event_name === EVENTO.note) { // tenant e módulo = a célula; só tenant = o cliente; só módulo = o módulo
+        const alvoNota = D.escopos[r.tenant && mod ? 'x:' + r.tenant + ':' + mod : r.tenant ? 'c:' + r.tenant : 'm:' + mod];
+        if (alvoNota) alvoNota.nota = r.value;
+        return;
+      }
+      const cli = D.escopos['c:' + r.tenant];
+      if (!cli) return;
+      if (r.event_name === EVENTO.priority) cli.priority = r.value;
+      if (r.event_name === EVENTO.type) { cli.client_type = r.value; retipa(r.tenant, r.value); }
+      if (r.event_name === EVENTO.name) renomeia(r.tenant, r.value);
     });
 
     const mexida = (k) => !!doBq[k] || (locais[k] || []).length > 0;
 
     // Planejado e estágio da célula: a foto, depois o que veio depois dela, depois o que este navegador gravou (em ordem).
-    function efetivo(k) {
+    // `soConfirmado`: sem o que ainda está gravando (é de onde sai o que a próxima gravação da célula tem de mandar).
+    function efetivo(k, soConfirmado) {
       const x = escopo(k);
       const e = { planned: x.planned || '', stage: x.stage || '' };
       const b = doBq[k] || {};
       if (b.planned !== undefined) e.planned = b.planned;
       if (b.stage !== undefined) e.stage = b.stage;
       (locais[k] || []).forEach((p) => {
+        if (soConfirmado && p.pendente) return;
         if (p.planned) e.planned = p.planned;
         if (p.stage !== undefined) e.stage = p.stage;
       });
       return e;
+    }
+
+    // Os totais do topo e a linha 'No ar / planejados' de cada cliente, refeitos do estado de cada célula (a regra é a de Estado.resumo do
+    // ops_log.py; os estágios de cada papel vêm na foto, D.roles).
+    function recalcula() {
+      const R = D.roles;
+      const por = {};
+      let noAr = 0;
+      let plan = 0;
+      let trav = 0;
+      let mont = 0;
+      Object.keys(cels).forEach((k) => {
+        const t = k.split('|')[0];
+        const c = por[t] = por[t] || { plan: 0, noAr: 0 };
+        const e = efetivo(k);
+        if (e.planned !== D.sim) return;
+        if (e.stage !== R.off) { c.plan += 1; plan += 1; }
+        if (e.stage === R.live) { c.noAr += 1; noAr += 1; } else if (e.stage === R.stuck) trav += 1; else if (e.stage === R.building) mont += 1;
+      });
+      const itens = doc.querySelectorAll('.totals li');
+      const poe = (i, numero, legenda) => {
+        if (!itens[i]) return;
+        itens[i].querySelector('.fc-numero').textContent = String(numero);
+        if (legenda !== undefined) itens[i].querySelector('.fc-legenda').textContent = legenda;
+      };
+      poe(0, noAr, itens[0] ? itens[0].querySelector('.fc-legenda').textContent.replace(/\d+/, String(plan)) : '');
+      poe(1, trav);
+      poe(2, mont);
+      const colunas = doc.querySelectorAll('tbody.resumo td');
+      Array.prototype.forEach.call(doc.querySelectorAll('thead th.cli button.nm'), (b, i) => {
+        const c = por[b.getAttribute('data-k').slice(2)];
+        if (c && colunas[i]) colunas[i].textContent = c.noAr + '/' + c.plan;
+      });
     }
 
     function desenha(k) {
@@ -91,6 +173,7 @@
         icone.className = o.forma;
         o.tinta.forEach((c) => td.classList.add(c));
         botao.setAttribute('aria-label', o.aria);
+        recalcula();
         return;
       }
       const e = efetivo(k);
@@ -109,6 +192,7 @@
         m.title = 'gravando';
         td.appendChild(m);
       }
+      recalcula();
     }
 
     function mostra(txt) {
@@ -148,39 +232,45 @@
       if (foco) foco.focus();
     }
 
-    // Escolheu um estado: pinta, grava e, se a gravação falhar, desfaz.
+    // Escolheu um estado: pinta na hora, grava e, se a gravação falhar, desfaz. A gravação é uma de cada vez por célula: o que vai no pedido
+    // sai da comparação com o que já foi CONFIRMADO, calculada só quando a anterior respondeu. Assim um clique não herda o estado de outro
+    // que ainda não gravou (ou que falhou), e os pedidos da mesma célula chegam ao servidor na ordem dos cliques.
     async function escolhe(op) {
       const a = alvo;
       const p = op.getAttribute('data-planned');
       const s = op.getAttribute('data-stage');
-      const e = efetivo(a.k);
       const tenant = a.td.getAttribute('data-tenant');
       const modulo = a.td.getAttribute('data-module');
-      const pedido = { id: tenant + '|' + modulo + '|' + Date.now(), pendente: true };
-      const eventos = [];
-      if (p && p !== e.planned) {
-        pedido.planned = p;
-        eventos.push({ event_name: EVENTO.planned, tenant, body: { module: modulo, value: p } });
-      }
-      if (s && (s === D.sem ? e.stage !== '' : s !== e.stage)) {
-        pedido.stage = semEstagio(s);
-        eventos.push({ event_name: EVENTO.stage, tenant, body: { module: modulo, value: s } });
-      }
+      const diferencas = (c) => ({ planned: !!p && p !== c.planned, stage: !!s && (s === D.sem ? c.stage !== '' : s !== c.stage) });
+      const agora = diferencas(efetivo(a.k));
       fechaEditor();
-      if (!eventos.length) { mostra(MSG.nada); return; }
+      if (!agora.planned && !agora.stage) { mostra(MSG.nada); return; }
+      const pedido = { pendente: true };
+      if (p) pedido.planned = p;
+      if (s) pedido.stage = semEstagio(s);
       (locais[a.k] = locais[a.k] || []).push(pedido);
       desenha(a.k);
-      let resultado = 'falha';
-      try { resultado = await ctxAtual.anota(eventos); } catch (err) { resultado = 'falha'; }
-      if (resultado === 'ok') {
-        pedido.pendente = false;
-        desenha(a.k);
-        mostra(MSG.ok);
-      } else {
-        locais[a.k] = locais[a.k].filter((x) => x !== pedido);
-        desenha(a.k);
-        mostra(MSG[resultado] || MSG.falha);
-      }
+      const anterior = fila[a.k] || Promise.resolve();
+      const minha = anterior.then(async () => {
+        const falta = diferencas(efetivo(a.k, true));
+        const eventos = [];
+        if (falta.planned) eventos.push({ event_name: EVENTO.planned, tenant, body: { module: modulo, value: p } });
+        if (falta.stage) eventos.push({ event_name: EVENTO.stage, tenant, body: { module: modulo, value: s } });
+        let resultado = 'ok'; // nada a gravar: o que a célula confirmada já tem é o que o clique pede
+        if (eventos.length) {
+          try { resultado = await ctxAtual.anota(eventos); } catch (err) { resultado = 'falha'; }
+        }
+        if (resultado === 'ok') {
+          pedido.pendente = false;
+        } else {
+          locais[a.k] = locais[a.k].filter((x) => x !== pedido);
+        }
+        return resultado;
+      });
+      fila[a.k] = minha;
+      const resultado = await minha;
+      desenha(a.k);
+      mostra(resultado === 'ok' ? MSG.ok : (MSG[resultado] || MSG.falha));
     }
 
     // Gaveta de histórico (a mesma do quadro de antes): célula, cliente ou módulo.
@@ -232,7 +322,7 @@
       if (!ed.hidden) fechaEditor();
       else if (!gaveta.hidden) fechaGaveta();
     });
-    Object.keys(doBq).forEach(desenha);
+    Object.keys(cels).forEach(desenha); // nome novo, estado novo e totais refeitos antes de o gabarito (e a pessoa) mexerem
     quadro.dataset.pronto = 'sim'; // o quadro está desenhado e os cliques ligados (o gabarito espera por isto)
   }
 
@@ -252,7 +342,7 @@
     }
     vazio.hidden = true;
     quadro.hidden = false;
-    sub.textContent = 'Foto de ' + foto.generated_at + '. O que mudou depois dela aparece na hora.';
+    sub.textContent = 'Foto de ' + foto.generated_at + '. Estados, notas, nomes, tipos e totais mudam na hora; a ordem por prioridade e o histórico entram na próxima foto (até 30 minutos).';
     let D;
     try { D = JSON.parse(foto.body); } catch (e) { D = null; }
     if (!D) {
