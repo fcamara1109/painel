@@ -119,12 +119,82 @@
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
   };
 
-  // Padrão: o último mês FECHADO pela data do dia (hoje 06/10: 01/09 a 30/09), para comparar com o mês anterior.
+  const hojeIso = () => isoLocal(new Date());
+
+  // Período: lógica pura do seletor (opção A, painel tipo Looker; réplica de prototipos/seletor_data.html). Datas sem fuso, por componentes via UTC.
+  const PER = (() => {
+    const pad = (n) => String(n).padStart(2, '0');
+    const partes = (iso) => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? [Number(m[1]), Number(m[2]), Number(m[3])] : null; };
+    const monta = (a, m, d) => { const t = new Date(Date.UTC(a, m - 1, d)); return `${String(t.getUTCFullYear()).padStart(4, '0')}-${pad(t.getUTCMonth() + 1)}-${pad(t.getUTCDate())}`; };
+    const emMs = (iso) => { const [a, m, d] = partes(iso); return Date.UTC(a, m - 1, d); };
+    const somaDias = (iso, n) => { const [a, m, d] = partes(iso); return monta(a, m, d + n); };
+    const dias = (a, b) => Math.round((emMs(b) - emMs(a)) / 86400000);
+    const ultimoDia = (a, m) => new Date(Date.UTC(a, m, 0)).getUTCDate();
+    // DATE_SUB/DATE_ADD de meses do BigQuery: limita ao último dia do mês quando preciso.
+    const somaMeses = (iso, n) => {
+      const [a, m, d] = partes(iso);
+      const t = a * 12 + (m - 1) + n;
+      const na = Math.floor(t / 12);
+      const nm = t - na * 12 + 1;
+      return monta(na, nm, Math.min(d, ultimoDia(na, nm)));
+    };
+    const mesesEntre = (s, e) => { const [as, ms] = partes(s); const [ae, me] = partes(e); return (ae - as) * 12 + me - ms; }; // DATE_DIFF(e, s, MONTH)
+    const primeiroDoMes = (iso) => { const [a, m] = partes(iso); return monta(a, m, 1); };
+    const segunda = (iso) => somaDias(iso, -((new Date(emMs(iso)).getUTCDay() + 6) % 7));
+
+    // Espelha prev_window de sql/_prelude.sql (3 regras). Se o SQL mudar, esta função muda junto; o test_painel_sql.py prova as duas contra o BigQuery.
+    const prevWindow = (s, e) => {
+      const k = mesesEntre(s, e) + 1;
+      const [ea, em, ed] = partes(e);
+      if (partes(s)[2] === 1 && ed === ultimoDia(ea, em)) return { start: somaMeses(s, -k), end: somaDias(s, -1) };
+      if (partes(s)[2] === 1) return { start: somaMeses(s, -k), end: somaMeses(e, -k) };
+      return { start: somaDias(s, -(dias(s, e) + 1)), end: somaDias(s, -1) };
+    };
+
+    // Sem atalho de dias e sem "Ano passado": a operação começou em 2026. "Todo o período" começa no primeiro dado do cliente (tenants.sql, first_date).
+    const ATALHOS = [
+      { id: 'esta-semana', grupo: 'Semanas', nome: 'Esta semana', calc: (h) => ({ start: segunda(h), end: h }) },
+      { id: 'semana-passada', grupo: 'Semanas', nome: 'Semana passada', calc: (h) => ({ start: somaDias(segunda(h), -7), end: somaDias(segunda(h), -1) }) },
+      { id: 'quatro-semanas', grupo: 'Semanas', nome: '4 semanas + a atual', calc: (h) => ({ start: somaDias(segunda(h), -28), end: h }) },
+      { id: 'este-mes', grupo: 'Meses', nome: 'Este mês', calc: (h) => ({ start: primeiroDoMes(h), end: h }) },
+      { id: 'mes-passado', grupo: 'Meses', nome: 'Mês passado', calc: (h) => ({ start: somaMeses(primeiroDoMes(h), -1), end: somaDias(primeiroDoMes(h), -1) }) },
+      { id: 'tres-meses', grupo: 'Meses', nome: '3 meses + o atual', calc: (h) => ({ start: somaMeses(primeiroDoMes(h), -3), end: h }) },
+      { id: 'este-ano', grupo: 'Longo prazo', nome: 'Este ano', calc: (h) => ({ start: monta(partes(h)[0], 1, 1), end: h }) },
+      { id: 'todo', grupo: 'Longo prazo', nome: 'Todo o período', calc: (h, primeiro) => (primeiro ? { start: primeiro, end: h, todo: true } : null) },
+    ];
+    const GRUPOS = ['Semanas', 'Meses', 'Longo prazo'];
+    const calcAtalho = (id, h, primeiro) => ATALHOS.find((a) => a.id === id).calc(h, primeiro);
+    const atalhoAtivo = (sel, h, primeiro) => {
+      const a = ATALHOS.find((x) => { const r = x.calc(h, primeiro); return r && r.start === sel.start && r.end === sel.end && !!r.todo === !!sel.todo; });
+      return a ? a.id : null;
+    };
+    // Texto do rodapé do painel. Janela anterior que termina antes do primeiro dado do cliente não tem o que comparar.
+    const comparaCom = (sel, primeiro) => {
+      const p = prevWindow(sel.start, sel.end);
+      if (primeiro && p.end < primeiro) return 'Sem período anterior para comparar';
+      const ano = partes(sel.end)[0];
+      const mesmo = partes(p.start)[0] === ano && partes(p.end)[0] === ano;
+      const dm = (iso) => fmtData(iso).slice(0, 5);
+      return `Compara com ${mesmo ? `${dm(p.start)} a ${dm(p.end)}` : `${fmtData(p.start)} a ${fmtData(p.end)}`}`;
+    };
+    const parseBR = (v) => {
+      const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(v || '');
+      if (!m) return null;
+      const a = Number(m[3]), mm = Number(m[2]), d = Number(m[1]);
+      if (a < 1900 || a > 2100 || mm < 1 || mm > 12 || d < 1) return null;
+      const iso = monta(a, mm, d);
+      const p = partes(iso);
+      return p[0] === a && p[1] === mm && p[2] === d ? iso : null;
+    };
+    return { partes, monta, somaDias, somaMeses, ultimoDia, primeiroDoMes, ATALHOS, GRUPOS, calcAtalho, atalhoAtivo, comparaCom, parseBR };
+  })();
+
+  // Padrão: 4 semanas fechadas + a atual, da segunda de 4 semanas atrás até hoje (quinta 05/11: 05/10 a 05/11; domingo 08/11: 05/10 a 08/11; segunda 09/11: 12/10 a 09/11).
   // O fixture é congelado: período fixo, para os rótulos das linhas do tempo baterem com o subtítulo.
   function periodoPadrao() {
     if (FIXTURE) return FIXTURE_PERIODO;
-    const h = new Date();
-    return [isoLocal(new Date(h.getFullYear(), h.getMonth() - 1, 1)), isoLocal(new Date(h.getFullYear(), h.getMonth(), 0))];
+    const p = PER.calcAtalho('quatro-semanas', hojeIso());
+    return [p.start, p.end];
   }
 
   // 'setup' tem botão próprio no topo (à esquerda do seletor de cliente), fora do grupo Funil | Cirurgias | Pacientes. Na página Setup o seletor de cliente some (o quadro é de todos).
@@ -138,12 +208,13 @@
     tenant: new URLSearchParams(location.search).get('tenant') || CFG.TENANT,
     pagina: paginaDaUrl(),
     cirurgias: [], // linhas do surgeries.sql (último snapshot do radar)
-    tenants: null, // [{tenant, n, spend_rows}] do tenants.sql, carregado uma vez
+    tenants: null, // [{tenant, n, spend_rows, first_date}] do tenants.sql, carregado uma vez
     basis: 'event',
     canal: [], // ids dos canais marcados no filtro Canal (vazio = Todos): escolhe a visão do funnel.sql (ver visaoDoCanal)
     aba: 'custo',
     start: periodoPadrao()[0],
     end: periodoPadrao()[1],
+    todo: false, // atalho "Todo o período" ligado: o início é o primeiro dado do cliente e acompanha a troca de cliente
     grain: 'week',
     filters: Object.fromEntries(FILTROS.map(([k]) => [k, []])),
     options: {},
@@ -648,13 +719,18 @@
     sub.textContent = `${subtituloComparacao(total)}. Entre as etapas, a taxa de passagem e a mudança em pontos percentuais (pp).`;
   }
 
+  // Período anterior sem dado nenhum (vazio, ou anterior ao primeiro dado do cliente): todas as variações de volume e de gasto vêm sem base.
+  const VARIACOES_DE_VOLUME = ['leads_chg', 'marked_patients_chg', 'scheduled_patients_chg', 'completed_patients_chg', 'spend_chg'];
+  const semPeriodoAnterior = (total) => VARIACOES_DE_VOLUME.every((c) => total[c] === null || total[c] === undefined);
+
   // Subtítulo do funil. Os 3 casos espelham prev_window (_prelude.sql); as datas do anterior vêm do SQL, o texto só as nomeia.
+  // Sem dado no período anterior, só o período atual: "contra ..." seria uma comparação com nada.
   function subtituloComparacao(total) {
     const d = (iso) => (/^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '') || []).slice(1).map(Number);
     const [ai, mi, di] = d(state.start);
     const [af, mf, df] = d(state.end);
     const atual = `De ${fmtData(state.start)} a ${fmtData(state.end)}`;
-    if (!total || !total.prev_start || !total.prev_end) return atual;
+    if (!total || !total.prev_start || !total.prev_end || semPeriodoAnterior(total)) return atual;
     const [pa, pm] = d(total.prev_start);
     const [pfa, pfm] = d(total.prev_end);
     const fimDoMes = df === new Date(Date.UTC(af, mf, 0)).getUTCDate();
@@ -806,7 +882,6 @@
   // O desenho mora em cirurgias.js (quem ainda pode operar, do mais quente ao mais frio, links do paciente no sistema da clínica).
   // Aqui fica o que depende do painel: login, consulta ao BigQuery, ?tenant= e o relógio.
   let seqCir = 0;
-  const hojeIso = () => isoLocal(new Date());
   const diasEntre = (deIso, ateIso) => Math.round((dataDeISO(ateIso) - dataDeISO(deIso)) / 86400000);
   const ctxCir = () => ({ esc, fmtData, nf0: NF0, hoje: hojeIso(), diasEntre, esqueleto: ESQUELETO_TABELA, tenant: state.tenant, enviaCheckin });
 
@@ -1071,6 +1146,197 @@
     }
   }
 
+  // ------------------------------------------------------------ campo Período (painel com atalhos, 2 meses e datas digitadas)
+  // Nasce fechado. Esc, clique fora e Cancelar descartam; só Aplicar muda o período e reconsulta, uma vez. A comparação é automática (prev_window do SQL).
+  const SETA_ESQ = '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M9 3L5 7l4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  const SETA_DIR = '<svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M5 3l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+  // Primeiro dia com dado do cliente atual (tenants.sql). Sem ele o atalho "Todo o período" fica desligado.
+  function primeiroDado() {
+    const t = (state.tenants || []).find((x) => x.tenant === state.tenant);
+    return (t && t.first_date) || null;
+  }
+
+  function mostraPeriodo() {
+    $('c-valor').textContent = `${state.todo ? 'Todo o período: ' : ''}${fmtData(state.start)} a ${fmtData(state.end)}`;
+  }
+
+  function ligaPeriodo() {
+    const gatilho = $('c-periodo'), pop = $('c-pop'), iIni = $('c-ini'), iFim = $('c-fim'), erro = $('c-erro'), aplicar = $('c-aplicar'), host = $('c-cal');
+    const botoes = (seletor) => Array.from(pop.querySelectorAll(seletor));
+    let aberto = false;
+    let pend = { start: state.start, end: state.end, todo: false };
+    let valido = true;
+    let base = PER.somaMeses(PER.primeiroDoMes(hojeIso()), -1); // primeiro dos 2 meses mostrados
+    let ini = null, hover = null, foco = null; // calendário: ini = primeiro clique à espera do segundo
+
+    $('c-atalhos').innerHTML = PER.GRUPOS.map((g, i) => `<div class="per-grupo" role="group" aria-labelledby="c-g${i}"><p class="fc-rotulo" id="c-g${i}">${g}</p>${
+      PER.ATALHOS.filter((a) => a.grupo === g).map((a) => `<button type="button" class="per-atalho" data-atalho="${a.id}" aria-pressed="false">${a.nome}</button>`).join('')}</div>`).join('');
+
+    // ---- calendário de 2 meses: o primeiro clique marca o início, o segundo o fim; passar o mouse mostra a faixa
+    function mesHtml(m, k) {
+      const [a, mm] = PER.partes(m);
+      const vazios = (new Date(Date.UTC(a, mm - 1, 1)).getUTCDay() + 6) % 7;
+      let cel = '<span></span>'.repeat(vazios);
+      for (let d = 1; d <= PER.ultimoDia(a, mm); d++) {
+        cel += `<button type="button" class="per-dia" data-iso="${PER.monta(a, mm, d)}" aria-label="${d} de ${MESES_POR_EXTENSO[mm - 1]} de ${a}" aria-pressed="false" tabindex="-1">${d}</button>`;
+      }
+      const esq = k === 0 ? `<button type="button" class="per-nav" data-dir="-1" aria-label="Mês anterior">${SETA_ESQ}</button>` : '<span class="per-nav-vazio"></span>';
+      const dir = k === 1 ? `<button type="button" class="per-nav" data-dir="1" aria-label="Próximo mês">${SETA_DIR}</button>` : '<span class="per-nav-vazio"></span>';
+      return `<div class="per-mes"><div class="per-mes-cab">${esq}<span class="per-mes-nome">${MESES_POR_EXTENSO[mm - 1]} de ${a}</span>${dir}</div>
+        <div class="per-dias-sem" aria-hidden="true"><span>seg</span><span>ter</span><span>qua</span><span>qui</span><span>sex</span><span>sáb</span><span>dom</span></div>
+        <div class="per-grade">${cel}</div></div>`;
+    }
+    function desenhaCalendario() {
+      host.innerHTML = `<div class="per-meses">${[0, 1].map((k) => mesHtml(PER.somaMeses(base, k), k)).join('')}</div>`;
+      pintaCalendario();
+    }
+    function pintaCalendario() {
+      let s = pend.start, e = pend.end;
+      if (ini !== null) { const h = hover || ini; s = ini < h ? ini : h; e = ini < h ? h : ini; }
+      const hj = hojeIso();
+      const dias = Array.from(host.querySelectorAll('.per-dia'));
+      const alvo = dias.some((b) => b.dataset.iso === foco) ? foco : (dias[0] && dias[0].dataset.iso);
+      dias.forEach((b) => {
+        const i = b.dataset.iso;
+        const dentro = i >= s && i <= e;
+        b.classList.toggle('na-faixa', dentro);
+        b.classList.toggle('ini', i === s);
+        b.classList.toggle('fim', i === e);
+        b.classList.toggle('hoje', i === hj);
+        b.setAttribute('aria-pressed', String(dentro));
+        b.tabIndex = i === alvo ? 0 : -1;
+      });
+    }
+    function irPara(iso) { base = PER.somaMeses(PER.primeiroDoMes(iso), -1); desenhaCalendario(); } // o dia fica no 2º mês
+    function garanteVisivel(iso) {
+      const m = PER.primeiroDoMes(iso);
+      const ultimo = PER.somaMeses(base, 1);
+      let novo = base;
+      if (m < base) novo = m;
+      else if (m > ultimo) novo = PER.somaMeses(m, -1);
+      if (novo !== base) { base = novo; desenhaCalendario(); }
+    }
+    function descartaCliqueNoCalendario() { ini = null; hover = null; pintaCalendario(); }
+
+    // ---- painel
+    function atualizaPend(escreveInputs) {
+      if (escreveInputs) {
+        iIni.value = fmtData(pend.start); iFim.value = fmtData(pend.end);
+        iIni.removeAttribute('aria-invalid'); iFim.removeAttribute('aria-invalid');
+        erro.textContent = '';
+      }
+      const primeiro = primeiroDado();
+      const ativo = PER.atalhoAtivo(pend, hojeIso(), primeiro);
+      botoes('.per-atalho').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.atalho === ativo)));
+      $('c-cmp').textContent = valido ? PER.comparaCom(pend, primeiro) : 'Informe as duas datas.';
+      aplicar.disabled = !valido;
+      pintaCalendario();
+    }
+    function abre() {
+      if (aberto) return;
+      pend = { start: state.start, end: state.end, todo: state.todo };
+      valido = true;
+      pop.querySelector('[data-atalho=todo]').disabled = !primeiroDado();
+      pop.hidden = false; aberto = true;
+      gatilho.setAttribute('aria-expanded', 'true');
+      descartaCliqueNoCalendario(); irPara(pend.end); atualizaPend(true);
+    }
+    function fecha(devolveFoco) {
+      if (!aberto) return;
+      pop.hidden = true; aberto = false;
+      gatilho.setAttribute('aria-expanded', 'false');
+      if (devolveFoco) gatilho.focus();
+    }
+    gatilho.addEventListener('click', () => (aberto ? fecha(true) : abre()));
+    // captura: o alvo ainda está no DOM mesmo se o calendário se redesenhar no clique
+    document.addEventListener('click', (e) => { if (aberto && !pop.contains(e.target) && !gatilho.contains(e.target)) fecha(false); }, true);
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && aberto) { e.preventDefault(); fecha(true); } });
+
+    host.addEventListener('click', (e) => {
+      const nav = e.target.closest('.per-nav');
+      if (nav) {
+        base = PER.somaMeses(base, Number(nav.dataset.dir));
+        desenhaCalendario();
+        const igual = host.querySelector(`.per-nav[data-dir="${nav.dataset.dir}"]`);
+        if (igual) igual.focus();
+        return;
+      }
+      const b = e.target.closest('.per-dia');
+      if (!b) return;
+      const iso = b.dataset.iso;
+      foco = iso;
+      if (ini === null) { ini = iso; hover = iso; pintaCalendario(); return; }
+      const s = ini < iso ? ini : iso, f = ini < iso ? iso : ini;
+      ini = null; hover = null;
+      pend = { start: s, end: f, todo: false }; valido = true;
+      atualizaPend(true);
+    });
+    host.addEventListener('mouseover', (e) => {
+      const b = e.target.closest('.per-dia');
+      if (b && ini !== null && hover !== b.dataset.iso) { hover = b.dataset.iso; pintaCalendario(); }
+    });
+    host.addEventListener('focusin', (e) => {
+      const b = e.target.closest('.per-dia');
+      if (!b) return;
+      foco = b.dataset.iso;
+      if (ini !== null) hover = foco;
+      pintaCalendario();
+    });
+    host.addEventListener('keydown', (e) => {
+      const b = e.target.closest('.per-dia');
+      if (!b) return;
+      const iso = b.dataset.iso;
+      const alvo = { ArrowLeft: PER.somaDias(iso, -1), ArrowRight: PER.somaDias(iso, 1), ArrowUp: PER.somaDias(iso, -7), ArrowDown: PER.somaDias(iso, 7), PageUp: PER.somaMeses(iso, -1), PageDown: PER.somaMeses(iso, 1) }[e.key];
+      if (!alvo) return;
+      e.preventDefault();
+      foco = alvo;
+      garanteVisivel(alvo);
+      const novo = host.querySelector(`.per-dia[data-iso="${alvo}"]`);
+      if (novo) novo.focus();
+    });
+
+    // ---- Início e Fim digitados (dd/mm/aaaa, com máscara)
+    function aoDigitar() {
+      const s = PER.parseBR(iIni.value), f = PER.parseBR(iFim.value);
+      let msg = '';
+      valido = false;
+      if (s && f) {
+        if (s <= f) { pend = { start: s, end: f, todo: false }; valido = true; descartaCliqueNoCalendario(); garanteVisivel(f); } else msg = 'A data final vem antes da inicial.';
+      } else if ((iIni.value.length === 10 && !s) || (iFim.value.length === 10 && !f)) {
+        msg = 'Use dd/mm/aaaa, com uma data que existe.';
+      }
+      erro.textContent = msg;
+      iIni.setAttribute('aria-invalid', String(iIni.value.length === 10 && (!s || !!msg)));
+      iFim.setAttribute('aria-invalid', String(iFim.value.length === 10 && (!f || !!msg)));
+      atualizaPend(false);
+    }
+    for (const inp of [iIni, iFim]) {
+      inp.addEventListener('input', () => {
+        let v = inp.value.replace(/\D/g, '').slice(0, 8);
+        if (v.length > 4) v = `${v.slice(0, 2)}/${v.slice(2, 4)}/${v.slice(4)}`;
+        else if (v.length > 2) v = `${v.slice(0, 2)}/${v.slice(2)}`;
+        inp.value = v;
+        aoDigitar();
+      });
+    }
+
+    $('c-atalhos').addEventListener('click', (e) => {
+      const b = e.target.closest('.per-atalho');
+      if (!b || b.disabled) return;
+      pend = PER.calcAtalho(b.dataset.atalho, hojeIso(), primeiroDado()); valido = true;
+      descartaCliqueNoCalendario(); irPara(pend.end); atualizaPend(true);
+    });
+    $('c-cancelar').addEventListener('click', () => fecha(true));
+    aplicar.addEventListener('click', () => {
+      if (!valido) return;
+      state.start = pend.start; state.end = pend.end; state.todo = !!pend.todo;
+      mostraPeriodo();
+      fecha(true);
+      agenda(true);
+    });
+  }
+
   // ------------------------------------------------------------ eventos
   function ligaEventos() {
     $('btn-login').addEventListener('click', pedeLogin);
@@ -1127,12 +1393,16 @@
       for (const k of Object.keys(state.filters)) state.filters[k] = []; // as opções mudam por cliente
       state.canal = [];
       state.options = {};
+      if (state.todo) { // "Todo o período" acompanha o primeiro dado do novo cliente; sem ele, o período fica como está
+        const primeiro = primeiroDado();
+        if (primeiro) { state.start = primeiro; state.end = hojeIso(); } else state.todo = false;
+        mostraPeriodo();
+      }
       renderFiltros();
       recarrega(true);
     });
 
-    $('c-inicio').addEventListener('change', (e) => { state.start = e.target.value; agenda(true); });
-    $('c-fim').addEventListener('change', (e) => { state.end = e.target.value; agenda(true); });
+    ligaPeriodo();
 
     $('filtros').addEventListener('change', (e) => {
       const caixa = e.target.closest('details');
@@ -1170,8 +1440,7 @@
   }
 
   function inicia() {
-    $('c-inicio').value = state.start;
-    $('c-fim').value = state.end;
+    mostraPeriodo();
     renderSeletor();
     renderFiltros();
     renderCartoes(true);

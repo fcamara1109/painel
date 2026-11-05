@@ -10,9 +10,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Schibsted+Grotesk:wght@300;400;500&display=swap">
 <!-- Fonte única de cor, fonte, espaço e forma (marca da casa). Não copiar valores: o publicar.sh copia o tokens.css canônico. -->
-<link rel="stylesheet" href="tokens.css?v=ca16e701ca">
-<link rel="stylesheet" href="cirurgias.css?v=ca16e701ca">
-<link rel="stylesheet" href="pacientes.css?v=ca16e701ca">
+<link rel="stylesheet" href="tokens.css?v=5d1bb087ed">
+<link rel="stylesheet" href="cirurgias.css?v=5d1bb087ed">
+<link rel="stylesheet" href="pacientes.css?v=5d1bb087ed">
 <style>
 body { margin: 0; }
 :focus-visible { outline: 3px solid var(--fc-accent); outline-offset: 2px; }
@@ -50,8 +50,55 @@ h1, h2, h3, p { margin: 0; }
 
 /* controles do período */
 .controles { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--fc-e-2) var(--fc-e-3); }
+.controles { position: relative; }
 .controles .cmp { display: flex; flex-direction: column; gap: var(--fc-e-1); }
-.controles .data { width: 180px; max-width: 100%; }
+
+/* campo Período: abre um painel com atalhos, 2 meses e Início/Fim digitados. Classes per-*: .erro da página é o aviso âmbar. */
+.per-gatilho { display: flex; align-items: center; justify-content: space-between; gap: var(--fc-e-2); width: 310px; max-width: 100%; text-align: left; cursor: pointer; }
+.per-gatilho span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.per-gatilho svg { flex: none; transition: transform var(--fc-dur) var(--fc-curva); }
+.per-gatilho[aria-expanded="true"] svg { transform: rotate(180deg); }
+.per-pop { position: absolute; z-index: 5; top: calc(100% + var(--fc-e-1)); left: 0; width: min(820px, 100%); padding: var(--fc-e-2); border: 1px solid var(--fc-hair-forte); border-radius: var(--fc-r-cartao); background: var(--fc-surface); box-shadow: 0 14px 34px color-mix(in srgb, var(--fc-ink) 18%, transparent); }
+.per-grade-pop { display: grid; grid-template-columns: 210px 1fr; gap: var(--fc-e-3); }
+.per-atalhos { display: flex; flex-direction: column; gap: var(--fc-e-2); padding-right: var(--fc-e-2); border-right: 1px solid var(--fc-hair); }
+.per-grupo { display: flex; flex-direction: column; gap: 2px; }
+.per-grupo .fc-rotulo { margin: 0 0 2px; }
+.per-atalho { min-height: 38px; padding: 0 var(--fc-e-2); border: 0; border-radius: var(--fc-r-campo); background: transparent; color: var(--fc-ink-2); text-align: left; font-family: var(--fc-body); font-size: var(--fc-t-legenda); cursor: pointer; }
+.per-atalho:hover { background: var(--fc-paper-2); }
+.per-atalho[aria-pressed="true"] { background: var(--fc-accent); color: var(--fc-on-accent); font-weight: 600; }
+.per-atalho:disabled { color: var(--fc-ink-3); cursor: not-allowed; opacity: .6; }
+.per-meses { display: flex; flex-wrap: wrap; gap: var(--fc-e-3); }
+.per-mes { width: 266px; flex: none; }
+.per-mes-cab { display: flex; align-items: center; justify-content: space-between; height: 40px; }
+.per-mes-nome { font-family: var(--fc-display); font-weight: 600; font-size: var(--fc-t-legenda); }
+.per-nav { width: 36px; height: 36px; display: grid; place-items: center; padding: 0; border: 1px solid var(--fc-hair-forte); border-radius: 50%; background: var(--fc-surface); color: var(--fc-ink); cursor: pointer; }
+.per-nav:hover { background: var(--fc-paper-2); }
+.per-nav-vazio { width: 36px; height: 36px; }
+.per-dias-sem, .per-grade { display: grid; grid-template-columns: repeat(7, 1fr); }
+.per-dias-sem span { padding: 4px 0; text-align: center; font-size: var(--fc-t-rotulo); font-weight: 600; color: var(--fc-ink-3); }
+.per-dia { height: 38px; padding: 0; border: 0; border-radius: 0; background: transparent; color: var(--fc-ink); font-family: var(--fc-body); font-size: var(--fc-t-legenda); font-variant-numeric: tabular-nums; cursor: pointer; }
+.per-dia:hover, .per-dia.na-faixa { background: color-mix(in srgb, var(--fc-accent) 14%, var(--fc-surface)); }
+.per-dia.ini, .per-dia.fim { background: var(--fc-accent); color: var(--fc-on-accent); font-weight: 600; }
+.per-dia.ini { border-radius: var(--fc-r-pilula) 0 0 var(--fc-r-pilula); }
+.per-dia.fim { border-radius: 0 var(--fc-r-pilula) var(--fc-r-pilula) 0; }
+.per-dia.ini.fim { border-radius: var(--fc-r-pilula); }
+.per-dia.hoje { box-shadow: inset 0 -3px 0 var(--fc-ambar); }
+.per-dia:focus-visible { outline-offset: -3px; }
+.per-datas { display: flex; flex-wrap: wrap; gap: var(--fc-e-2); margin-top: var(--fc-e-2); }
+.per-datas label { display: flex; flex-direction: column; gap: 4px; }
+.per-datas .campo { width: 150px; }
+.per-campo-erro { min-height: 1.4em; color: var(--fc-erro); font-size: var(--fc-t-legenda); line-height: var(--fc-lh-legenda); }
+.per-rodape { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--fc-e-2); margin-top: var(--fc-e-2); padding-top: var(--fc-e-2); border-top: 1px solid var(--fc-hair); }
+.per-cmp { font-size: var(--fc-t-legenda); color: var(--fc-ink-2); }
+.per-acoes { display: flex; gap: var(--fc-e-1); margin-left: auto; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+@media (max-width: 760px) {
+  .per-grade-pop { grid-template-columns: 1fr; }
+  .per-atalhos { flex-direction: row; flex-wrap: wrap; padding: 0 0 var(--fc-e-2); border-right: 0; border-bottom: 1px solid var(--fc-hair); }
+  .per-grupo { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px; }
+  .per-grupo .fc-rotulo { width: 100%; }
+  .per-acoes { margin-left: 0; width: 100%; }
+}
 
 /* painel de filtros: os 7 filtros em grade (multiescolha, um menu por filtro) */
 .painel-filtros { padding: var(--fc-e-2); display: flex; flex-direction: column; gap: var(--fc-e-2); }
@@ -251,8 +298,32 @@ td.txt small.sv { white-space: nowrap; }
           <button type="button" id="aba-event" data-basis="event" aria-pressed="true">Data do evento</button>
           <button type="button" id="aba-lead" data-basis="lead" aria-pressed="false">Data do lead</button>
         </div>
-        <label class="cmp data"><span class="fc-rotulo">Data inicial</span><input class="campo" type="date" id="c-inicio"></label>
-        <label class="cmp data"><span class="fc-rotulo">Data final</span><input class="campo" type="date" id="c-fim"></label>
+        <div class="cmp">
+          <span class="fc-rotulo" id="lg-periodo">Período</span>
+          <button type="button" class="campo per-gatilho" id="c-periodo" aria-haspopup="dialog" aria-expanded="false" aria-controls="c-pop" aria-labelledby="lg-periodo c-valor"><span id="c-valor"></span>
+            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <div class="per-pop" id="c-pop" role="dialog" aria-label="Escolher período" hidden>
+          <div class="per-grade-pop">
+            <nav class="per-atalhos" id="c-atalhos" aria-label="Atalhos de período"></nav>
+            <div>
+              <div id="c-cal"></div>
+              <div class="per-datas">
+                <label><span class="fc-rotulo">Início</span><input class="campo" id="c-ini" inputmode="numeric" placeholder="dd/mm/aaaa" maxlength="10" autocomplete="off"></label>
+                <label><span class="fc-rotulo">Fim</span><input class="campo" id="c-fim" inputmode="numeric" placeholder="dd/mm/aaaa" maxlength="10" autocomplete="off"></label>
+              </div>
+              <p class="per-campo-erro" id="c-erro" role="alert"></p>
+            </div>
+          </div>
+          <div class="per-rodape">
+            <p class="per-cmp" id="c-cmp" aria-live="polite"></p>
+            <div class="per-acoes">
+              <button type="button" class="btn ghost" id="c-cancelar">Cancelar</button>
+              <button type="button" class="btn" id="c-aplicar">Aplicar</button>
+            </div>
+          </div>
+        </div>
         <div class="cmp">
           <span class="fc-rotulo" id="lg-grao">Agrupar por</span>
           <div class="seg" role="group" aria-labelledby="lg-grao">
@@ -386,11 +457,11 @@ td.txt small.sv { white-space: nowrap; }
     </section>
   </main>
 </div>
-<script src="config.js?v=ca16e701ca"></script>
-<script src="followup.js?v=ca16e701ca"></script>
-<script src="cirurgias.js?v=ca16e701ca"></script>
-<script src="pacientes.js?v=ca16e701ca"></script>
-<script src="setup.js?v=ca16e701ca"></script>
-<script src="painel.js?v=ca16e701ca"></script>
+<script src="config.js?v=5d1bb087ed"></script>
+<script src="followup.js?v=5d1bb087ed"></script>
+<script src="cirurgias.js?v=5d1bb087ed"></script>
+<script src="pacientes.js?v=5d1bb087ed"></script>
+<script src="setup.js?v=5d1bb087ed"></script>
+<script src="painel.js?v=5d1bb087ed"></script>
 </body>
 </html>
