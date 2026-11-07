@@ -197,10 +197,10 @@
     return [p.start, p.end];
   }
 
-  // 'setup' tem botão próprio no topo (à esquerda do seletor de cliente), fora do grupo Funil | Cirurgias | Pacientes. Na página Setup o seletor de cliente some (o quadro é de todos).
+  // 'setup' e 'onboarding' têm botão próprio no topo (à esquerda do seletor de cliente), fora do grupo Funil | Cirurgias | Pacientes. Nessas duas páginas o seletor de cliente some (o quadro e o mapa são de todos).
   function paginaDaUrl() {
     const p = new URLSearchParams(location.search).get('pagina');
-    return p === 'cirurgias' || p === 'setup' || p === 'pacientes' ? p : 'funil';
+    return p === 'cirurgias' || p === 'setup' || p === 'pacientes' || p === 'onboarding' ? p : 'funil';
   }
 
   // ------------------------------------------------------------ estado
@@ -541,7 +541,7 @@
         // Pacientes e mensagens são listas simples (fixtures/README_pacientes.md), não o formato do BigQuery; as mensagens são só as do telefone pedido.
         if (nome === 'patients') return await fixtureBruto('patients');
         if (nome === 'messages') return (await fixtureBruto('messages')).filter((m) => m.phone_key === params.phone_key).sort((a, b) => (a.sent_at || '').localeCompare(b.sent_at || '') || a.seq - b.seq);
-        return await fixture(['completed', 'marked', 'options', 'tenants', 'surgeries', 'setup_board', 'setup_events'].includes(nome) ? nome : 'funnel');
+        return await fixture(['completed', 'marked', 'options', 'tenants', 'surgeries', 'setup_board', 'setup_events', 'onboarding_map'].includes(nome) ? nome : 'funnel');
       }
       return await bqQuery(nome, params);
     } finally {
@@ -1027,13 +1027,50 @@
     }
   }
 
+  // ------------------------------------------------------------ página Onboarding (mapa do onboarding, só leitura)
+  // O desenho mora no html que o build.py do mapa grava em analytics.onboarding_map; o onboarding.js põe esse html num iframe com sandbox.
+  // Aqui: a consulta (login do Google), a frase de espera e os erros. O mapa tem nome de cliente: só chega a quem o BigQuery deixa ler.
+  let seqOnb = 0;
+
+  async function carregaOnboarding() {
+    const meu = ++seqOnb;
+    $('onb-erro').hidden = true;
+    $('onb-carregando').hidden = false;
+    window.PainelOnboarding.limpa();
+    const app = $('painel');
+    app.classList.add('carregando');
+    app.setAttribute('aria-busy', 'true');
+    try {
+      const [linha] = await consulta('onboarding_map', {});
+      if (meu !== seqOnb) return;
+      $('onb-carregando').hidden = true;
+      window.PainelOnboarding.render(linha || null);
+    } catch (e) {
+      if (e instanceof AuthError) return;
+      if (meu === seqOnb) {
+        $('onb-carregando').hidden = true;
+        window.PainelOnboarding.limpa();
+        $('onb-erro').textContent = /^BigQuery 403/.test(String(e.message))
+          ? 'Sua conta não tem permissão para ver o mapa do onboarding. Fale com o Felipe.'
+          : 'Não consegui carregar o mapa do onboarding. Tente de novo em alguns minutos.';
+        $('onb-erro').hidden = false;
+      }
+    } finally {
+      if (meu === seqOnb) {
+        app.classList.remove('carregando');
+        app.removeAttribute('aria-busy');
+      }
+    }
+  }
+
   function mudaPagina(pagina) {
     state.pagina = pagina;
     $('pg-funil').hidden = pagina !== 'funil';
     $('pg-cirurgias').hidden = pagina !== 'cirurgias';
     $('pg-pacientes').hidden = pagina !== 'pacientes';
     $('pg-setup').hidden = pagina !== 'setup';
-    document.querySelector('.topo-campo').hidden = pagina === 'setup'; // o quadro é de todos os clientes: sem seletor
+    $('pg-onboarding').hidden = pagina !== 'onboarding';
+    document.querySelector('.topo-campo').hidden = pagina === 'setup' || pagina === 'onboarding'; // o quadro e o mapa são de todos os clientes: sem seletor
     document.querySelectorAll('[data-pagina]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.pagina === pagina)));
     const q = new URLSearchParams(location.search);
     if (pagina === 'funil') q.delete('pagina'); else q.set('pagina', pagina);
@@ -1094,6 +1131,7 @@
     if (state.pagina === 'cirurgias') return carregaCirurgias();
     if (state.pagina === 'pacientes') return carregaPacientes();
     if (state.pagina === 'setup') return carregaSetup();
+    if (state.pagina === 'onboarding') return carregaOnboarding();
     if (state.start > state.end) {
       mostraErro('A data inicial vem depois da final.');
       return;

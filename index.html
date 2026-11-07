@@ -10,9 +10,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Schibsted+Grotesk:wght@300;400;500&display=swap">
 <!-- Fonte única de cor, fonte, espaço e forma (marca da casa). Não copiar valores: o publicar.sh copia o tokens.css canônico. -->
-<link rel="stylesheet" href="tokens.css?v=5d1bb087ed">
-<link rel="stylesheet" href="cirurgias.css?v=5d1bb087ed">
-<link rel="stylesheet" href="pacientes.css?v=5d1bb087ed">
+<link rel="stylesheet" href="tokens.css?v=45793aeb88">
+<link rel="stylesheet" href="cirurgias.css?v=45793aeb88">
+<link rel="stylesheet" href="pacientes.css?v=45793aeb88">
 <style>
 body { margin: 0; }
 :focus-visible { outline: 3px solid var(--fc-accent); outline-offset: 2px; }
@@ -231,10 +231,13 @@ small.sv { display: block; color: var(--fc-ink-3); font-size: var(--fc-t-rotulo)
 .esq-linha { height: 22px; }
 
 /* página Cirurgias: o estilo da fila está em cirurgias.css */
-#pg-funil, #pg-cirurgias, #pg-setup { display: flex; flex-direction: column; gap: var(--fc-e-3); }
+#pg-funil, #pg-cirurgias, #pg-setup, #pg-onboarding { display: flex; flex-direction: column; gap: var(--fc-e-3); }
 /* página Setup: o quadro vive num iframe sem script (setup.js); o estilo dele é o do arquivo gerado pelo ops_log.py.
    A altura é a do conteúdo (o setup.js mede e põe; 480px é só até medir): quem rola é a página, não o iframe. */
 #set-quadro { display: block; width: 100%; height: 480px; border: 0; background: var(--fc-paper); }
+/* página Onboarding: o mapa vive num iframe com script próprio e sandbox (onboarding.js). A altura vai até o fim da tela (o onboarding.js mede
+   e põe; 480px é só até medir): a rolagem é a de dentro do iframe, para as abas sticky do mapa seguirem no topo, e a página não rola. */
+#onb-quadro { display: block; width: 100%; height: 480px; border: 0; background: var(--fc-paper); }
 td.txt small.sv { white-space: nowrap; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -263,8 +266,9 @@ td.txt small.sv { white-space: nowrap; }
       </svg>
       <h1 class="fc-h2">Funil</h1>
     </div>
-    <div class="seg" id="nav-setup" role="group" aria-label="Setup" hidden>
+    <div class="seg" id="nav-setup" role="group" aria-label="Setup e onboarding" hidden>
       <button type="button" id="pag-setup" data-pagina="setup" aria-pressed="false">Setup</button>
+      <button type="button" id="pag-onboarding" data-pagina="onboarding" aria-pressed="false">Onboarding</button>
     </div>
     <div class="topo-campo">
       <label class="fc-rotulo" for="c-tenant">Cliente</label>
@@ -454,14 +458,25 @@ td.txt small.sv { white-space: nowrap; }
         <p class="nota" id="set-vazio" hidden>Ainda não há foto do quadro. Ela é gerada a cada 30 minutos; se passou disso, avise o Felipe.</p>
         <iframe id="set-quadro" title="Quadro de setup dos clientes" sandbox="allow-same-origin" hidden></iframe>
       </section>
+
+      <section id="pg-onboarding" aria-labelledby="t-onboarding" hidden>
+        <div class="cir-cab">
+          <h2 class="fc-h2" id="t-onboarding">Mapa do onboarding</h2>
+          <p class="sub" id="onb-sub"></p>
+        </div>
+        <p class="nota" id="onb-carregando" role="status" hidden>Carregando o mapa do onboarding...</p>
+        <div class="erro" id="onb-erro" hidden></div>
+        <p class="nota" id="onb-vazio" hidden>Ainda não há mapa publicado. Quem publica é o Felipe, com o build.py do mapa.</p>
+      </section>
     </section>
   </main>
 </div>
-<script src="config.js?v=5d1bb087ed"></script>
-<script src="followup.js?v=5d1bb087ed"></script>
-<script src="cirurgias.js?v=5d1bb087ed"></script>
-<script src="pacientes.js?v=5d1bb087ed"></script>
-<script src="setup.js?v=5d1bb087ed"></script>
-<script src="painel.js?v=5d1bb087ed"></script>
+<script src="config.js?v=45793aeb88"></script>
+<script src="followup.js?v=45793aeb88"></script>
+<script src="cirurgias.js?v=45793aeb88"></script>
+<script src="pacientes.js?v=45793aeb88"></script>
+<script src="setup.js?v=45793aeb88"></script>
+<script src="onboarding.js?v=45793aeb88"></script>
+<script src="painel.js?v=45793aeb88"></script>
 </body>
 </html>
