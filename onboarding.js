@@ -8,6 +8,7 @@
 //     dentro do iframe. Com a base em about:srcdoc, #clientes e #e-<id> mudam só o hash do mapa.
 //   - allow-popups-to-escape-sandbox: os links externos do Método (target=_blank) abrem em aba nova que roda normal, sem herdar o sandbox.
 //   - altura: do topo do iframe até o fim da tela. A rolagem é a de dentro do iframe (as abas sticky do mapa seguem no topo) e a página não rola.
+//     O painel.js tira o padding de baixo de .pagina nesta página (classe pagina-cheia), então não há folga a descontar.
 (function () {
   'use strict';
 
@@ -33,8 +34,7 @@
     const quadro = document.getElementById('onb-quadro');
     if (!quadro || quadro.hidden) return;
     const topo = quadro.getBoundingClientRect().top + window.scrollY;
-    const folga = parseFloat(window.getComputedStyle(document.querySelector('.pagina')).paddingBottom) || 0;
-    quadro.style.height = Math.max(ALTURA_MINIMA, Math.floor(window.innerHeight - topo - folga)) + 'px';
+    quadro.style.height = Math.max(ALTURA_MINIMA, Math.floor(window.innerHeight - topo)) + 'px';
   }
   window.addEventListener('resize', ajusta);
 

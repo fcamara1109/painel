@@ -1070,6 +1070,7 @@
     $('pg-pacientes').hidden = pagina !== 'pacientes';
     $('pg-setup').hidden = pagina !== 'setup';
     $('pg-onboarding').hidden = pagina !== 'onboarding';
+    document.querySelector('.pagina').classList.toggle('pagina-cheia', pagina === 'onboarding'); // o mapa vai até o fim da tela: sem o padding de baixo
     document.querySelector('.topo-campo').hidden = pagina === 'setup' || pagina === 'onboarding'; // o quadro e o mapa são de todos os clientes: sem seletor
     document.querySelectorAll('[data-pagina]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.pagina === pagina)));
     const q = new URLSearchParams(location.search);

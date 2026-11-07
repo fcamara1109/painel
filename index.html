@@ -10,9 +10,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Schibsted+Grotesk:wght@300;400;500&display=swap">
 <!-- Fonte única de cor, fonte, espaço e forma (marca da casa). Não copiar valores: o publicar.sh copia o tokens.css canônico. -->
-<link rel="stylesheet" href="tokens.css?v=45793aeb88">
-<link rel="stylesheet" href="cirurgias.css?v=45793aeb88">
-<link rel="stylesheet" href="pacientes.css?v=45793aeb88">
+<link rel="stylesheet" href="tokens.css?v=d30dbfee06">
+<link rel="stylesheet" href="cirurgias.css?v=d30dbfee06">
+<link rel="stylesheet" href="pacientes.css?v=d30dbfee06">
 <style>
 body { margin: 0; }
 :focus-visible { outline: 3px solid var(--fc-accent); outline-offset: 2px; }
@@ -238,6 +238,11 @@ small.sv { display: block; color: var(--fc-ink-3); font-size: var(--fc-t-rotulo)
 /* página Onboarding: o mapa vive num iframe com script próprio e sandbox (onboarding.js). A altura vai até o fim da tela (o onboarding.js mede
    e põe; 480px é só até medir): a rolagem é a de dentro do iframe, para as abas sticky do mapa seguirem no topo, e a página não rola. */
 #onb-quadro { display: block; width: 100%; height: 480px; border: 0; background: var(--fc-paper); }
+/* o título da página é o hero do próprio mapa (o h2 do painel é só para leitor de tela); sobra a linha com a data, compacta, e o padding de baixo
+   da página some aqui (o mapa encosta no fim da tela; as outras páginas mantêm o padding). */
+#pg-onboarding { gap: var(--fc-e-1); }
+#pg-onboarding .cir-cab .sub { margin-top: 0; max-width: none; }
+.pagina.pagina-cheia { padding-bottom: 0; }
 td.txt small.sv { white-space: nowrap; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -461,7 +466,7 @@ td.txt small.sv { white-space: nowrap; }
 
       <section id="pg-onboarding" aria-labelledby="t-onboarding" hidden>
         <div class="cir-cab">
-          <h2 class="fc-h2" id="t-onboarding">Mapa do onboarding</h2>
+          <h2 class="fc-h2 cir-so-leitor" id="t-onboarding">Mapa do onboarding</h2>
           <p class="sub" id="onb-sub"></p>
         </div>
         <p class="nota" id="onb-carregando" role="status" hidden>Carregando o mapa do onboarding...</p>
@@ -471,12 +476,12 @@ td.txt small.sv { white-space: nowrap; }
     </section>
   </main>
 </div>
-<script src="config.js?v=45793aeb88"></script>
-<script src="followup.js?v=45793aeb88"></script>
-<script src="cirurgias.js?v=45793aeb88"></script>
-<script src="pacientes.js?v=45793aeb88"></script>
-<script src="setup.js?v=45793aeb88"></script>
-<script src="onboarding.js?v=45793aeb88"></script>
-<script src="painel.js?v=45793aeb88"></script>
+<script src="config.js?v=d30dbfee06"></script>
+<script src="followup.js?v=d30dbfee06"></script>
+<script src="cirurgias.js?v=d30dbfee06"></script>
+<script src="pacientes.js?v=d30dbfee06"></script>
+<script src="setup.js?v=d30dbfee06"></script>
+<script src="onboarding.js?v=d30dbfee06"></script>
+<script src="painel.js?v=d30dbfee06"></script>
 </body>
 </html>
