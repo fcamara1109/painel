@@ -1,0 +1,24 @@
+/* tema-b.css: tema B "Pampulha". Sobrescreve os tokens --fc-* do tokens.css, traz as fontes (Familjen Grotesk nos títulos,
+   Hanken Grotesk no texto) e a assinatura: verde modernista, luz da Pampulha (ocre, verde, azul) no cabeçalho e a curva única
+   só no canto superior direito dos cartões (feedback v3: assimetria do lado da leitura incomoda). Criado em 12/11/2026. */
+@import url("https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700&family=Familjen+Grotesk:wght@400;500;600&display=swap");
+
+:root{
+  --fc-paper:#F4F3EF; --fc-paper-2:#E9E8E1; --fc-surface:#FBFAF7; --fc-hair:#D6D5CC; --fc-hair-forte:#7F847B;
+  --fc-ink:#16201B; --fc-ink-2:#4B5650; --fc-ink-3:#56605A;
+  --fc-accent:#1E5A3E; --fc-accent-forte:#16452F; --fc-on-accent:#FFFFFF;
+  --fc-mesh-1:#E3EBDD; --fc-mesh-2:#F2CFA0; --fc-mesh-3:#BFDCC4; --fc-mesh-4:#C3D2EE; --fc-on-mesh:#16201B;
+  --fc-scrim-cor:#FFFFFF; --fc-scrim-alfa:0; --fc-grao:.12;
+  --fc-menta:#6FB58A; --fc-ambar:#D9A441;
+  --fc-ok:#1F6440; --fc-atencao:#7A5410; --fc-erro:#9A3A22;
+  --fc-display:'Familjen Grotesk', 'Hanken Grotesk', 'Helvetica Neue', Arial, sans-serif;
+  --fc-body:'Hanken Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --fc-r-bloco:28px; --fc-r-cartao:22px; --fc-r-campo:10px; --fc-r-pilula:999px;
+  --fc-vidro-fundo:rgba(255,255,255,.5); --fc-vidro-borda:rgba(22,32,27,.18); --fc-vidro-fundo-hover:rgba(255,255,255,.72);
+  --fc-sombra-acao:0 12px 28px rgba(30,90,62,.24);
+}
+.fc-mesh{ background-size:220% 220%; }
+@media (prefers-reduced-motion:no-preference){ .fc-mesh{ animation:fc-vivo 16s var(--fc-curva) infinite alternate; } }
+@keyframes fc-vivo{ from{ background-position:0% 0%; } to{ background-position:100% 100%; } }
+/* a curva de marquise: só em cima e à direita, fora do caminho do olho */
+.fc-cartao{ border-radius:var(--fc-r-cartao) 56px var(--fc-r-cartao) var(--fc-r-cartao); }

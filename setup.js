@@ -391,8 +391,15 @@
       quadro.removeEventListener('load', ligar);
       ligaQuadro(quadro, D, sobre);
     });
-    quadro.srcdoc = foto.html;
+    quadro.srcdoc = window.FcTema ? FcTema.injeta(foto.html) : foto.html; // o quadro segue o tema escolhido no topo
   }
+
+  // trocou o tema no topo: troca só o CSS dentro do quadro (redesenhar perderia as edições que ainda não estão na foto)
+  document.addEventListener('fc-tema', () => {
+    const doc = document.getElementById('set-quadro').contentDocument;
+    const l = doc && doc.getElementById('fc-tema');
+    if (l) l.href = FcTema.href(FcTema.atual());
+  });
 
   window.PainelSetup = { render };
 })();

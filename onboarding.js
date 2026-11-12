@@ -68,8 +68,13 @@
       quadro.removeEventListener('load', pronto);
       quadro.dataset.pronto = 'sim';
     });
-    quadro.srcdoc = comBase(linha.html);
+    quadro.srcdoc = comBase(window.FcTema ? FcTema.injeta(linha.html) : linha.html); // o mapa segue o tema escolhido no topo
+    ultima = linha;
   }
+
+  // trocou o tema no topo: redesenha o mapa com o tema novo
+  let ultima = null;
+  document.addEventListener('fc-tema', () => { if (ultima && document.getElementById('onb-quadro')?.srcdoc) render(ultima); });
 
   window.PainelOnboarding = { render, limpa, ajusta };
 })();

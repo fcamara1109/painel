@@ -8,12 +8,14 @@
 <link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Schibsted+Grotesk:wght@300;400;500&display=swap">
 <!-- Fonte única de cor, fonte, espaço e forma (marca da casa). Não copiar valores: o publicar.sh copia o tokens.css canônico. -->
-<link rel="stylesheet" href="tokens.css?v=37e06c20c9">
-<link rel="stylesheet" href="cirurgias.css?v=37e06c20c9">
-<link rel="stylesheet" href="pacientes.css?v=37e06c20c9">
-<link rel="stylesheet" href="atividades.css?v=37e06c20c9">
+<link rel="stylesheet" href="tokens.css?v=3dcf101cba">
+<!-- Tema (A, B, E): sobrescreve os tokens e traz a fonte; o tema.js troca este href pelo último salvo e liga o seletor do topo. -->
+<link rel="stylesheet" id="fc-tema" href="tema-a.css?v=3dcf101cba">
+<script src="tema.js?v=3dcf101cba"></script>
+<link rel="stylesheet" href="cirurgias.css?v=3dcf101cba">
+<link rel="stylesheet" href="pacientes.css?v=3dcf101cba">
+<link rel="stylesheet" href="atividades.css?v=3dcf101cba">
 <style>
 body { margin: 0; }
 :focus-visible { outline: 3px solid var(--fc-accent); outline-offset: 2px; }
@@ -32,6 +34,9 @@ h1, h2, h3, p { margin: 0; }
 .logo-fundo { fill: var(--fc-on-mesh); }
 .logo-traco { stroke: var(--fc-mesh-1); }
 .topo-campo { display: flex; flex-direction: column; gap: var(--fc-e-1); width: 240px; max-width: 100%; }
+/* Tema + Cliente ocupam os 240px que o Cliente ocupava sozinho: o topo não ganha linha em 1440 */
+.topo-tema { width: 78px; }
+.topo-cliente { width: 140px; }
 .login-estado { display: flex; align-items: center; gap: var(--fc-e-2); min-height: var(--fc-toque); font-size: var(--fc-t-legenda); }
 .ponto { width: 10px; height: 10px; border-radius: 50%; background: var(--fc-menta); flex: none; }
 .selo { align-self: center; padding: 2px var(--fc-e-2); border: 1px solid var(--fc-on-mesh); border-radius: var(--fc-r-pilula); font-size: var(--fc-t-rotulo); font-weight: 600; white-space: nowrap; }
@@ -278,7 +283,11 @@ td.txt small.sv { white-space: nowrap; }
       <button type="button" id="pag-onboarding" data-pagina="onboarding" aria-pressed="false">Onboarding</button>
       <button type="button" id="pag-atividades" data-pagina="atividades" aria-pressed="false">Atividades</button>
     </div>
-    <div class="topo-campo">
+    <div class="topo-campo topo-tema">
+      <label class="fc-rotulo" for="c-tema">Tema</label>
+      <select class="campo" id="c-tema" data-fc-tema="curto"></select>
+    </div>
+    <div class="topo-campo topo-cliente">
       <label class="fc-rotulo" for="c-tenant">Cliente</label>
       <select class="campo" id="c-tenant" disabled></select>
     </div>
@@ -489,14 +498,14 @@ td.txt small.sv { white-space: nowrap; }
     </section>
   </main>
 </div>
-<script src="config.js?v=37e06c20c9"></script>
-<script src="followup.js?v=37e06c20c9"></script>
-<script src="cirurgias.js?v=37e06c20c9"></script>
-<script src="pacientes.js?v=37e06c20c9"></script>
-<script src="setup.js?v=37e06c20c9"></script>
-<script src="onboarding.js?v=37e06c20c9"></script>
-<script src="modulos.js?v=37e06c20c9"></script>
-<script src="atividades.js?v=37e06c20c9"></script>
-<script src="painel.js?v=37e06c20c9"></script>
+<script src="config.js?v=3dcf101cba"></script>
+<script src="followup.js?v=3dcf101cba"></script>
+<script src="cirurgias.js?v=3dcf101cba"></script>
+<script src="pacientes.js?v=3dcf101cba"></script>
+<script src="setup.js?v=3dcf101cba"></script>
+<script src="onboarding.js?v=3dcf101cba"></script>
+<script src="modulos.js?v=3dcf101cba"></script>
+<script src="atividades.js?v=3dcf101cba"></script>
+<script src="painel.js?v=3dcf101cba"></script>
 </body>
 </html>

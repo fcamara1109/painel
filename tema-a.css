@@ -1,0 +1,24 @@
+/* tema-a.css: tema A "Prancha" (padrão). Sobrescreve os tokens --fc-* do tokens.css, traz a fonte (Geist) e a assinatura:
+   papel frio, tinta grafite, cabeçalho com gradiente menta, céu e pêssego que desliza devagar. Criado em 12/11/2026.
+   Contrato dos temas e como trocar: tema.js. Contrastes medidos: DESIGN.md, seção "Temas". */
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600&display=swap");
+
+:root{
+  --fc-paper:#F7F8F6; --fc-paper-2:#ECF1EE; --fc-surface:#FFFFFF; --fc-hair:#D5DBD8; --fc-hair-forte:#7E8A86;
+  --fc-ink:#16201E; --fc-ink-2:#4A5652; --fc-ink-3:#56625E;
+  --fc-accent:#0E5A54; --fc-accent-forte:#0A4843; --fc-on-accent:#FFFFFF;
+  /* gradiente vivo: base clara e três lavagens fortes o bastante para se ver (feedback v3: "quase imperceptível") */
+  --fc-mesh-1:#E4F0EC; --fc-mesh-2:#9FD8C4; --fc-mesh-3:#B3CDEB; --fc-mesh-4:#F2BBA8; --fc-on-mesh:#16201E;
+  --fc-scrim-cor:#FFFFFF; --fc-scrim-alfa:0; --fc-grao:.10;
+  --fc-menta:#5FB89E; --fc-ambar:#E2A34C;
+  --fc-ok:#0D5C32; --fc-atencao:#7A5410; --fc-erro:#8F3A25;
+  --fc-display:'Geist', 'Helvetica Neue', Arial, sans-serif;
+  --fc-body:'Geist', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --fc-r-bloco:16px; --fc-r-cartao:12px; --fc-r-campo:8px; --fc-r-pilula:999px;
+  --fc-vidro-fundo:rgba(255,255,255,.55); --fc-vidro-borda:rgba(22,32,30,.18); --fc-vidro-fundo-hover:rgba(255,255,255,.75);
+  --fc-sombra-acao:0 10px 24px rgba(14,90,84,.22);
+}
+.fc-mesh{ background-size:200% 200%; }
+@media (prefers-reduced-motion:no-preference){ .fc-mesh{ animation:fc-vivo 18s var(--fc-curva) infinite alternate; } }
+@keyframes fc-vivo{ from{ background-position:0% 0%; } to{ background-position:100% 100%; } }
+.fc-cartao{ border-color:var(--fc-hair); }
