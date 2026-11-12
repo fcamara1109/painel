@@ -164,6 +164,13 @@
 #pg-pacientes .pc-acao { display: flex; flex-direction: column; gap: var(--fc-e-1); padding: var(--fc-e-2) var(--fc-e-3); flex: none; }
 #pg-pacientes .pc-acao .pc-rot { margin-bottom: 0; }
 #pg-pacientes .pc-acao-t { font-family: var(--fc-display); font-weight: 500; font-size: var(--fc-t-lede); line-height: var(--fc-lh-h3); }
+#pg-pacientes .pc-padrao { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fc-e-1) var(--fc-e-2); margin: 0; padding: 0; border: 0; min-width: 0; }
+#pg-pacientes .pc-padrao legend { float: left; padding: 0; margin-right: var(--fc-e-2); }
+#pg-pacientes .pc-padrao .pc-rot { margin: 0; }
+#pg-pacientes .pc-padrao-op { display: inline-flex; align-items: center; gap: var(--fc-e-1); min-height: var(--fc-toque); color: var(--fc-ink); font-size: var(--fc-t-corpo); cursor: pointer; }
+#pg-pacientes .pc-padrao-op input { width: 20px; height: 20px; margin: 0; accent-color: var(--fc-accent-forte); }
+#pg-pacientes .pc-padrao-hr { display: inline-flex; align-items: center; gap: var(--fc-e-1); }
+#pg-pacientes .pc-padrao input.pc-campo { width: auto; min-width: 120px; }
 #pg-pacientes .pc-acoes { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--fc-e-1); }
 #pg-pacientes .pc-acoes .pc-btn { padding: 0 var(--fc-e-2); white-space: nowrap; font-size: var(--fc-t-legenda); }
 #pg-pacientes .pc-acoes .pc-btn:first-child { font-size: var(--fc-t-corpo); }

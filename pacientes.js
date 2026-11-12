@@ -29,7 +29,7 @@
   const COMANDOS = [['send', 'Enviar agora', 'E'], ['schedule', 'Agendar', 'A'], ['skip', 'Pular hoje', 'P'], ['snooze', 'Soneca', 'S'], ['discard', 'Descartar', 'D'], ['convert', 'Converteu', 'C']];
   const DIA_MAX = 4;
 
-  const ui = { tenant: null, view: 'due_today', aud: '', busca: '', closedOpen: false, diasAbertos: {}, sel: null, panel: null, pane: 'conversa', pendente: null, logOpen: false };
+  const ui = { tenant: null, view: 'due_today', aud: '', busca: '', closedOpen: false, diasAbertos: {}, sel: null, panel: null, pane: 'conversa', pendente: null, logOpen: false, avisoPadrao: null };
   const conversas = {}; // phone_key -> { estado: 'carregando' | 'ok' | 'erro', msgs }, só desta sessão
   const rascunhos = {}; // phone_key -> texto editado antes de enviar
   const emCurso = {}; // phone_key -> { nome, id }: ação esperando o servidor (22 a 35 s com telefone); o paciente fica "processando" e a fila segue
@@ -39,6 +39,33 @@
   let travaAte = 0; // depois de uma ação a fila anda: cliques seguidos (duplo clique) não podem cair no paciente que acabou de abrir
   let S = null; // o que o último desenho sabe: { ctx, entrada, estado, todos, fx, cov, idx }
   const TRAVA_MS = 500;
+  // Envio padrão desta sessão da página, por cliente: { modo: 'agora' } ou { modo: 'agendar', hora: 'HH:MM' }. O que o Felipe usou ou escolheu por último vale para os próximos.
+  let padrao = { modo: 'agora' }, horaUlt = '', dataUlt = ''; // horaUlt e dataUlt: a última escolha, para os campos do controle quando o padrão volta a ser 'agora'
+  const HORA_OK = /^([01]\d|2[0-3]):[0-5]\d$/, DATA_OK = /^\d{4}-\d{2}-\d{2}$/;
+  const DIAS_MAX = 90; // o servidor recusa agendamento além disso (at_longe_demais)
+  const chavePadrao = (t) => `pc_envio_padrao:${t}`;
+  function carregaPadrao(t, hoje) {
+    padrao = { modo: 'agora' }; horaUlt = ''; dataUlt = '';
+    try {
+      const v = JSON.parse(sessionStorage.getItem(chavePadrao(t)) || 'null');
+      if (v && v.modo === 'agendar' && HORA_OK.test(v.hora)) { padrao = { modo: 'agendar', data: DATA_OK.test(v.data) ? v.data : hoje, hora: v.hora }; horaUlt = v.hora; dataUlt = padrao.data; } // guardado sem dia (versão antiga): vale hoje
+    } catch (err) { /* sem storage: vale só em memória */ }
+  }
+  function definePadrao(novo) {
+    padrao = novo;
+    if (novo.hora) { horaUlt = novo.hora; dataUlt = novo.data; }
+    try { sessionStorage.setItem(chavePadrao(ui.tenant), JSON.stringify(padrao)); } catch (err) { /* sem storage: vale só em memória */ }
+  }
+  const hojeSp = () => fuDay(S.fx.now);
+  const dataHora = (data, hora) => `${dd(data)} ${hora}`;
+  const quando = (data, hora) => `${data === hojeSp() ? 'hoje' : dd(data)} ${hora}`; // rótulo do botão principal
+  // dia e hora de São Paulo viram o `at` do servidor; passado e além de 90 dias não vão (o servidor recusaria do mesmo jeito)
+  function resolveAgenda(data, hora) {
+    const at = fuSpIso(data, hora);
+    if (fuMs(at) - Date.now() <= 0) return { erro: 'passou' };
+    if (fuDaysBetween(hojeSp(), data) > DIAS_MAX) return { erro: 'longe' };
+    return { at };
+  }
   const ROTULO_CURSO = { send_now: 'Enviando', schedule: 'Agendando', cancel_schedule: 'Cancelando', snooze: 'Soneca', skip: 'Pulando', discard: 'Descartando', mark_converted: 'Registrando', set_audience: 'Definindo' };
   const ERRO_MOTIVO = {
     sem_whatsapp: 'Esse número não tem WhatsApp.', at_no_passado: 'Esse horário já passou.', at_longe_demais: 'A data é longe demais (no máximo 90 dias).',
@@ -276,17 +303,30 @@
   }
   function painelHtml(p) {
     const { esc } = S.ctx;
-    if (ui.panel === 'schedule') return '<div class="pc-painel-acao"><div class="pc-linha"><label class="pc-rot" for="pc-p-time">Agendar para que horas?</label></div><div class="pc-linha"><input class="pc-campo" type="time" id="pc-p-time"><button type="button" class="pc-btn" data-act="ok_schedule">Confirmar</button></div></div>';
+    if (ui.panel === 'schedule') {
+      const hoje = hojeSp(), pad = !ui.avisoPadrao && padrao.modo === 'agendar';
+      return `<div class="pc-painel-acao">${ui.avisoPadrao ? `<div class="pc-aviso pc-perigo" role="alert">${ic('warn')}<span>${esc(ui.avisoPadrao)}</span></div>` : ''}<div class="pc-linha"><label class="pc-rot" for="pc-p-date">Agendar para que dia e hora?</label></div><div class="pc-linha"><input class="pc-campo" type="date" id="pc-p-date" aria-label="Dia do envio" min="${hoje}" max="${fuAddDays(hoje, DIAS_MAX)}" value="${pad ? padrao.data : hoje}"><input class="pc-campo" type="time" id="pc-p-time" aria-label="Hora do envio"${pad ? ` value="${padrao.hora}"` : ''}><button type="button" class="pc-btn" data-act="ok_schedule">Confirmar</button></div></div>`;
+    }
     if (ui.panel === 'snooze') return `<div class="pc-painel-acao"><div class="pc-linha"><label class="pc-rot" for="pc-p-days">Soneca por quantos dias?</label></div><div class="pc-linha"><select class="pc-campo" id="pc-p-days">${selectDias([3, 7, 15, 30], 7)}</select><button type="button" class="pc-btn" data-act="ok_snooze">Confirmar</button></div></div>`;
     if (ui.panel === 'discard') return `<div class="pc-painel-acao"><div class="pc-linha"><label class="pc-rot" for="pc-p-reason">Por que descartar?</label></div><div class="pc-linha"><select class="pc-campo" id="pc-p-reason">${FU_DISCARD_REASONS.map((x) => `<option value="${x.key}">${esc(x.label)}</option>`).join('')}</select><button type="button" class="pc-btn pc-perigo pc-ghost" data-act="ok_discard">Descartar</button></div></div>`;
     if (ui.panel === 'convert') return `<div class="pc-painel-acao"><div class="pc-linha"><span class="pc-rot">O que foi marcado?</span></div><div class="pc-linha">${p.audience === 'surgery' ? '' : '<button type="button" class="pc-btn" data-act="ok_convert" data-val="consultation">Consulta marcada</button>'}<button type="button" class="pc-btn" data-act="ok_convert" data-val="surgery">Cirurgia marcada</button></div></div>`;
     return '';
   }
+  function padraoHtml() {
+    const ag = padrao.modo === 'agendar', hora = ag ? padrao.hora : horaUlt, hoje = hojeSp(), data = ag ? padrao.data : (dataUlt || hoje);
+    return `<fieldset class="pc-padrao"><legend class="pc-rot">Envio padrão:</legend>`
+      + `<label class="pc-padrao-op"><input type="radio" name="pc-padrao-modo" value="agora" data-padrao="modo"${ag ? '' : ' checked'}><span>Agora</span></label>`
+      + `<label class="pc-padrao-op"><input type="radio" name="pc-padrao-modo" value="agendar" data-padrao="modo"${ag ? ' checked' : ''}><span>Agendar em</span></label>`
+      + `<input class="pc-campo" type="date" id="pc-padrao-data" data-padrao="data" aria-label="Dia do envio padrão" min="${hoje}" max="${fuAddDays(hoje, DIAS_MAX)}" value="${data}">`
+      + `<span class="pc-padrao-hr"><span class="pc-rot">às</span><input class="pc-campo" type="time" id="pc-padrao-hora" data-padrao="hora" aria-label="Hora do envio padrão" value="${hora}"></span></fieldset>`;
+  }
   function acoesHtml(p, desligado, bloqueio) {
-    return `<div class="pc-acoes" role="group" aria-label="Ações para ${S.ctx.esc(nomeDe(p))}">${COMANDOS.map(([k, nome, tecla], i) => {
-      const off = desligado || (bloqueio && (k === 'send' || k === 'schedule'));
-      return `<button type="button" class="pc-btn${i === 0 ? '' : ' pc-ghost'}${k === 'discard' ? ' pc-perigo' : ''}" data-act="cmd" data-cmd="${k}" aria-keyshortcuts="${tecla}"${off ? ' disabled' : ''}>${nome} <kbd>${tecla}</kbd></button>`;
-    }).join('')}</div>`;
+    const ag = padrao.modo === 'agendar';
+    const btn = (k, nome, tecla, i) => {
+      const off = desligado || (bloqueio && (k === 'send' || k === 'send_now' || k === 'schedule'));
+      return `<button type="button" class="pc-btn${i === 0 ? '' : ' pc-ghost'}${k === 'discard' ? ' pc-perigo' : ''}" data-act="cmd" data-cmd="${k}"${tecla ? ` aria-keyshortcuts="${tecla}"` : ''}${off ? ' disabled' : ''}>${nome}${tecla ? ` <kbd>${tecla}</kbd>` : ''}</button>`;
+    };
+    return `<div class="pc-acoes" role="group" aria-label="Ações para ${S.ctx.esc(nomeDe(p))}">${COMANDOS.map(([k, nome, tecla], i) => (k === 'send' && ag ? btn(k, `Agendar ${quando(padrao.data, padrao.hora)}`, tecla, i) + btn('send_now', 'Enviar agora', '', 1) : btn(k, nome, tecla, i))).join('')}</div>`;
   }
   function defineHtml(p) {
     const { esc } = S.ctx;
@@ -316,7 +356,7 @@
       + resHtml(p)
       + (solto ? `<div class="pc-aviso pc-perigo">${ic('warn')}<span>Sem próximo passo: ninguém marcou o próximo contato de ${esc(nomeDe(p))}. Envie, agende ou use Soneca para devolver à fila.</span></div>` : '')
       + (bloqueio ? `<div class="pc-aviso">${ic('info')}<span>Envio bloqueado: ${esc(bloqueio)}</span></div>` : '')
-      + acoesHtml(p, false, bloqueio) + painelHtml(p) + '</section>';
+      + padraoHtml() + acoesHtml(p, false, bloqueio) + painelHtml(p) + '</section>';
   }
   const diaTxt = (iso) => `${new Date(`${iso}T12:00:00Z`).toLocaleDateString('pt-BR', { weekday: 'short', timeZone: 'UTC' }).replace('.', '')} ${dd(iso)}`;
   function nomeBtn(p, txt) { return `<button type="button" class="pc-nome-btn" data-act="pick_sit" data-id="${S.idx.get(p)}">${S.ctx.esc(txt || nomeDe(p))}</button>`; }
@@ -338,7 +378,7 @@
       + `<div class="pc-res-duas"><div class="pc-res-bloco"><h3 class="pc-sec-t">Última tentativa</h3><p class="pc-vazio-nota">Já fizeram todas as tentativas e saem sozinhos se não responderem.</p>${ultHtml}</div>`
       + `<div class="pc-res-bloco"><h3 class="pc-sec-t">Com a Júlia</h3><p class="pc-vazio-nota">Responderam, a Júlia está na conversa.</p>${julHtml}</div></div></section>`;
   }
-  const CAMPOS_PAINEL = ['pc-p-time', 'pc-p-days', 'pc-p-reason', 'pc-def-aud'];
+  const CAMPOS_PAINEL = ['pc-p-date', 'pc-p-time', 'pc-p-days', 'pc-p-reason', 'pc-def-aud'];
   let meioDe = null; // de quem é o meio desenhado por último
   function desenhaMeio() {
     const box = $('pc-meio'), p = selecionado();
@@ -544,12 +584,13 @@
 
   // O único ponto de ação: tudo que muda um paciente passa por aqui e vai ao servidor (ctx.acao). O servidor confere de novo.
   // O servidor leva até 40 s: o paciente fica "processando", a fila já anda e o resultado volta no item, no aviso e no Log.
-  async function executa(nome, corpo, extra) {
+  async function executa(nome, corpo, extra, quando) {
     const p = selecionado();
     if (!p || !S.estado || !S.ctx.acao || emCurso[p.phone_key] || Date.now() < travaAte) return;
     if (nome === 'send_now' || nome === 'schedule') {
       const b = fuSendBlock(p, S.fx);
       if (b) { aviso(b[1], false); return; }
+      definePadrao(nome === 'send_now' ? { modo: 'agora' } : { modo: 'agendar', data: quando.data, hora: quando.hora });
     }
     const ctx = S.ctx, tenant = ui.tenant, chave = p.phone_key;
     const antes = listaAtual().map((x) => x.phone_key), idx = antes.indexOf(chave);
@@ -559,7 +600,7 @@
     emCurso[chave] = marca;
     delete resultados[chave];
     travaAte = Date.now() + TRAVA_MS;
-    ui.panel = null;
+    ui.panel = null; ui.avisoPadrao = null;
     const prox = proximoDaFila(antes, idx);
     if (prox) seleciona(prox);
     desenha();
@@ -593,23 +634,39 @@
   }
   const rascunho = () => { const ta = $('pc-draft'); return ta ? ta.value : undefined; };
   const textoOpc = () => { const t = rascunho(); return t && t.trim() ? { text: t } : {}; }; // sem texto o servidor usa o padrão da audiência
-  function comando(cmd) {
-    const p = selecionado();
-    if (!p) return;
-    if (cmd === 'send') { executa('send_now', textoOpc()); return; }
-    if (cmd === 'skip') { executa('skip', {}); return; }
-    ui.panel = ui.panel === cmd ? null : cmd;
-    desenhaMeio();
+  const extraAgenda = (data, hora) => (data === hojeSp() ? ` às ${hora}` : ` em ${dd(data)} às ${hora}`);
+  function focaPainel() {
     const painel = document.querySelector('#pg-pacientes .pc-painel-acao');
     if (painel) { painel.scrollIntoView({ block: 'nearest' }); const f = painel.querySelector('input,select,button'); if (f) f.focus({ preventScroll: true }); }
   }
+  function comando(cmd) {
+    const p = selecionado();
+    if (!p) return;
+    if (cmd === 'send' && padrao.modo === 'agendar') { // o botão principal segue o padrão: agenda direto na hora padrão
+      const r = resolveAgenda(padrao.data, padrao.hora);
+      if (r.erro) { // nunca agenda numa hora que o Felipe não escolheu: abre o painel para ele escolher outra
+        ui.panel = 'schedule'; ui.avisoPadrao = r.erro === 'passou' ? `O horário padrão (${dataHora(padrao.data, padrao.hora)}) já passou. Escolha outro.` : ERRO_MOTIVO.at_longe_demais;
+        desenhaMeio(); focaPainel(); return;
+      }
+      executa('schedule', { at: r.at, ...textoOpc() }, extraAgenda(padrao.data, padrao.hora), { data: padrao.data, hora: padrao.hora });
+      return;
+    }
+    if (cmd === 'send' || cmd === 'send_now') { executa('send_now', textoOpc()); return; }
+    if (cmd === 'skip') { executa('skip', {}); return; }
+    ui.avisoPadrao = null;
+    ui.panel = ui.panel === cmd ? null : cmd;
+    desenhaMeio();
+    focaPainel();
+  }
   function confirma(tipo, val) {
     if (tipo === 'schedule') {
-      const hora = $('pc-p-time').value;
+      const hora = $('pc-p-time').value, data = $('pc-p-date').value;
       if (!hora) { aviso('Escolha a hora do envio.', false); return; }
-      const at = fuSpIso(S.fx.now, hora); // hoje, no horário de São Paulo, como no protótipo
-      if (fuMs(at) <= Date.now()) { aviso('Esse horário já passou hoje. Escolha uma hora mais tarde.', false); return; }
-      executa('schedule', { at, ...textoOpc() }, ` às ${hora}`);
+      if (!DATA_OK.test(data)) { aviso('Escolha o dia do envio.', false); return; }
+      const r = resolveAgenda(data, hora); // dia e hora no horário de São Paulo
+      if (r.erro === 'passou') { aviso(data === hojeSp() ? 'Esse horário já passou hoje. Escolha uma hora mais tarde.' : 'Esse horário já passou. Escolha outro.', false); return; }
+      if (r.erro) { aviso(ERRO_MOTIVO.at_longe_demais, false); return; }
+      executa('schedule', { at: r.at, ...textoOpc() }, extraAgenda(data, hora), { data, hora });
     }
     if (tipo === 'snooze') { const dias = Number($('pc-p-days').value); executa('snooze', { days: dias }, ` por ${plural(dias, 'dia', 'dias')}`); }
     if (tipo === 'discard') { const motivo = $('pc-p-reason').value; executa('discard', { reason: motivo }, `: ${FU_DISCARD_REASONS.find((x) => x.key === motivo).label.toLowerCase()}`); }
@@ -653,9 +710,23 @@
       default: break;
     }
   });
+  function mudaPadrao(t) { // o controle "Envio padrão": a última escolha vale; muda só os botões, sem redesenhar (o teclado não perde o lugar)
+    const campo = $('pc-padrao-hora'), dia = $('pc-padrao-data'), p = selecionado();
+    if (t.dataset.padrao === 'modo' && t.value === 'agora') definePadrao({ modo: 'agora' });
+    else if (HORA_OK.test(campo.value) && DATA_OK.test(dia.value)) definePadrao({ modo: 'agendar', data: dia.value, hora: campo.value });
+    else if (t.dataset.padrao === 'modo') { // Agendar sem dia ou hora escolhidos: o padrão só vira agendar quando houver os dois
+      const ag = padrao.modo === 'agendar';
+      document.querySelectorAll('#pg-pacientes input[name="pc-padrao-modo"]').forEach((r) => { r.checked = (r.value === 'agendar') === ag; });
+      (DATA_OK.test(dia.value) ? campo : dia).focus(); return;
+    } else return;
+    document.querySelectorAll('#pg-pacientes input[name="pc-padrao-modo"]').forEach((r) => { r.checked = r.value === padrao.modo; });
+    const acoes = document.querySelector('#pg-pacientes .pc-acoes');
+    if (acoes && p) { const b = fuSendBlock(p, S.fx); acoes.outerHTML = acoesHtml(p, false, b ? b[1] : null); }
+  }
   document.addEventListener('change', (e) => {
     const t = e.target;
     if (!aberta() || !t.dataset) return;
+    if (t.dataset.padrao) { mudaPadrao(t); return; }
     if (t.dataset.filter) {
       if (t.dataset.filter === 'view') { ui.view = t.value; if (ui.view !== 'all' && (ui.aud === 'attended' || ui.aud === 'lost')) ui.aud = ''; }
       else { ui.aud = t.value; if (ui.aud === 'attended' || ui.aud === 'lost') ui.view = 'all'; else if (ui.view === 'unsegmented') ui.view = 'due_today'; }
@@ -672,7 +743,7 @@
     if (p) rascunhos[p.phone_key] = t.value;
   });
   document.addEventListener('keydown', (e) => {
-    if (!aberta() || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (!aberta() || e.metaKey || e.ctrlKey || e.altKey || e.repeat) return; // segurar a tecla não dispara de novo: a fila anda e cairia em outro paciente
     if (e.key === 'Escape' && e.target.id === 'pc-busca' && ui.busca) { e.preventDefault(); ui.busca = ''; ui.panel = null; desenha(); return; }
     if (e.key === 'Escape' && ui.panel) { ui.panel = null; desenhaMeio(); return; }
     if (['INPUT', 'TEXTAREA', 'SELECT'].indexOf(e.target.tagName) >= 0 || document.querySelector('dialog[open]')) return;
@@ -686,7 +757,7 @@
   // entrada: null = carregando; false = falhou (o painel já mostra o erro); { linhas, estado } = pronto (estado null = ações desligadas)
   function render(entrada, ctx) {
     if (ui.tenant !== ctx.tenant) { // outro cliente: lista, seleção e conversas começam do zero
-      ui.tenant = ctx.tenant; ui.sel = null; ui.panel = null; ui.busca = ''; ui.pendente = null; registro = []; travaAte = 0;
+      ui.tenant = ctx.tenant; carregaPadrao(ctx.tenant, ctx.hoje); ui.sel = null; ui.panel = null; ui.busca = ''; ui.pendente = null; registro = []; travaAte = 0;
       [conversas, rascunhos, emCurso, resultados, enviadosAgora].forEach((m) => Object.keys(m).forEach((k) => delete m[k]));
     }
     if (!entrada) {
