@@ -189,7 +189,7 @@
     const alertas = SOLTOS.filter((k) => cv.counts[k] > 0).map((k) => `<button type="button" class="pc-btn-alerta" data-act="sit" data-val="${k}" aria-pressed="${ui.view === k}">${ic('warn')}${cv.counts[k]}${k === 'unsegmented' ? ' sem audiência: definir' : ' sem próximo passo: ver'}</button>`).join('');
     const leg = legenda ? `<div class="pc-cob-leg">${ativos.map((x) => `<button type="button" class="pc-leg" data-act="sit" data-val="${x.key}"><i class="pc-dot pc-s-${x.key}"></i>${S.ctx.esc(x.label)} <b>${cv.counts[x.key]}</b></button>`).join('')}</div>` : '';
     return `<div class="pc-cob"><div class="pc-cob-bar" role="group" aria-label="Situação de cada paciente">${segs}</div>`
-      + `<p class="pc-cob-txt pc-${cv.ok ? 'ok' : 'alerta'}">${cv.ok ? ic('ok') : (legenda ? ic('warn') : '')}${cv.covered} de ${cv.total} com próximo passo</p>${leg}${legenda ? '' : alertas}</div>`;
+      + `<p class="pc-cob-txt pc-${cv.ok ? 'ok' : 'alerta'}">${cv.ok ? ic('ok') : (legenda ? ic('warn') : '')}${cv.total} acompanhados: ${cv.ok ? 'nenhum esquecido' : `${cv.total - cv.covered} sem próximo passo`}</p>${leg}${legenda ? '' : alertas}</div>`;
   }
   function filtrosHtml() {
     const { esc } = S.ctx;
