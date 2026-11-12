@@ -34,7 +34,7 @@ var FU_NO_DATE = 9999;
 var FU_DISCARD_REASONS = [
   { key: 'no_reply', label: 'Sem resposta' }, { key: 'not_interested', label: 'Não tem interesse' },
   { key: 'operated_elsewhere', label: 'Operou em outro lugar' }, { key: 'wrong_number', label: 'Número errado' },
-  { key: 'other', label: 'Outro' }
+  { key: 'no_surgery_needed', label: 'Não precisa de cirurgia (robô classificou errado)' }, { key: 'other', label: 'Outro' }
 ];
 var FU_SITUATIONS = [
   { key: 'due_today', label: 'Devido hoje', order: 'mais parado primeiro' },
