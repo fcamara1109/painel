@@ -10,9 +10,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Schibsted+Grotesk:wght@300;400;500&display=swap">
 <!-- Fonte única de cor, fonte, espaço e forma (marca da casa). Não copiar valores: o publicar.sh copia o tokens.css canônico. -->
-<link rel="stylesheet" href="tokens.css?v=6a1975dbfa">
-<link rel="stylesheet" href="cirurgias.css?v=6a1975dbfa">
-<link rel="stylesheet" href="pacientes.css?v=6a1975dbfa">
+<link rel="stylesheet" href="tokens.css?v=a946868921">
+<link rel="stylesheet" href="cirurgias.css?v=a946868921">
+<link rel="stylesheet" href="pacientes.css?v=a946868921">
+<link rel="stylesheet" href="atividades.css?v=a946868921">
 <style>
 body { margin: 0; }
 :focus-visible { outline: 3px solid var(--fc-accent); outline-offset: 2px; }
@@ -231,7 +232,7 @@ small.sv { display: block; color: var(--fc-ink-3); font-size: var(--fc-t-rotulo)
 .esq-linha { height: 22px; }
 
 /* página Cirurgias: o estilo da fila está em cirurgias.css */
-#pg-funil, #pg-cirurgias, #pg-setup, #pg-onboarding { display: flex; flex-direction: column; gap: var(--fc-e-3); }
+#pg-funil, #pg-cirurgias, #pg-setup, #pg-onboarding, #pg-atividades { display: flex; flex-direction: column; gap: var(--fc-e-3); }
 /* página Setup: o quadro vive num iframe sem script (setup.js); o estilo dele é o do arquivo gerado pelo ops_log.py.
    A altura é a do conteúdo (o setup.js mede e põe; 480px é só até medir): quem rola é a página, não o iframe. */
 #set-quadro { display: block; width: 100%; height: 480px; border: 0; background: var(--fc-paper); }
@@ -253,6 +254,7 @@ td.txt small.sv { white-space: nowrap; }
 @media (max-width: 600px) {
   .bloco { padding: var(--fc-e-2); }
   .seg button { padding: 0 var(--fc-e-1); }
+  #nav-setup button { padding: 0 3px; } /* três botões (Setup, Onboarding, Atividades) cabem numa linha no celular */
   .controles .seg { max-width: 100%; }
   .opcoes { position: static; max-width: none; margin-top: var(--fc-e-1); box-shadow: none; }
   .acc { padding: 0 var(--fc-e-2); }
@@ -274,6 +276,7 @@ td.txt small.sv { white-space: nowrap; }
     <div class="seg" id="nav-setup" role="group" aria-label="Setup e onboarding" hidden>
       <button type="button" id="pag-setup" data-pagina="setup" aria-pressed="false">Setup</button>
       <button type="button" id="pag-onboarding" data-pagina="onboarding" aria-pressed="false">Onboarding</button>
+      <button type="button" id="pag-atividades" data-pagina="atividades" aria-pressed="false">Atividades</button>
     </div>
     <div class="topo-campo">
       <label class="fc-rotulo" for="c-tenant">Cliente</label>
@@ -464,6 +467,16 @@ td.txt small.sv { white-space: nowrap; }
         <iframe id="set-quadro" title="Quadro de setup dos clientes" sandbox="allow-same-origin" hidden></iframe>
       </section>
 
+      <section id="pg-atividades" aria-labelledby="t-atividades" hidden>
+        <div class="cir-cab">
+          <h2 class="fc-h2" id="t-atividades">Atividades dos clientes</h2>
+          <p class="sub" id="atv-sub"></p>
+        </div>
+        <div class="erro" id="atv-erro" hidden></div>
+        <div class="atv-filtros" id="atv-filtros"></div>
+        <div id="atv-lista"></div>
+      </section>
+
       <section id="pg-onboarding" aria-labelledby="t-onboarding" hidden>
         <div class="cir-cab">
           <h2 class="fc-h2 cir-so-leitor" id="t-onboarding">Mapa do onboarding</h2>
@@ -476,12 +489,14 @@ td.txt small.sv { white-space: nowrap; }
     </section>
   </main>
 </div>
-<script src="config.js?v=6a1975dbfa"></script>
-<script src="followup.js?v=6a1975dbfa"></script>
-<script src="cirurgias.js?v=6a1975dbfa"></script>
-<script src="pacientes.js?v=6a1975dbfa"></script>
-<script src="setup.js?v=6a1975dbfa"></script>
-<script src="onboarding.js?v=6a1975dbfa"></script>
-<script src="painel.js?v=6a1975dbfa"></script>
+<script src="config.js?v=a946868921"></script>
+<script src="followup.js?v=a946868921"></script>
+<script src="cirurgias.js?v=a946868921"></script>
+<script src="pacientes.js?v=a946868921"></script>
+<script src="setup.js?v=a946868921"></script>
+<script src="onboarding.js?v=a946868921"></script>
+<script src="modulos.js?v=a946868921"></script>
+<script src="atividades.js?v=a946868921"></script>
+<script src="painel.js?v=a946868921"></script>
 </body>
 </html>

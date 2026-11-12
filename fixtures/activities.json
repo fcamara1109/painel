@@ -1,0 +1,460 @@
+{
+ "schema": {
+  "fields": [
+   {
+    "name": "ts",
+    "type": "STRING"
+   },
+   {
+    "name": "tenant",
+    "type": "STRING"
+   },
+   {
+    "name": "kind",
+    "type": "STRING"
+   },
+   {
+    "name": "event_name",
+    "type": "STRING"
+   },
+   {
+    "name": "title",
+    "type": "STRING"
+   },
+   {
+    "name": "detail",
+    "type": "STRING"
+   },
+   {
+    "name": "link",
+    "type": "STRING"
+   },
+   {
+    "name": "event_id",
+    "type": "STRING"
+   }
+  ]
+ },
+ "rows": [
+  {
+   "f": [
+    {
+     "v": "2026-11-10 23:59"
+    },
+    {
+     "v": "exemplo_a"
+    },
+    {
+     "v": "whatsapp_day"
+    },
+    {
+     "v": "whatsapp_day"
+    },
+    {
+     "v": "Grupo Exemplo A: 12 mensagens"
+    },
+    {
+     "v": "{\"by_person\":[{\"n\":8,\"name\":\"Pessoa 1\"},{\"n\":4,\"name\":\"Felipe\"}],\"chat_id\":\"120363000000000001@g.us\",\"client_match\":\"internal_group\",\"date\":\"2026-11-10\",\"group_name\":\"Grupo Exemplo A\",\"messages_total\":12,\"model\":\"gemini-3.7-flash\",\"ours_total\":4,\"source\":\"mirror\",\"summary\":\"Combinaram o texto da confirmação e a data do teste.\"}"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "910000000000000002"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-11-10 18:30"
+    },
+    {
+     "v": "exemplo_a"
+    },
+    {
+     "v": "setup"
+    },
+    {
+     "v": "setup_stage"
+    },
+    {
+     "v": "site: setup_stage → no ar"
+    },
+    {
+     "v": "{\"module\":\"site\",\"seq\":1,\"value\":\"no ar\"}"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "910000000000000007"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-11-10 18:29"
+    },
+    {
+     "v": "exemplo_a"
+    },
+    {
+     "v": "setup"
+    },
+    {
+     "v": "setup_planned"
+    },
+    {
+     "v": "ai_attendant: setup_planned → sim"
+    },
+    {
+     "v": "{\"module\":\"ai_attendant\",\"seq\":2,\"value\":\"sim\"}"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "910000000000000008"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-11-10 17:00"
+    },
+    {
+     "v": "exemplo_a"
+    },
+    {
+     "v": "task"
+    },
+    {
+     "v": "task_done"
+    },
+    {
+     "v": "task_done #3: Atualizar fotos do site"
+    },
+    {
+     "v": "{\"assignee\":\"felipe\",\"module\":\"site\",\"name\":\"Atualizar fotos do site\",\"row\":7,\"sheet_id\":\"SHEET_EXEMPLO\",\"source\":\"sheet\",\"tab\":\"adm.tarefas\",\"task_no\":\"3\"}"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "910000000000000005"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-11-10 14:40"
+    },
+    {
+     "v": "exemplo_a"
+    },
+    {
+     "v": "meeting"
+    },
+    {
+     "v": "meeting_recorded"
+    },
+    {
+     "v": "Reunião de acompanhamento"
+    },
+    {
+     "v": "{\"client_match\":\"title\",\"decisions\":[\"Ligar a confirmação 24h antes\",\"Manter o orçamento de anúncios\"],\"duration_min\":42,\"model\":\"gemini-3.7-flash\",\"next_steps\":[{\"what\":\"Configurar a mensagem de confirmação\",\"who\":\"Felipe\"},{\"what\":\"Revisar a agenda de dezembro\",\"who\":\"Secretária\"}],\"recording_id\":\"900000001\",\"share_url\":\"https://fathom.video/share/exemplo-a\",\"source\":\"fathom\",\"summary\":\"Revisamos o funil de outubro. A confirmação 24h antes entra na semana que vem.\",\"title\":\"Reunião de acompanhamento\",\"url\":\"https://fathom.video/calls/900000001\"}"
+    },
+    {
+     "v": "https://fathom.video/share/exemplo-a"
+    },
+    {
+     "v": "910000000000000001"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-11-09 12:00"
+    },
+    {
+     "v": "exemplo_a"
+    },
+    {
+     "v": "task"
+    },
+    {
+     "v": "task_prioritized"
+    },
+    {
+     "v": "task_prioritized #3: Atualizar fotos do site"
+    },
+    {
+     "v": "{\"assignee\":\"felipe\",\"module\":\"site\",\"name\":\"Atualizar fotos do site\",\"row\":6,\"sheet_id\":\"SHEET_EXEMPLO\",\"source\":\"sheet\",\"tab\":\"adm.tarefas\",\"task_no\":\"3\"}"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "910000000000000004"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-11-09 09:00"
+    },
+    {
+     "v": "exemplo_a"
+    },
+    {
+     "v": "task"
+    },
+    {
+     "v": "task_created"
+    },
+    {
+     "v": "task_created #3: Atualizar fotos do site"
+    },
+    {
+     "v": "{\"assignee\":\"felipe\",\"module\":\"site\",\"name\":\"Atualizar fotos do site\",\"row\":5,\"sheet_id\":\"SHEET_EXEMPLO\",\"source\":\"sheet\",\"tab\":\"adm.tarefas\",\"task_no\":\"3\"}"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "910000000000000003"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-11-08 12:00"
+    },
+    {
+     "v": "exemplo_b"
+    },
+    {
+     "v": "task"
+    },
+    {
+     "v": "task_cancelled"
+    },
+    {
+     "v": "task_cancelled #4: Revisar convênios"
+    },
+    {
+     "v": "{\"assignee\":\"aura\",\"module\":\"site\",\"name\":\"Revisar convênios\",\"row\":9,\"sheet_id\":\"SHEET_EXEMPLO\",\"source\":\"sheet\",\"tab\":\"adm.tarefas\",\"task_no\":\"4\"}"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "910000000000000006"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-11-06 15:00"
+    },
+    {
+     "v": "felipe"
+    },
+    {
+     "v": "meeting"
+    },
+    {
+     "v": "meeting_recorded"
+    },
+    {
+     "v": "Conversa sem cliente"
+    },
+    {
+     "v": "{\"client_match\":\"none\",\"decisions\":[],\"duration_min\":20,\"next_steps\":[],\"recording_id\":\"900000002\",\"share_url\":\"https://fathom.video/share/exemplo-b\",\"source\":\"fathom\",\"summary\":\"Conversa de apresentação.\",\"title\":\"Conversa sem cliente\",\"url\":\"https://fathom.video/calls/900000002\"}"
+    },
+    {
+     "v": "https://fathom.video/share/exemplo-b"
+    },
+    {
+     "v": "910000000000000014"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-11-05 10:00"
+    },
+    {
+     "v": "exemplo_a"
+    },
+    {
+     "v": "setup"
+    },
+    {
+     "v": "setup_note"
+    },
+    {
+     "v": "site: setup_note → Esperando o domínio do cliente"
+    },
+    {
+     "v": "{\"module\":\"site\",\"seq\":3,\"text\":\"Esperando o domínio do cliente\"}"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "910000000000000009"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-11-04 09:00"
+    },
+    {
+     "v": "exemplo_b"
+    },
+    {
+     "v": "setup"
+    },
+    {
+     "v": "setup_priority"
+    },
+    {
+     "v": "setup_priority → alta"
+    },
+    {
+     "v": "{\"seq\":4,\"value\":\"alta\"}"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "910000000000000010"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-11-03 09:00"
+    },
+    {
+     "v": "exemplo_c"
+    },
+    {
+     "v": "setup"
+    },
+    {
+     "v": "setup_name"
+    },
+    {
+     "v": "setup_name → Doutor Exemplo C"
+    },
+    {
+     "v": "{\"seq\":5,\"value\":\"Doutor Exemplo C\"}"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "910000000000000011"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-11-02 09:00"
+    },
+    {
+     "v": "exemplo_c"
+    },
+    {
+     "v": "setup"
+    },
+    {
+     "v": "setup_type"
+    },
+    {
+     "v": "setup_type → recorrente"
+    },
+    {
+     "v": "{\"seq\":6,\"value\":\"recorrente\"}"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "910000000000000012"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-11-01 09:00"
+    },
+    {
+     "v": "exemplo_b"
+    },
+    {
+     "v": "setup"
+    },
+    {
+     "v": "setup_stage"
+    },
+    {
+     "v": "modulo_novo: setup_stage → travado"
+    },
+    {
+     "v": "{\"module\":\"modulo_novo\",\"seq\":7,\"value\":\"travado\"}"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "910000000000000013"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-10-13 00:00"
+    },
+    {
+     "v": "exemplo_b"
+    },
+    {
+     "v": "setup"
+    },
+    {
+     "v": "setup_stage"
+    },
+    {
+     "v": "site: setup_stage → em montagem"
+    },
+    {
+     "v": "{\"module\":\"site\",\"seq\":8,\"value\":\"em montagem\"}"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "910000000000000015"
+    }
+   ]
+  }
+ ]
+}

@@ -200,7 +200,7 @@
   // 'setup' e 'onboarding' têm botão próprio no topo (à esquerda do seletor de cliente), fora do grupo Funil | Cirurgias | Pacientes. Nessas duas páginas o seletor de cliente some (o quadro e o mapa são de todos).
   function paginaDaUrl() {
     const p = new URLSearchParams(location.search).get('pagina');
-    return p === 'cirurgias' || p === 'setup' || p === 'pacientes' || p === 'onboarding' ? p : 'funil';
+    return p === 'cirurgias' || p === 'setup' || p === 'pacientes' || p === 'onboarding' || p === 'atividades' ? p : 'funil';
   }
 
   // ------------------------------------------------------------ estado
@@ -541,7 +541,7 @@
         // Pacientes e mensagens são listas simples (fixtures/README_pacientes.md), não o formato do BigQuery; as mensagens são só as do telefone pedido.
         if (nome === 'patients') return await fixtureBruto('patients');
         if (nome === 'messages') return (await fixtureBruto('messages')).filter((m) => m.phone_key === params.phone_key).sort((a, b) => (a.sent_at || '').localeCompare(b.sent_at || '') || a.seq - b.seq);
-        return await fixture(['completed', 'marked', 'options', 'tenants', 'surgeries', 'setup_board', 'setup_events', 'onboarding_map'].includes(nome) ? nome : 'funnel');
+        return await fixture(['completed', 'marked', 'options', 'tenants', 'surgeries', 'setup_board', 'setup_events', 'onboarding_map', 'activities'].includes(nome) ? nome : 'funnel');
       }
       return await bqQuery(nome, params);
     } finally {
@@ -1027,6 +1027,40 @@
     }
   }
 
+  // ------------------------------------------------------------ página Atividades (linha do tempo dos clientes, só leitura)
+  // O desenho mora em atividades.js. Aqui: o período (últimos N dias, hoje incluído), a consulta (activities.sql) e os erros. Cliente e tipo filtram lá.
+  let seqAtv = 0;
+  let diasAtv = 30;
+
+  async function carregaAtividades(dias) {
+    const meu = ++seqAtv;
+    diasAtv = dias || diasAtv;
+    const fim = hojeIso();
+    const ctx = { esc, inicio: PER.somaDias(fim, -(diasAtv - 1)), fim, dias: diasAtv, carrega: (n) => carregaAtividades(n) };
+    $('atv-erro').hidden = true;
+    window.PainelAtividades.render(null, ctx);
+    const app = $('painel');
+    app.classList.add('carregando');
+    app.setAttribute('aria-busy', 'true');
+    try {
+      const linhas = await consulta('activities', { start_date: ctx.inicio, end_date: ctx.fim });
+      if (meu !== seqAtv) return;
+      window.PainelAtividades.render(linhas, ctx);
+    } catch (e) {
+      if (e instanceof AuthError) return;
+      if (meu === seqAtv) {
+        $('atv-erro').textContent = 'Não consegui carregar as atividades. Tente de novo em alguns minutos.';
+        $('atv-erro').hidden = false;
+        window.PainelAtividades.render(false, ctx);
+      }
+    } finally {
+      if (meu === seqAtv) {
+        app.classList.remove('carregando');
+        app.removeAttribute('aria-busy');
+      }
+    }
+  }
+
   // ------------------------------------------------------------ página Onboarding (mapa do onboarding, só leitura)
   // O desenho mora no html que o build.py do mapa grava em analytics.onboarding_map; o onboarding.js põe esse html num iframe com sandbox.
   // Aqui: a consulta (login do Google), a frase de espera e os erros. O mapa tem nome de cliente: só chega a quem o BigQuery deixa ler.
@@ -1070,8 +1104,9 @@
     $('pg-pacientes').hidden = pagina !== 'pacientes';
     $('pg-setup').hidden = pagina !== 'setup';
     $('pg-onboarding').hidden = pagina !== 'onboarding';
+    $('pg-atividades').hidden = pagina !== 'atividades';
     document.querySelector('.pagina').classList.toggle('pagina-cheia', pagina === 'onboarding'); // o mapa vai até o fim da tela: sem o padding de baixo
-    document.querySelector('.topo-campo').hidden = pagina === 'setup' || pagina === 'onboarding'; // o quadro e o mapa são de todos os clientes: sem seletor
+    document.querySelector('.topo-campo').hidden = pagina === 'setup' || pagina === 'onboarding' || pagina === 'atividades'; // o quadro, o mapa e a linha do tempo são de todos os clientes: sem seletor
     document.querySelectorAll('[data-pagina]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.pagina === pagina)));
     const q = new URLSearchParams(location.search);
     if (pagina === 'funil') q.delete('pagina'); else q.set('pagina', pagina);
@@ -1133,6 +1168,7 @@
     if (state.pagina === 'pacientes') return carregaPacientes();
     if (state.pagina === 'setup') return carregaSetup();
     if (state.pagina === 'onboarding') return carregaOnboarding();
+    if (state.pagina === 'atividades') return carregaAtividades();
     if (state.start > state.end) {
       mostraErro('A data inicial vem depois da final.');
       return;

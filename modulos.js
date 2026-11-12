@@ -1,0 +1,28 @@
+// GERADO por painel/gerar_modulos_js.py a partir de _shared/adm/setup/modulos.json. Não edite: rode o gerador.
+window.MODULOS_SETUP = {
+ "profile": "Perfil",
+ "ads_search": "Google Ads Search",
+ "ads_meta": "Meta Ads",
+ "ads_bing": "Bing Ads",
+ "deep_research": "Pesquisa profunda",
+ "brand_manual": "Manual de marca",
+ "voice": "Tom de voz",
+ "site": "Site / landing page",
+ "seo_pages": "Páginas SEO e GEO",
+ "reputation": "Reputação",
+ "doctoralia_paid": "Doctoralia pago",
+ "ai_attendant": "IA de atendimento",
+ "aura_admin": "IA administrativa (Aura)",
+ "scheduling": "Agenda",
+ "weekly_agenda": "Alerta da agenda",
+ "whatsapp_crm": "CRM via WhatsApp",
+ "social_plan": "Ideias e cronograma para redes",
+ "social_static": "Conteúdo estático para redes",
+ "social_video": "Conteúdo em vídeo para redes",
+ "social_guidance": "Orientações para redes sociais",
+ "tracking": "Rastreamento e conversões",
+ "reports": "Relatórios de resultado",
+ "consulting": "Consultoria (horas em call)",
+ "finance": "Financeiro",
+ "customizations": "Personalizações"
+};
