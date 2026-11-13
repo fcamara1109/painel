@@ -4,18 +4,22 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Funil · Felipe Câmara</title>
+<title>Painel</title>
 <link rel="icon" href="data:,">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- Fonte única de cor, fonte, espaço e forma (marca da casa). Não copiar valores: o publicar.sh copia o tokens.css canônico. -->
-<link rel="stylesheet" href="tokens.css?v=3dcf101cba">
+<link rel="stylesheet" href="tokens.css?v=40f8903aa5">
 <!-- Tema (A, B, E): sobrescreve os tokens e traz a fonte; o tema.js troca este href pelo último salvo e liga o seletor do topo. -->
-<link rel="stylesheet" id="fc-tema" href="tema-a.css?v=3dcf101cba">
-<script src="tema.js?v=3dcf101cba"></script>
-<link rel="stylesheet" href="cirurgias.css?v=3dcf101cba">
-<link rel="stylesheet" href="pacientes.css?v=3dcf101cba">
-<link rel="stylesheet" href="atividades.css?v=3dcf101cba">
+<link rel="stylesheet" id="fc-tema" href="tema-a.css?v=40f8903aa5">
+<script src="tema.js?v=40f8903aa5"></script>
+<!-- Componentes do painel por tema (só A e B; o E fica no kit da marca). O painel.js troca este href junto com o tema. -->
+<link rel="stylesheet" id="painel-tema" href="painel-a.css?v=40f8903aa5">
+<link rel="stylesheet" href="cirurgias.css?v=40f8903aa5">
+<link rel="stylesheet" href="pacientes.css?v=40f8903aa5">
+<link rel="stylesheet" href="atividades.css?v=40f8903aa5">
+<link rel="stylesheet" href="hoje.css?v=40f8903aa5">
+<link rel="stylesheet" href="funil.css?v=40f8903aa5">
 <style>
 body { margin: 0; }
 :focus-visible { outline: 3px solid var(--fc-accent); outline-offset: 2px; }
@@ -25,21 +29,42 @@ h1, h2, h3, p { margin: 0; }
 .pagina { max-width: 1440px; margin: 0 auto; padding: var(--fc-e-3) var(--fc-e-2) var(--fc-e-5); display: flex; flex-direction: column; gap: var(--fc-e-3); }
 @media (min-width: 700px) { .pagina { padding-left: var(--fc-e-4); padding-right: var(--fc-e-4); } }
 
-/* cabeçalho: o único bloco de mesh da página, de ponta a ponta */
-.topo { border-radius: 0 0 var(--fc-r-bloco) var(--fc-r-bloco); }
-.topo-in { max-width: 1440px; margin: 0 auto; padding: var(--fc-e-3) var(--fc-e-2); display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--fc-e-2) var(--fc-e-3); }
-@media (min-width: 700px) { .topo-in { padding-left: var(--fc-e-4); padding-right: var(--fc-e-4); } }
-.marca { display: flex; align-items: center; gap: var(--fc-e-2); margin-right: auto; min-height: var(--fc-toque); }
+/* topo em dois andares (redesign, 13/11/2026): global sempre igual; local (cliente + Funil | Cirurgias | Pacientes) só dentro de um cliente.
+   Os componentes de cada tema moram em painel-a.css / painel-b.css; aqui só o esqueleto. */
+.topo { position: sticky; top: 0; z-index: 20; background: var(--fc-surface); border-bottom: 1px solid var(--fc-hair-forte); }
+.topo-g, .topo-l { max-width: 1440px; margin: 0 auto; padding: var(--fc-e-1) var(--fc-e-2); display: flex; align-items: center; gap: var(--fc-e-2) var(--fc-e-3); }
+.topo-l { flex-wrap: wrap; border-top: 1px solid var(--fc-hair); }
+@media (min-width: 700px) { .topo-g, .topo-l { padding-left: var(--fc-e-4); padding-right: var(--fc-e-4); } }
+.marca { display: flex; align-items: center; gap: var(--fc-e-2); min-height: var(--fc-toque); color: var(--fc-ink); text-decoration: none; font-weight: 700; font-size: var(--fc-t-corpo); }
 .marca svg { display: block; flex: none; }
-.logo-fundo { fill: var(--fc-on-mesh); }
-.logo-traco { stroke: var(--fc-mesh-1); }
-.topo-campo { display: flex; flex-direction: column; gap: var(--fc-e-1); width: 240px; max-width: 100%; }
-/* Tema + Cliente ocupam os 240px que o Cliente ocupava sozinho: o topo não ganha linha em 1440 */
-.topo-tema { width: 78px; }
-.topo-cliente { width: 140px; }
+.logo-fundo { fill: var(--fc-ink); }
+.logo-traco { stroke: var(--fc-surface); }
+.nav-g { display: flex; gap: 2px; margin-right: auto; }
+.nav-g button, .barra-m button, .mais-painel button { min-height: var(--fc-toque); padding: 0 var(--fc-e-2); border: 0; background: transparent; color: var(--fc-ink-2); font-family: var(--fc-body); font-size: var(--fc-t-corpo); cursor: pointer; }
+.nav-g button[aria-pressed="true"] { color: var(--fc-ink); font-weight: 600; box-shadow: inset 0 -3px 0 var(--fc-ink); }
+.topo-dir { display: flex; align-items: center; gap: var(--fc-e-2); }
+.topo-cliente { display: flex; align-items: center; gap: var(--fc-e-2); }
+.topo-cliente .campo { width: auto; min-width: 200px; }
 .login-estado { display: flex; align-items: center; gap: var(--fc-e-2); min-height: var(--fc-toque); font-size: var(--fc-t-legenda); }
 .ponto { width: 10px; height: 10px; border-radius: 50%; background: var(--fc-menta); flex: none; }
-.selo { align-self: center; padding: 2px var(--fc-e-2); border: 1px solid var(--fc-on-mesh); border-radius: var(--fc-r-pilula); font-size: var(--fc-t-rotulo); font-weight: 600; white-space: nowrap; }
+.conta { position: relative; }
+.conta-btn { width: var(--fc-toque); height: var(--fc-toque); border: 1px solid var(--fc-ink); border-radius: 50%; background: var(--fc-surface); color: var(--fc-ink); font-family: var(--fc-body); font-size: var(--fc-t-corpo); font-weight: 600; cursor: pointer; }
+.conta-painel { position: absolute; right: 0; top: calc(100% + 8px); z-index: 30; min-width: 240px; display: flex; flex-direction: column; gap: var(--fc-e-2); padding: var(--fc-e-3); background: var(--fc-surface); border: 1px solid var(--fc-hair-forte); border-radius: var(--fc-r-campo); box-shadow: 0 8px 24px rgb(0 0 0 / .12); }
+.conta-painel a { display: flex; align-items: center; min-height: var(--fc-toque); color: var(--fc-ink); }
+.faixa-ex { margin: 0; padding: var(--fc-e-1) var(--fc-e-2); text-align: center; background: var(--fc-paper-2, var(--fc-surface)); color: var(--fc-ink); font-size: var(--fc-t-legenda); border-top: 1px solid var(--fc-hair); }
+.barra-m { display: none; }
+body.sem-login .nav-g, body.sem-login .barra-m, body.sem-login .topo-l, body.sem-login .mais-painel { display: none !important; } /* na tela de login não há navegação */
+.mais-painel { display: none; }
+@media (max-width: 699px) {
+  .nav-g, .login-estado { display: none; }
+  .topo-g { justify-content: space-between; }
+  .topo-cliente .campo { min-width: 0; flex: 1; }
+  .topo-cliente { flex: 1 1 100%; }
+  .barra-m { display: grid; grid-template-columns: repeat(4, 1fr); position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; padding-bottom: env(safe-area-inset-bottom, 0px); background: var(--fc-surface); border-top: 1px solid var(--fc-hair-forte); }
+  .barra-m button[aria-pressed="true"], .barra-m button[aria-expanded="true"] { color: var(--fc-ink); font-weight: 600; }
+  .mais-painel:not([hidden]) { display: flex; flex-direction: column; position: fixed; left: 0; right: 0; bottom: calc(var(--fc-toque) + 1px); z-index: 25; padding: var(--fc-e-2); background: var(--fc-surface); border-top: 1px solid var(--fc-hair-forte); }
+  body { padding-bottom: calc(var(--fc-toque) + 1px + env(safe-area-inset-bottom, 0px)); } /* = altura da .barra-m: o fim da página encosta nela */
+}
 
 .campo { width: 100%; min-width: 0; min-height: var(--fc-toque); padding: 0 var(--fc-e-2); border: 1px solid var(--fc-hair-forte); border-radius: var(--fc-r-campo); background: var(--fc-surface); color: var(--fc-ink); font-family: var(--fc-body); font-size: var(--fc-t-legenda); }
 
@@ -141,16 +166,12 @@ h1, h2, h3, p { margin: 0; }
 .cn { flex: 0 0 auto; }
 .passo { flex: 1 1 0; min-width: 0; padding: var(--fc-e-3); border: 1px solid var(--fc-hair); border-radius: var(--fc-r-cartao); background: var(--fc-surface); display: flex; flex-direction: column; gap: var(--fc-e-1); }
 .passo .num.vol { font-size: clamp(40px, 12vw, 60px); white-space: nowrap; }
-.passo .num.custo { font-size: 26px; white-space: nowrap; }
 .passo .linha { display: flex; flex-wrap: wrap; gap: 0 var(--fc-e-1); font-size: var(--fc-t-legenda); }
 .passo .peq { font-size: var(--fc-t-rotulo); color: var(--fc-ink-3); }
 .passo .parte { display: flex; flex-direction: column; gap: 6px; }
 .passo .parte span { font-size: var(--fc-t-legenda); color: var(--fc-ink-2); }
 .barra { height: 12px; border-radius: var(--fc-r-pilula); background: var(--fc-paper-2); }
 .barra i { display: block; height: 100%; border-radius: var(--fc-r-pilula); background: var(--fc-accent); }
-.passo hr { width: 100%; height: 1px; margin: 0; border: 0; background: var(--fc-hair); }
-.passo .custo-bloco { display: flex; flex-direction: column; gap: 2px; }
-.passo .custo-bloco .rot { font-size: var(--fc-t-legenda); color: var(--fc-ink-2); }
 .cn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; padding: var(--fc-e-1) 0; }
 .cn .num { font-size: 28px; white-space: nowrap; }
 .cn .seta { transform: rotate(90deg); margin: var(--fc-e-2) 0; }
@@ -175,20 +196,7 @@ h1, h2, h3, p { margin: 0; }
 .dlt.neu { color: var(--fc-ink-2); }
 .sem-base { color: var(--fc-ink-3); font-size: var(--fc-t-legenda); }
 
-/* sparkline: série por período do funnel.sql */
-.spark { margin-top: auto; padding-top: var(--fc-e-1); }
-.spark .area { position: relative; height: 32px; }
-.spark svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.spark polyline { fill: none; stroke: var(--fc-accent); stroke-width: 2.5; vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
-.spark polyline.tracejado { stroke-dasharray: 4 5; }
-.spark.escuro polyline { stroke: var(--fc-ink); }
-.spark .ponta { position: absolute; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--fc-surface); background: var(--fc-accent); transform: translate(-50%, 50%); }
-.spark.escuro .ponta { background: var(--fc-ink); }
-.spark .ponta.parcial { background: var(--fc-surface); border-color: var(--fc-accent); }
-.spark.escuro .ponta.parcial { background: var(--fc-surface); border-color: var(--fc-ink); }
-.spark .eixo { display: flex; justify-content: space-between; font-size: var(--fc-t-rotulo); color: var(--fc-ink-3); }
-
-/* faixa Gasto, CPA, ROAS, ROI */
+/* resumo: Gasto, CPA, ROAS, Honorário */
 .faixa { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: var(--fc-e-2); }
 .faixa-cartao { padding: var(--fc-e-3); display: flex; flex-direction: column; gap: var(--fc-e-2); min-width: 0; }
 .faixa-cartao .txt { display: flex; flex-direction: column; gap: var(--fc-e-1); }
@@ -259,7 +267,6 @@ td.txt small.sv { white-space: nowrap; }
 @media (max-width: 600px) {
   .bloco { padding: var(--fc-e-2); }
   .seg button { padding: 0 var(--fc-e-1); }
-  #nav-setup button { padding: 0 3px; } /* três botões (Setup, Onboarding, Atividades) cabem numa linha no celular */
   .controles .seg { max-width: 100%; }
   .opcoes { position: static; max-width: none; margin-top: var(--fc-e-1); box-shadow: none; }
   .acc { padding: 0 var(--fc-e-2); }
@@ -269,51 +276,76 @@ td.txt small.sv { white-space: nowrap; }
 </head>
 <body class="fc-base">
 <div id="barra-carga" class="barra-carga" role="progressbar" aria-label="Carregando dados do BigQuery" hidden><span></span></div>
-<header class="topo fc-mesh">
-  <div class="topo-in">
-    <div class="marca">
-      <svg width="46" height="46" viewBox="0 0 46 46" role="img" aria-label="Símbolo Felipe Câmara">
+<header class="topo" data-topo>
+  <div class="topo-g">
+    <a class="marca" href="?" id="lk-marca">
+      <svg width="36" height="36" viewBox="0 0 46 46" aria-hidden="true">
         <rect class="logo-fundo" x="1" y="9" width="44" height="28" rx="14"/>
         <path class="logo-traco" d="M9 23 H17 L20 16 L26 30 L29 23 H37" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
-      <h1 class="fc-h2">Funil</h1>
+      <span>Painel</span>
+    </a>
+    <nav class="nav-g" data-nav="global" aria-label="Principal">
+      <button type="button" data-pagina="hoje" aria-pressed="false">Hoje</button>
+      <button type="button" data-pagina="clientes" aria-pressed="false">Clientes</button>
+      <button type="button" data-pagina="setup" aria-pressed="false">Setup</button>
+      <button type="button" data-pagina="atividades" aria-pressed="false">Atividades</button>
+      <button type="button" data-pagina="onboarding" aria-pressed="false">Onboarding</button>
+    </nav>
+    <div class="topo-dir">
+      <span class="login-estado"><span class="ponto" aria-hidden="true"></span><span><span id="estado-login">Sem login</span><span id="estado-carga" hidden>, atualizando</span></span></span>
+      <div class="conta" data-menu="conta">
+        <button type="button" class="conta-btn" id="btn-conta" aria-expanded="false" aria-controls="conta-painel" aria-label="Conta e tema">F</button>
+        <div class="conta-painel" id="conta-painel" hidden>
+          <label class="fc-rotulo" for="c-tema">Tema</label>
+          <select class="campo" id="c-tema"><option value="a">A Prancha</option><option value="b">B Pampulha</option></select>
+          <a href="classico/" id="lk-classico">Versão antiga do painel</a>
+          <button class="btn ghost" id="btn-sair" type="button" hidden>Sair</button>
+        </div>
+      </div>
     </div>
-    <div class="seg" id="nav-setup" role="group" aria-label="Setup e onboarding" hidden>
-      <button type="button" id="pag-setup" data-pagina="setup" aria-pressed="false">Setup</button>
-      <button type="button" id="pag-onboarding" data-pagina="onboarding" aria-pressed="false">Onboarding</button>
-      <button type="button" id="pag-atividades" data-pagina="atividades" aria-pressed="false">Atividades</button>
-    </div>
-    <div class="topo-campo topo-tema">
-      <label class="fc-rotulo" for="c-tema">Tema</label>
-      <select class="campo" id="c-tema" data-fc-tema="curto"></select>
-    </div>
-    <div class="topo-campo topo-cliente">
-      <label class="fc-rotulo" for="c-tenant">Cliente</label>
-      <select class="campo" id="c-tenant" disabled></select>
-    </div>
-    <div class="seg" id="nav-pagina" role="group" aria-label="Página" hidden>
-      <button type="button" id="pag-funil" data-pagina="funil" aria-pressed="true">Funil</button>
-      <button type="button" id="pag-cirurgias" data-pagina="cirurgias" aria-pressed="false">Cirurgias</button>
-      <button type="button" id="pag-pacientes" data-pagina="pacientes" aria-pressed="false">Pacientes</button>
-    </div>
-    <div class="login-estado">
-      <span class="ponto" aria-hidden="true"></span>
-      <span><span id="estado-login">Sem login</span><span id="estado-carga" hidden>, atualizando</span></span>
-      <button class="btn ghost" id="btn-sair" type="button" hidden>Sair</button>
-    </div>
-    <span class="selo" id="selo-exemplo" hidden>Dados de exemplo</span>
   </div>
+  <div class="topo-l" data-nav="local" hidden>
+    <div class="topo-cliente">
+      <label class="fc-rotulo" for="c-tenant">Cliente</label>
+      <select class="campo" id="c-tenant" data-sel="cliente" disabled></select>
+    </div>
+    <div class="seg" id="nav-pagina" role="group" aria-label="Página do cliente">
+      <button type="button" data-pagina="funil" aria-pressed="false">Funil</button>
+      <button type="button" data-pagina="cirurgias" aria-pressed="false">Cirurgias</button>
+      <button type="button" data-pagina="pacientes" aria-pressed="false">Pacientes</button>
+    </div>
+  </div>
+  <p class="faixa-ex" data-faixa="exemplo" id="selo-exemplo" hidden>Dados de exemplo. Nenhum paciente real.</p>
 </header>
+<nav class="barra-m" data-nav="global" aria-label="Principal no celular">
+  <button type="button" data-pagina="hoje" aria-pressed="false">Hoje</button>
+  <button type="button" data-pagina="clientes" aria-pressed="false">Clientes</button>
+  <button type="button" data-pagina="setup" aria-pressed="false">Setup</button>
+  <button type="button" id="btn-mais" aria-expanded="false" aria-controls="mais-painel">Mais</button>
+</nav>
+<div class="mais-painel" id="mais-painel" hidden>
+  <button type="button" data-pagina="atividades" aria-pressed="false">Atividades</button>
+  <button type="button" data-pagina="onboarding" aria-pressed="false">Onboarding</button>
+  <button type="button" id="btn-mais-conta">Conta e tema</button>
+</div>
 
 <div class="pagina">
   <main id="app">
-    <section id="login" class="login fc-cartao" hidden>
+    <section id="login" class="login fc-cartao" data-tela="login" hidden>
+      <h1 class="fc-h2">Painel dos clientes</h1>
+      <p class="fc-corpo">Funil, pacientes, cirurgias e setup de cada cliente num lugar só.</p>
       <p id="login-msg" class="fc-corpo">Entre com a conta Google que tem acesso ao BigQuery.</p>
       <button id="btn-login" class="fc-btn" type="button">Entrar com Google</button>
     </section>
 
     <section id="painel" hidden>
-      <div id="pg-funil">
+      <section id="pg-hoje" data-tela="hoje" aria-labelledby="t-hoje" hidden><h1 class="fc-h2" id="t-hoje">Hoje</h1><div id="hoje-corpo"></div></section>
+      <section id="pg-clientes" data-tela="clientes" aria-labelledby="t-clientes" hidden><h1 class="fc-h2" id="t-clientes">Clientes</h1><div id="clientes-corpo"></div></section>
+      <div id="pg-funil" data-tela="funil">
+      <h1 class="fc-h2" id="t-funil-pagina"></h1>
+      <section class="bloco fc-cartao" id="bloco-ritmo" data-bloco="ritmo" aria-labelledby="t-ritmo"></section>
+      <section class="bloco fc-cartao" id="bloco-historico" data-bloco="historico" aria-labelledby="t-hist"></section>
       <div class="controles">
         <div class="seg" role="group" aria-label="Base da data">
           <button type="button" id="aba-event" data-basis="event" aria-pressed="true">Data do evento</button>
@@ -353,6 +385,7 @@ td.txt small.sv { white-space: nowrap; }
             <button type="button" id="g-month" data-grao="month" aria-pressed="false">Mês</button>
           </div>
         </div>
+        <div id="filtro-canal"></div>
         <button type="button" class="btn ghost" id="btn-filtros" aria-expanded="false" aria-controls="painel-filtros">
           <span>Filtros<span class="ativos" id="filtros-ativos"></span></span>
           <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -371,7 +404,7 @@ td.txt small.sv { white-space: nowrap; }
       <div class="aviso" id="aviso-midia" hidden>Cliente sem dado de mídia: gasto e custos ficam vazios.</div>
       <div class="erro" id="erro" hidden></div>
 
-      <section class="funil" aria-labelledby="t-funil">
+      <section class="funil" data-bloco="funil" aria-labelledby="t-funil">
         <div>
           <h2 class="fc-h2" id="t-funil">Onde o funil quebra</h2>
           <p class="sub" id="funil-sub"></p>
@@ -379,7 +412,7 @@ td.txt small.sv { white-space: nowrap; }
         <div class="fl" id="cartoes"></div>
       </section>
 
-      <div class="faixa" id="faixa"></div>
+      <div class="faixa" id="faixa" data-bloco="resumo"></div>
 
       <div id="blocos">
         <section class="bloco fc-cartao" id="bloco-canais">
@@ -498,14 +531,15 @@ td.txt small.sv { white-space: nowrap; }
     </section>
   </main>
 </div>
-<script src="config.js?v=3dcf101cba"></script>
-<script src="followup.js?v=3dcf101cba"></script>
-<script src="cirurgias.js?v=3dcf101cba"></script>
-<script src="pacientes.js?v=3dcf101cba"></script>
-<script src="setup.js?v=3dcf101cba"></script>
-<script src="onboarding.js?v=3dcf101cba"></script>
-<script src="modulos.js?v=3dcf101cba"></script>
-<script src="atividades.js?v=3dcf101cba"></script>
-<script src="painel.js?v=3dcf101cba"></script>
+<script src="config.js?v=40f8903aa5"></script>
+<script src="followup.js?v=40f8903aa5"></script>
+<script src="cirurgias.js?v=40f8903aa5"></script>
+<script src="pacientes.js?v=40f8903aa5"></script>
+<script src="setup.js?v=40f8903aa5"></script>
+<script src="onboarding.js?v=40f8903aa5"></script>
+<script src="modulos.js?v=40f8903aa5"></script>
+<script src="atividades.js?v=40f8903aa5"></script>
+<script src="hoje.js?v=40f8903aa5"></script>
+<script src="painel.js?v=40f8903aa5"></script>
 </body>
 </html>

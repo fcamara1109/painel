@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Funil · Felipe Câmara</title>
+<link rel="icon" href="data:,">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Fonte única de cor, fonte, espaço e forma (marca da casa). Não copiar valores: o publicar.sh copia o tokens.css canônico. -->
+<link rel="stylesheet" href="tokens.css?v=3dcf101cba">
+<!-- Tema (A, B, E): sobrescreve os tokens e traz a fonte; o tema.js troca este href pelo último salvo e liga o seletor do topo. -->
+<link rel="stylesheet" id="fc-tema" href="tema-a.css?v=3dcf101cba">
+<script src="tema.js?v=3dcf101cba"></script>
+<link rel="stylesheet" href="cirurgias.css?v=3dcf101cba">
+<link rel="stylesheet" href="pacientes.css?v=3dcf101cba">
+<link rel="stylesheet" href="atividades.css?v=3dcf101cba">
+<style>
+body { margin: 0; }
+:focus-visible { outline: 3px solid var(--fc-accent); outline-offset: 2px; }
+[hidden] { display: none !important; }
+h1, h2, h3, p { margin: 0; }
+
+.pagina { max-width: 1440px; margin: 0 auto; padding: var(--fc-e-3) var(--fc-e-2) var(--fc-e-5); display: flex; flex-direction: column; gap: var(--fc-e-3); }
+@media (min-width: 700px) { .pagina { padding-left: var(--fc-e-4); padding-right: var(--fc-e-4); } }
+
+/* cabeçalho: o único bloco de mesh da página, de ponta a ponta */
+.topo { border-radius: 0 0 var(--fc-r-bloco) var(--fc-r-bloco); }
+.topo-in { max-width: 1440px; margin: 0 auto; padding: var(--fc-e-3) var(--fc-e-2); display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--fc-e-2) var(--fc-e-3); }
+@media (min-width: 700px) { .topo-in { padding-left: var(--fc-e-4); padding-right: var(--fc-e-4); } }
+.marca { display: flex; align-items: center; gap: var(--fc-e-2); margin-right: auto; min-height: var(--fc-toque); }
+.marca svg { display: block; flex: none; }
+.logo-fundo { fill: var(--fc-on-mesh); }
+.logo-traco { stroke: var(--fc-mesh-1); }
+.topo-campo { display: flex; flex-direction: column; gap: var(--fc-e-1); width: 240px; max-width: 100%; }
+/* Tema + Cliente ocupam os 240px que o Cliente ocupava sozinho: o topo não ganha linha em 1440 */
+.topo-tema { width: 78px; }
+.topo-cliente { width: 140px; }
+.login-estado { display: flex; align-items: center; gap: var(--fc-e-2); min-height: var(--fc-toque); font-size: var(--fc-t-legenda); }
+.ponto { width: 10px; height: 10px; border-radius: 50%; background: var(--fc-menta); flex: none; }
+.selo { align-self: center; padding: 2px var(--fc-e-2); border: 1px solid var(--fc-on-mesh); border-radius: var(--fc-r-pilula); font-size: var(--fc-t-rotulo); font-weight: 600; white-space: nowrap; }
+
+.campo { width: 100%; min-width: 0; min-height: var(--fc-toque); padding: 0 var(--fc-e-2); border: 1px solid var(--fc-hair-forte); border-radius: var(--fc-r-campo); background: var(--fc-surface); color: var(--fc-ink); font-family: var(--fc-body); font-size: var(--fc-t-legenda); }
+
+.btn { display: inline-flex; align-items: center; gap: var(--fc-e-1); min-height: var(--fc-toque); padding: 0 var(--fc-e-3); border: 1px solid var(--fc-accent); border-radius: var(--fc-r-pilula); background: var(--fc-accent); color: var(--fc-on-accent); font-family: var(--fc-body); font-size: var(--fc-t-legenda); font-weight: 600; cursor: pointer; }
+.btn.ghost { background: var(--fc-surface); border-color: var(--fc-hair-forte); color: var(--fc-ink); font-weight: 400; }
+.btn svg { transition: transform var(--fc-dur) var(--fc-curva); }
+.btn[aria-expanded="true"] svg { transform: rotate(180deg); }
+.btn .ativos { color: var(--fc-accent-forte); font-weight: 600; }
+
+/* controle segmentado: pílula com opções exclusivas */
+.seg { display: inline-flex; gap: 2px; padding: 3px; border: 1px solid var(--fc-hair-forte); border-radius: var(--fc-r-pilula); background: var(--fc-surface); }
+.seg button { min-height: var(--fc-toque); padding: 0 var(--fc-e-2); border: 0; border-radius: var(--fc-r-pilula); background: transparent; color: var(--fc-ink-2); font-family: var(--fc-body); font-size: var(--fc-t-legenda); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--fc-accent); color: var(--fc-on-accent); font-weight: 600; }
+
+/* controles do período */
+.controles { display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--fc-e-2) var(--fc-e-3); }
+.controles { position: relative; }
+.controles .cmp { display: flex; flex-direction: column; gap: var(--fc-e-1); }
+
+/* campo Período: abre um painel com atalhos, 2 meses e Início/Fim digitados. Classes per-*: .erro da página é o aviso âmbar. */
+.per-gatilho { display: flex; align-items: center; justify-content: space-between; gap: var(--fc-e-2); width: 310px; max-width: 100%; text-align: left; cursor: pointer; }
+.per-gatilho span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.per-gatilho svg { flex: none; transition: transform var(--fc-dur) var(--fc-curva); }
+.per-gatilho[aria-expanded="true"] svg { transform: rotate(180deg); }
+.per-pop { position: absolute; z-index: 5; top: calc(100% + var(--fc-e-1)); left: 0; width: min(820px, 100%); padding: var(--fc-e-2); border: 1px solid var(--fc-hair-forte); border-radius: var(--fc-r-cartao); background: var(--fc-surface); box-shadow: 0 14px 34px color-mix(in srgb, var(--fc-ink) 18%, transparent); }
+.per-grade-pop { display: grid; grid-template-columns: 210px 1fr; gap: var(--fc-e-3); }
+.per-atalhos { display: flex; flex-direction: column; gap: var(--fc-e-2); padding-right: var(--fc-e-2); border-right: 1px solid var(--fc-hair); }
+.per-grupo { display: flex; flex-direction: column; gap: 2px; }
+.per-grupo .fc-rotulo { margin: 0 0 2px; }
+.per-atalho { min-height: 38px; padding: 0 var(--fc-e-2); border: 0; border-radius: var(--fc-r-campo); background: transparent; color: var(--fc-ink-2); text-align: left; font-family: var(--fc-body); font-size: var(--fc-t-legenda); cursor: pointer; }
+.per-atalho:hover { background: var(--fc-paper-2); }
+.per-atalho[aria-pressed="true"] { background: var(--fc-accent); color: var(--fc-on-accent); font-weight: 600; }
+.per-atalho:disabled { color: var(--fc-ink-3); cursor: not-allowed; opacity: .6; }
+.per-meses { display: flex; flex-wrap: wrap; gap: var(--fc-e-3); }
+.per-mes { width: 266px; flex: none; }
+.per-mes-cab { display: flex; align-items: center; justify-content: space-between; height: 40px; }
+.per-mes-nome { font-family: var(--fc-display); font-weight: 600; font-size: var(--fc-t-legenda); }
+.per-nav { width: 36px; height: 36px; display: grid; place-items: center; padding: 0; border: 1px solid var(--fc-hair-forte); border-radius: 50%; background: var(--fc-surface); color: var(--fc-ink); cursor: pointer; }
+.per-nav:hover { background: var(--fc-paper-2); }
+.per-nav-vazio { width: 36px; height: 36px; }
+.per-dias-sem, .per-grade { display: grid; grid-template-columns: repeat(7, 1fr); }
+.per-dias-sem span { padding: 4px 0; text-align: center; font-size: var(--fc-t-rotulo); font-weight: 600; color: var(--fc-ink-3); }
+.per-dia { height: 38px; padding: 0; border: 0; border-radius: 0; background: transparent; color: var(--fc-ink); font-family: var(--fc-body); font-size: var(--fc-t-legenda); font-variant-numeric: tabular-nums; cursor: pointer; }
+.per-dia:hover, .per-dia.na-faixa { background: color-mix(in srgb, var(--fc-accent) 14%, var(--fc-surface)); }
+.per-dia.ini, .per-dia.fim { background: var(--fc-accent); color: var(--fc-on-accent); font-weight: 600; }
+.per-dia.ini { border-radius: var(--fc-r-pilula) 0 0 var(--fc-r-pilula); }
+.per-dia.fim { border-radius: 0 var(--fc-r-pilula) var(--fc-r-pilula) 0; }
+.per-dia.ini.fim { border-radius: var(--fc-r-pilula); }
+.per-dia.hoje { box-shadow: inset 0 -3px 0 var(--fc-ambar); }
+.per-dia:focus-visible { outline-offset: -3px; }
+.per-datas { display: flex; flex-wrap: wrap; gap: var(--fc-e-2); margin-top: var(--fc-e-2); }
+.per-datas label { display: flex; flex-direction: column; gap: 4px; }
+.per-datas .campo { width: 150px; }
+.per-campo-erro { min-height: 1.4em; color: var(--fc-erro); font-size: var(--fc-t-legenda); line-height: var(--fc-lh-legenda); }
+.per-rodape { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--fc-e-2); margin-top: var(--fc-e-2); padding-top: var(--fc-e-2); border-top: 1px solid var(--fc-hair); }
+.per-cmp { font-size: var(--fc-t-legenda); color: var(--fc-ink-2); }
+.per-acoes { display: flex; gap: var(--fc-e-1); margin-left: auto; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+@media (max-width: 760px) {
+  .per-grade-pop { grid-template-columns: 1fr; }
+  .per-atalhos { flex-direction: row; flex-wrap: wrap; padding: 0 0 var(--fc-e-2); border-right: 0; border-bottom: 1px solid var(--fc-hair); }
+  .per-grupo { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 4px; }
+  .per-grupo .fc-rotulo { width: 100%; }
+  .per-acoes { margin-left: 0; width: 100%; }
+}
+
+/* painel de filtros: os 7 filtros em grade (multiescolha, um menu por filtro) */
+.painel-filtros { padding: var(--fc-e-2); display: flex; flex-direction: column; gap: var(--fc-e-2); }
+.filtros { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr)); gap: var(--fc-e-2); }
+.filtro-campo { display: flex; flex-direction: column; gap: var(--fc-e-1); min-width: 0; }
+.filtro { position: relative; }
+.filtro summary { list-style: none; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: var(--fc-e-1); min-height: var(--fc-toque); padding: 0 var(--fc-e-2); border: 1px solid var(--fc-hair-forte); border-radius: var(--fc-r-campo); background: var(--fc-surface); font-size: var(--fc-t-legenda); }
+.filtro summary::-webkit-details-marker { display: none; }
+.filtro summary .val { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.filtro summary svg { flex: none; }
+.filtro[open] summary { border-color: var(--fc-accent); }
+.opcoes { position: absolute; z-index: 5; top: calc(100% + var(--fc-e-1)); left: 0; min-width: 240px; max-width: 340px; max-height: 300px; overflow: auto; background: var(--fc-surface); border: 1px solid var(--fc-hair); border-radius: var(--fc-r-campo); padding: var(--fc-e-1); box-shadow: 0 14px 34px color-mix(in srgb, var(--fc-ink) 18%, transparent); }
+.opcoes label { display: flex; align-items: center; gap: var(--fc-e-1); min-height: var(--fc-toque); padding: 0 var(--fc-e-1); font-size: var(--fc-t-legenda); cursor: pointer; }
+.opcoes input { width: 20px; height: 20px; accent-color: var(--fc-accent); }
+.opcoes .n { margin-left: auto; font-size: var(--fc-t-rotulo); color: var(--fc-ink-3); }
+.opcoes .vazio { padding: var(--fc-e-1); font-size: var(--fc-t-legenda); color: var(--fc-ink-3); }
+.nota { display: flex; gap: var(--fc-e-1); align-items: flex-start; font-size: var(--fc-t-legenda); line-height: var(--fc-lh-legenda); color: var(--fc-ink-3); }
+.nota svg { flex: none; margin-top: 3px; }
+
+.aviso, .erro { padding: var(--fc-e-1) var(--fc-e-2); border: 1px solid var(--fc-ambar); border-radius: var(--fc-r-campo); background: color-mix(in srgb, var(--fc-ambar) 16%, var(--fc-surface)); font-size: var(--fc-t-legenda); line-height: var(--fc-lh-legenda); }
+.erro { border-color: var(--fc-erro); background: color-mix(in srgb, var(--fc-erro) 10%, var(--fc-surface)); }
+#painel { display: flex; flex-direction: column; gap: var(--fc-e-3); }
+#blocos { display: contents; }
+
+.login { padding: var(--fc-e-4) var(--fc-e-3); text-align: center; display: flex; flex-direction: column; align-items: center; gap: var(--fc-e-2); }
+
+/* números grandes: Schibsted 500 e algarismos proporcionais (tabular espaça "R$ 40 . 600"); tabular só nas tabelas */
+.num { font-family: var(--fc-display); font-weight: 500; font-variant-numeric: lining-nums proportional-nums; letter-spacing: -.01em; line-height: var(--fc-lh-numero); margin: 0; }
+
+/* onde o funil quebra */
+.funil { display: flex; flex-direction: column; gap: var(--fc-e-2); }
+.funil .sub { color: var(--fc-ink-3); font-size: var(--fc-t-legenda); line-height: var(--fc-lh-legenda); margin-top: 4px; }
+.fl { display: flex; flex-direction: column; gap: var(--fc-e-1); }
+.cn { flex: 0 0 auto; }
+.passo { flex: 1 1 0; min-width: 0; padding: var(--fc-e-3); border: 1px solid var(--fc-hair); border-radius: var(--fc-r-cartao); background: var(--fc-surface); display: flex; flex-direction: column; gap: var(--fc-e-1); }
+.passo .num.vol { font-size: clamp(40px, 12vw, 60px); white-space: nowrap; }
+.passo .num.custo { font-size: 26px; white-space: nowrap; }
+.passo .linha { display: flex; flex-wrap: wrap; gap: 0 var(--fc-e-1); font-size: var(--fc-t-legenda); }
+.passo .peq { font-size: var(--fc-t-rotulo); color: var(--fc-ink-3); }
+.passo .parte { display: flex; flex-direction: column; gap: 6px; }
+.passo .parte span { font-size: var(--fc-t-legenda); color: var(--fc-ink-2); }
+.barra { height: 12px; border-radius: var(--fc-r-pilula); background: var(--fc-paper-2); }
+.barra i { display: block; height: 100%; border-radius: var(--fc-r-pilula); background: var(--fc-accent); }
+.passo hr { width: 100%; height: 1px; margin: 0; border: 0; background: var(--fc-hair); }
+.passo .custo-bloco { display: flex; flex-direction: column; gap: 2px; }
+.passo .custo-bloco .rot { font-size: var(--fc-t-legenda); color: var(--fc-ink-2); }
+.cn { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; text-align: center; padding: var(--fc-e-1) 0; }
+.cn .num { font-size: 28px; white-space: nowrap; }
+.cn .seta { transform: rotate(90deg); margin: var(--fc-e-2) 0; }
+.cn .antes { font-size: var(--fc-t-rotulo); color: var(--fc-ink-3); }
+.cn .pp { font-size: var(--fc-t-legenda); }
+.cn.quebra { padding: var(--fc-e-2) var(--fc-e-1); border-radius: 22px; background: color-mix(in srgb, var(--fc-erro) 8%, var(--fc-paper)); }
+.cn.quebra .taxa { color: var(--fc-erro); }
+.cn.quebra .queda { background: var(--fc-surface); }
+.queda { padding: 2px var(--fc-e-1); border-radius: var(--fc-r-pilula); background: color-mix(in srgb, var(--fc-erro) 12%, var(--fc-surface)); color: var(--fc-erro); font-size: var(--fc-t-rotulo); font-weight: 600; }
+@media (min-width: 1200px) {
+  .fl { flex-direction: row; align-items: stretch; gap: var(--fc-e-2); }
+  .cn { flex-basis: 112px; padding: 0; }
+  .cn .seta { transform: none; margin: 0; }
+  .passo .num.vol { font-size: clamp(40px, 4.1vw, 60px); }
+}
+
+/* variação contra o período anterior: seta e sinal sempre, a cor só reforça (queda ruim em erro, alta boa em ok) */
+.dlt { font-weight: 600; white-space: nowrap; display: inline-flex; align-items: center; gap: 3px; }
+.dlt .vs { flex: none; }
+.dlt.ok { color: var(--fc-ok); }
+.dlt.ruim { color: var(--fc-erro); }
+.dlt.neu { color: var(--fc-ink-2); }
+.sem-base { color: var(--fc-ink-3); font-size: var(--fc-t-legenda); }
+
+/* sparkline: série por período do funnel.sql */
+.spark { margin-top: auto; padding-top: var(--fc-e-1); }
+.spark .area { position: relative; height: 32px; }
+.spark svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.spark polyline { fill: none; stroke: var(--fc-accent); stroke-width: 2.5; vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
+.spark polyline.tracejado { stroke-dasharray: 4 5; }
+.spark.escuro polyline { stroke: var(--fc-ink); }
+.spark .ponta { position: absolute; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--fc-surface); background: var(--fc-accent); transform: translate(-50%, 50%); }
+.spark.escuro .ponta { background: var(--fc-ink); }
+.spark .ponta.parcial { background: var(--fc-surface); border-color: var(--fc-accent); }
+.spark.escuro .ponta.parcial { background: var(--fc-surface); border-color: var(--fc-ink); }
+.spark .eixo { display: flex; justify-content: space-between; font-size: var(--fc-t-rotulo); color: var(--fc-ink-3); }
+
+/* faixa Gasto, CPA, ROAS, ROI */
+.faixa { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: var(--fc-e-2); }
+.faixa-cartao { padding: var(--fc-e-3); display: flex; flex-direction: column; gap: var(--fc-e-2); min-width: 0; }
+.faixa-cartao .txt { display: flex; flex-direction: column; gap: var(--fc-e-1); }
+.faixa-cartao .num { font-size: 32px; white-space: nowrap; }
+.faixa-cartao .num .un { font-size: 22px; }
+.faixa-cartao .linha { display: flex; flex-wrap: wrap; gap: 0 var(--fc-e-1); font-size: var(--fc-t-legenda); }
+.faixa-cartao .peq { font-size: var(--fc-t-rotulo); color: var(--fc-ink-3); }
+
+/* detalhe */
+.bloco { padding: var(--fc-e-3); display: flex; flex-direction: column; gap: var(--fc-e-2); min-width: 0; }
+.bloco .cab { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--fc-e-2); }
+.rolagem { overflow-x: auto; border: 1px solid var(--fc-hair); border-radius: var(--fc-r-campo); }
+.rolagem:focus-visible { outline: 3px solid var(--fc-accent); outline-offset: 3px; }
+table { border-collapse: collapse; width: 100%; font-size: var(--fc-t-legenda); line-height: var(--fc-lh-legenda); font-variant-numeric: tabular-nums; }
+th, td { padding: var(--fc-e-1) var(--fc-e-2); border-top: 1px solid var(--fc-hair); text-align: right; white-space: nowrap; }
+thead th { border-top: 0; background: var(--fc-paper-2); color: var(--fc-ink-2); font-size: var(--fc-t-legenda); font-weight: 600; vertical-align: bottom; }
+th:first-child, td:first-child { text-align: left; }
+td.txt, th.txt { text-align: left; }
+tr.total td { font-weight: 500; border-top: 2px solid var(--fc-ink); background: var(--fc-paper-2); }
+td.sem-gasto { color: var(--fc-ink-3); font-weight: 400; }
+small.sv { display: block; color: var(--fc-ink-3); font-size: var(--fc-t-rotulo); font-weight: 400; }
+.pag { display: flex; flex-wrap: wrap; align-items: center; gap: var(--fc-e-2); font-size: var(--fc-t-legenda); color: var(--fc-ink-3); }
+.pag button { min-height: var(--fc-toque); padding: 0 var(--fc-e-3); border: 1px solid var(--fc-hair-forte); border-radius: var(--fc-r-campo); background: var(--fc-surface); color: var(--fc-ink); font-family: var(--fc-body); font-size: var(--fc-t-legenda); cursor: pointer; }
+.pag button:disabled { background: var(--fc-paper-2); color: var(--fc-ink-3); border-color: var(--fc-hair); cursor: default; }
+.vazio-lista { padding: var(--fc-e-2); color: var(--fc-ink-3); }
+.carregando { cursor: progress; }
+
+/* listas recolhidas por padrão */
+.lista h2, .lista .cir-h3 { font-family: var(--fc-display); font-weight: 500; font-size: 22px; line-height: var(--fc-lh-h3); }
+.acc { display: flex; width: 100%; min-height: 64px; align-items: center; justify-content: space-between; gap: var(--fc-e-2); padding: 0 var(--fc-e-3); border: 0; border-radius: var(--fc-r-cartao); background: transparent; color: var(--fc-ink); text-align: left; font: inherit; cursor: pointer; }
+.acc .dir { display: inline-flex; align-items: center; gap: var(--fc-e-2); }
+.acc .hint { font-family: var(--fc-body); font-size: var(--fc-t-legenda); font-weight: 400; color: var(--fc-ink-3); }
+.acc svg { transition: transform var(--fc-dur) var(--fc-curva); }
+.acc[aria-expanded="true"] svg { transform: rotate(180deg); }
+.lista-corpo { padding: 0 var(--fc-e-3) var(--fc-e-3); display: flex; flex-direction: column; gap: var(--fc-e-2); }
+
+/* barra de carregamento: fina, indeterminada, no topo; some quando a última consulta ao BigQuery termina */
+.barra-carga { position: fixed; top: 0; left: 0; right: 0; height: 4px; z-index: 20; overflow: hidden; background: color-mix(in srgb, var(--fc-accent) 18%, transparent); }
+.barra-carga span { display: block; width: 40%; height: 100%; background: var(--fc-accent); animation: varre calc(var(--fc-dur) * 4) var(--fc-curva) infinite; }
+@keyframes varre { from { transform: translateX(-100%); } to { transform: translateX(250%); } }
+
+/* esqueleto: bloco cinza no lugar do número e da tabela enquanto a resposta não chega */
+.esq { display: block; background: var(--fc-hair); border-radius: var(--fc-r-campo); }
+.esq-numero { width: 5ch; height: 0.8em; }
+.esq-tabela { display: flex; flex-direction: column; gap: var(--fc-e-1); padding: var(--fc-e-1); }
+.esq-linha { height: 22px; }
+
+/* página Cirurgias: o estilo da fila está em cirurgias.css */
+#pg-funil, #pg-cirurgias, #pg-setup, #pg-onboarding, #pg-atividades { display: flex; flex-direction: column; gap: var(--fc-e-3); }
+/* página Setup: o quadro vive num iframe sem script (setup.js); o estilo dele é o do arquivo gerado pelo ops_log.py.
+   A altura é a do conteúdo (o setup.js mede e põe; 480px é só até medir): quem rola é a página, não o iframe. */
+#set-quadro { display: block; width: 100%; height: 480px; border: 0; background: var(--fc-paper); }
+/* página Onboarding: o mapa vive num iframe com script próprio e sandbox (onboarding.js). A altura vai até o fim da tela (o onboarding.js mede
+   e põe; 480px é só até medir): a rolagem é a de dentro do iframe, para as abas sticky do mapa seguirem no topo, e a página não rola. */
+#onb-quadro { display: block; width: 100%; height: 480px; border: 0; background: var(--fc-paper); }
+/* o título da página é o hero do próprio mapa (o h2 do painel é só para leitor de tela); sobra a linha com a data, compacta, e o padding de baixo
+   da página some aqui (o mapa encosta no fim da tela; as outras páginas mantêm o padding). */
+#pg-onboarding { gap: var(--fc-e-1); }
+#pg-onboarding .cir-cab .sub { margin-top: 0; max-width: none; }
+.pagina.pagina-cheia { padding-bottom: 0; }
+td.txt small.sv { white-space: nowrap; }
+
+@media (prefers-reduced-motion: reduce) {
+  .barra-carga span { width: 100%; animation: none; }
+  .btn svg, .acc svg { transition: none; }
+}
+
+@media (max-width: 600px) {
+  .bloco { padding: var(--fc-e-2); }
+  .seg button { padding: 0 var(--fc-e-1); }
+  #nav-setup button { padding: 0 3px; } /* três botões (Setup, Onboarding, Atividades) cabem numa linha no celular */
+  .controles .seg { max-width: 100%; }
+  .opcoes { position: static; max-width: none; margin-top: var(--fc-e-1); box-shadow: none; }
+  .acc { padding: 0 var(--fc-e-2); }
+  .lista-corpo { padding: 0 var(--fc-e-2) var(--fc-e-2); }
+}
+</style>
+</head>
+<body class="fc-base">
+<div id="barra-carga" class="barra-carga" role="progressbar" aria-label="Carregando dados do BigQuery" hidden><span></span></div>
+<header class="topo fc-mesh">
+  <div class="topo-in">
+    <div class="marca">
+      <svg width="46" height="46" viewBox="0 0 46 46" role="img" aria-label="Símbolo Felipe Câmara">
+        <rect class="logo-fundo" x="1" y="9" width="44" height="28" rx="14"/>
+        <path class="logo-traco" d="M9 23 H17 L20 16 L26 30 L29 23 H37" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <h1 class="fc-h2">Funil</h1>
+    </div>
+    <div class="seg" id="nav-setup" role="group" aria-label="Setup e onboarding" hidden>
+      <button type="button" id="pag-setup" data-pagina="setup" aria-pressed="false">Setup</button>
+      <button type="button" id="pag-onboarding" data-pagina="onboarding" aria-pressed="false">Onboarding</button>
+      <button type="button" id="pag-atividades" data-pagina="atividades" aria-pressed="false">Atividades</button>
+    </div>
+    <div class="topo-campo topo-tema">
+      <label class="fc-rotulo" for="c-tema">Tema</label>
+      <select class="campo" id="c-tema" data-fc-tema="curto"></select>
+    </div>
+    <div class="topo-campo topo-cliente">
+      <label class="fc-rotulo" for="c-tenant">Cliente</label>
+      <select class="campo" id="c-tenant" disabled></select>
+    </div>
+    <div class="seg" id="nav-pagina" role="group" aria-label="Página" hidden>
+      <button type="button" id="pag-funil" data-pagina="funil" aria-pressed="true">Funil</button>
+      <button type="button" id="pag-cirurgias" data-pagina="cirurgias" aria-pressed="false">Cirurgias</button>
+      <button type="button" id="pag-pacientes" data-pagina="pacientes" aria-pressed="false">Pacientes</button>
+    </div>
+    <div class="login-estado">
+      <span class="ponto" aria-hidden="true"></span>
+      <span><span id="estado-login">Sem login</span><span id="estado-carga" hidden>, atualizando</span></span>
+      <button class="btn ghost" id="btn-sair" type="button" hidden>Sair</button>
+    </div>
+    <span class="selo" id="selo-exemplo" hidden>Dados de exemplo</span>
+  </div>
+</header>
+
+<div class="pagina">
+  <main id="app">
+    <section id="login" class="login fc-cartao" hidden>
+      <p id="login-msg" class="fc-corpo">Entre com a conta Google que tem acesso ao BigQuery.</p>
+      <button id="btn-login" class="fc-btn" type="button">Entrar com Google</button>
+    </section>
+
+    <section id="painel" hidden>
+      <div id="pg-funil">
+      <div class="controles">
+        <div class="seg" role="group" aria-label="Base da data">
+          <button type="button" id="aba-event" data-basis="event" aria-pressed="true">Data do evento</button>
+          <button type="button" id="aba-lead" data-basis="lead" aria-pressed="false">Data do lead</button>
+        </div>
+        <div class="cmp">
+          <span class="fc-rotulo" id="lg-periodo">Período</span>
+          <button type="button" class="campo per-gatilho" id="c-periodo" aria-haspopup="dialog" aria-expanded="false" aria-controls="c-pop" aria-labelledby="lg-periodo c-valor"><span id="c-valor"></span>
+            <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <div class="per-pop" id="c-pop" role="dialog" aria-label="Escolher período" hidden>
+          <div class="per-grade-pop">
+            <nav class="per-atalhos" id="c-atalhos" aria-label="Atalhos de período"></nav>
+            <div>
+              <div id="c-cal"></div>
+              <div class="per-datas">
+                <label><span class="fc-rotulo">Início</span><input class="campo" id="c-ini" inputmode="numeric" placeholder="dd/mm/aaaa" maxlength="10" autocomplete="off"></label>
+                <label><span class="fc-rotulo">Fim</span><input class="campo" id="c-fim" inputmode="numeric" placeholder="dd/mm/aaaa" maxlength="10" autocomplete="off"></label>
+              </div>
+              <p class="per-campo-erro" id="c-erro" role="alert"></p>
+            </div>
+          </div>
+          <div class="per-rodape">
+            <p class="per-cmp" id="c-cmp" aria-live="polite"></p>
+            <div class="per-acoes">
+              <button type="button" class="btn ghost" id="c-cancelar">Cancelar</button>
+              <button type="button" class="btn" id="c-aplicar">Aplicar</button>
+            </div>
+          </div>
+        </div>
+        <div class="cmp">
+          <span class="fc-rotulo" id="lg-grao">Agrupar por</span>
+          <div class="seg" role="group" aria-labelledby="lg-grao">
+            <button type="button" id="g-day" data-grao="day" aria-pressed="false">Dia</button>
+            <button type="button" id="g-week" data-grao="week" aria-pressed="true">Semana</button>
+            <button type="button" id="g-month" data-grao="month" aria-pressed="false">Mês</button>
+          </div>
+        </div>
+        <button type="button" class="btn ghost" id="btn-filtros" aria-expanded="false" aria-controls="painel-filtros">
+          <span>Filtros<span class="ativos" id="filtros-ativos"></span></span>
+          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+      </div>
+
+      <div class="painel-filtros fc-cartao" id="painel-filtros" hidden>
+        <div class="filtros" id="filtros"></div>
+        <p class="nota" id="aviso-campanha">
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 7.2v4M8 4.6v.1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <span>Campanha e grupo do lead só são completos desde ago/2026.</span>
+        </p>
+      </div>
+
+      <div class="aviso" id="aviso-custo" hidden>Custo não se aplica a este filtro</div>
+      <div class="aviso" id="aviso-midia" hidden>Cliente sem dado de mídia: gasto e custos ficam vazios.</div>
+      <div class="erro" id="erro" hidden></div>
+
+      <section class="funil" aria-labelledby="t-funil">
+        <div>
+          <h2 class="fc-h2" id="t-funil">Onde o funil quebra</h2>
+          <p class="sub" id="funil-sub"></p>
+        </div>
+        <div class="fl" id="cartoes"></div>
+      </section>
+
+      <div class="faixa" id="faixa"></div>
+
+      <div id="blocos">
+        <section class="bloco fc-cartao" id="bloco-canais">
+          <div class="cab">
+            <h2 class="fc-h3" id="t-canais">Por canal</h2>
+          </div>
+          <div class="rolagem" tabindex="0"></div>
+          <p class="nota" id="nota-canais"></p>
+        </section>
+        <section class="bloco fc-cartao" id="bloco-detalhe">
+          <div class="cab">
+            <h2 class="fc-h3" id="t-detalhe">Detalhe por semana</h2>
+            <div class="seg" role="group" aria-label="Tabela">
+              <button type="button" id="aba-custo" data-aba="custo" aria-pressed="true">Custo e retorno</button>
+              <button type="button" id="aba-conv" data-aba="conv" aria-pressed="false">Conversões</button>
+              <button type="button" id="aba-vol" data-aba="vol" aria-pressed="false">Volumes</button>
+            </div>
+          </div>
+          <div class="rolagem" tabindex="0"></div>
+        </section>
+        <section class="lista fc-cartao" id="bloco-realizados">
+          <h2><button type="button" class="acc" id="acc-realizados" aria-expanded="false" aria-controls="corpo-realizados">
+            <span>Realizados</span>
+            <span class="dir"><span class="hint"></span><svg width="16" height="16" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </button></h2>
+          <div class="lista-corpo" id="corpo-realizados" hidden><div class="rolagem" tabindex="0"></div><div class="pag"></div></div>
+        </section>
+        <section class="lista fc-cartao" id="bloco-marcacoes">
+          <h2><button type="button" class="acc" id="acc-marcacoes" aria-expanded="false" aria-controls="corpo-marcacoes">
+            <span>Marcações</span>
+            <span class="dir"><span class="hint"></span><svg width="16" height="16" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </button></h2>
+          <div class="lista-corpo" id="corpo-marcacoes" hidden><div class="rolagem" tabindex="0"></div><div class="pag"></div></div>
+        </section>
+      </div>
+      </div>
+
+      <section id="pg-cirurgias" aria-labelledby="t-cirurgias" hidden>
+        <div class="cir-cab">
+          <h2 class="fc-h2" id="t-cirurgias">Quem ainda pode operar</h2>
+          <p class="sub" id="cir-sub"></p>
+        </div>
+        <div class="aviso" id="cir-aviso" hidden></div>
+        <div class="erro" id="cir-erro" hidden></div>
+        <div class="cir-resumo fc-cartao" id="cir-resumo"></div>
+        <div id="cir-fila"></div>
+        <section class="lista fc-cartao" id="bloco-operaram" hidden>
+          <h3 class="cir-h3"><button type="button" class="acc" id="acc-operaram" aria-expanded="false" aria-controls="corpo-operaram">
+            <span>Já operaram</span>
+            <span class="dir"><span class="hint"></span><svg width="16" height="16" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </button></h3>
+          <div class="lista-corpo" id="corpo-operaram" hidden><ol class="cir-itens"></ol></div>
+        </section>
+        <section class="lista fc-cartao" id="bloco-desistiram" hidden>
+          <h3 class="cir-h3"><button type="button" class="acc" id="acc-desistiram" aria-expanded="false" aria-controls="corpo-desistiram">
+            <span>Desistiram</span>
+            <span class="dir"><span class="hint"></span><svg width="16" height="16" viewBox="0 0 14 14" aria-hidden="true"><path d="M3 5l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </button></h3>
+          <div class="lista-corpo" id="corpo-desistiram" hidden><ol class="cir-itens"></ol></div>
+        </section>
+        <p class="nota" id="cir-sem-link" hidden>
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 7.2v4M8 4.6v.1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <span>Este cliente ainda não tem link do paciente no sistema da clínica. A lista aparece sem os links.</span>
+        </p>
+        <p class="nota">
+          <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.5" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M8 7.2v4M8 4.6v.1" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+          <span>Só leitura. Esta lista é para revisão: ninguém recebe mensagem por causa dela. Quando o Felipe registra que um paciente deve ser acompanhado, a linha dele passa a mostrar "Acompanhar: sim" na próxima atualização da lista.</span>
+        </p>
+      </section>
+
+      <section id="pg-pacientes" aria-labelledby="t-pacientes" hidden>
+        <div class="pc-cab">
+          <h2 class="fc-h2" id="t-pacientes">Acompanhamento de pacientes</h2>
+          <p class="pc-contador" id="pc-contador" aria-live="polite"></p>
+        </div>
+        <div class="erro" id="pc-erro" hidden></div>
+        <nav class="pc-seg pc-nav-m" id="pc-nav-m" aria-label="Partes da tela"></nav>
+        <div class="pc-grade" id="pc-grade" data-pane="conversa">
+          <section class="pc-col pc-col-lista" aria-label="Lista de pacientes"><div class="pc-lista fc-cartao" id="pc-lista"></div></section>
+          <section class="pc-col pc-col-meio" aria-label="Conversa e ação" id="pc-meio"></section>
+          <section class="pc-col pc-col-dir" aria-label="Prontuário e perfil" id="pc-dir"></section>
+        </div>
+        <footer class="pc-logbar" id="pc-logbar" aria-label="Log desta sessão"></footer>
+        <div class="pc-toast" id="pc-toast" role="status" aria-live="polite"></div>
+      </section>
+
+      <section id="pg-setup" aria-labelledby="t-setup" hidden>
+        <div class="cir-cab">
+          <h2 class="fc-h2" id="t-setup">Setup dos clientes</h2>
+          <p class="sub" id="set-sub"></p>
+        </div>
+        <div class="erro" id="set-erro" hidden></div>
+        <p class="nota" id="set-vazio" hidden>Ainda não há foto do quadro. Ela é gerada a cada 30 minutos; se passou disso, avise o Felipe.</p>
+        <iframe id="set-quadro" title="Quadro de setup dos clientes" sandbox="allow-same-origin" hidden></iframe>
+      </section>
+
+      <section id="pg-atividades" aria-labelledby="t-atividades" hidden>
+        <div class="cir-cab">
+          <h2 class="fc-h2" id="t-atividades">Atividades dos clientes</h2>
+          <p class="sub" id="atv-sub"></p>
+        </div>
+        <div class="erro" id="atv-erro" hidden></div>
+        <div class="atv-filtros" id="atv-filtros"></div>
+        <div id="atv-lista"></div>
+      </section>
+
+      <section id="pg-onboarding" aria-labelledby="t-onboarding" hidden>
+        <div class="cir-cab">
+          <h2 class="fc-h2 cir-so-leitor" id="t-onboarding">Mapa do onboarding</h2>
+          <p class="sub" id="onb-sub"></p>
+        </div>
+        <p class="nota" id="onb-carregando" role="status" hidden>Carregando o mapa do onboarding...</p>
+        <div class="erro" id="onb-erro" hidden></div>
+        <p class="nota" id="onb-vazio" hidden>Ainda não há mapa publicado. Quem publica é o Felipe, com o build.py do mapa.</p>
+      </section>
+    </section>
+  </main>
+</div>
+<script src="config.js?v=3dcf101cba"></script>
+<script src="followup.js?v=3dcf101cba"></script>
+<script src="cirurgias.js?v=3dcf101cba"></script>
+<script src="pacientes.js?v=3dcf101cba"></script>
+<script src="setup.js?v=3dcf101cba"></script>
+<script src="onboarding.js?v=3dcf101cba"></script>
+<script src="modulos.js?v=3dcf101cba"></script>
+<script src="atividades.js?v=3dcf101cba"></script>
+<script src="painel.js?v=3dcf101cba"></script>
+</body>
+</html>

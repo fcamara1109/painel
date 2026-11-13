@@ -1,0 +1,285 @@
+/* ============================================================
+   Felipe Camara, consultoria e tecnologia para medicos
+   Identidade visual "Vidro sobre Creme", versao 1, 13/09/2026
+
+   Fonte unica de verdade das cores, tipos, formas e movimento.
+   Importe por caminho, nunca copie os valores:
+       <link rel="stylesheet" href=".../marca-doctors/tokens.css">
+
+   Regras e porques: DESIGN.md na mesma pasta.
+   Gabarito: python3 _shared/tools/gabarito_marca.py tokens.css [arquivo.html]
+   ============================================================ */
+
+:root{
+  /* ---------- superficie ---------- */
+  --fc-paper:        #F6F0E9;   /* fundo de toda pagina, nunca branco puro */
+  --fc-paper-2:      #EDE5DA;   /* faixa alternada */
+  --fc-surface:      #FFFFFF;   /* cartao sobre o creme */
+  --fc-hair:         #E0D5C5;   /* fio decorativo de 1px, sempre quente */
+  --fc-hair-forte:   #968874;   /* borda de campo e controle, 3.06:1 sobre o creme. O piso se mede contra o FUNDO DA PAGINA, que e o pior caso, nao contra o cartao. */
+
+  /* ---------- tinta ---------- */
+  --fc-ink:          #1E1A16;   /* texto principal, 15.3:1 sobre o creme */
+  --fc-ink-2:        #4A423A;   /* texto secundario, 8.7:1 */
+  --fc-ink-3:        #5F564C;   /* rotulo e legenda, 6.4:1 */
+
+  /* ---------- acao ---------- */
+  --fc-accent:       #0E6F66;   /* botao, link, tudo que e clicavel */
+  --fc-accent-forte: #0B4F4A;   /* estado ativo e hover */
+  --fc-on-accent:    #FFFFFF;   /* 6.0:1 sobre o acento */
+
+  /* ---------- mesh ----------
+     Os quatro pontos do gradiente. Todos aprovados para texto branco
+     com o scrim abaixo. Ver DESIGN.md, secao "Por que estas quatro". */
+  --fc-mesh-1:       #0B4F4A;   /* base profunda   */
+  --fc-mesh-2:       #0E6F66;   /* teal            */
+  --fc-mesh-3:       #2E8F7C;   /* verde           */
+  --fc-mesh-4:       #A9702E;   /* ambar queimado  */
+  --fc-on-mesh:      #FFFFFF;
+
+  /* O scrim e obrigatorio. Sem ele o texto branco cai para 2.5:1
+     nos pontos claros do mesh. Nao baixar de 0.22. */
+  --fc-scrim-cor:    #062B28;
+  --fc-scrim-alfa:   0.22;
+
+  /* ---------- acentos claros ----------
+     Vivos e uteis, mas NUNCA recebem texto branco. So preenchimento,
+     grafico, borda e detalhe sobre superficie clara. */
+  --fc-menta:        #4FB49A;
+  --fc-ambar:        #E2A34C;
+
+  /* ---------- semantico ---------- */
+  --fc-ok:           #1F6E4F;
+  --fc-atencao:      #8A5A12;
+  --fc-erro:         #9B2C22;
+
+  /* ---------- tipografia ---------- */
+  /* Duas familias, e so. A Schibsted e a voz; a Public Sans e a legibilidade.
+     Mono nao e fonte da marca: e stack do sistema, so para codigo literal. */
+  --fc-display: 'Schibsted Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --fc-body:    'Public Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --fc-mono:    ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+
+  /* Escala. Publico de 45+ anos: o piso do corpo e 17px, nao 16px.
+     Nada abaixo de 13px existe nesta marca. */
+  --fc-t-display: clamp(32px, 5vw, 52px);
+  --fc-t-h2:      clamp(24px, 3.2vw, 34px);
+  --fc-t-h3:      21px;
+  --fc-t-lede:    19px;
+  --fc-t-corpo:   17px;
+  --fc-t-legenda: 15px;
+  --fc-t-rotulo:  13px;   /* so em caixa alta com peso 600 */
+
+  --fc-lh-titulo:  1.12;
+  --fc-lh-h2:      1.18;
+  --fc-lh-h3:      1.3;
+  --fc-lh-lede:    1.55;
+  --fc-lh-corpo:   1.6;
+  --fc-lh-legenda: 1.55;   /* texto menor precisa de MAIS entrelinha, nao menos */
+  --fc-lh-numero:  1.08;
+  --fc-track-rotulo: .13em;
+  --fc-medida: 66ch;       /* linha de texto corrido nunca passa disso */
+
+  /* ---------- espaco ----------
+     A hierarquia desta marca vem do tamanho e do espaco em volta, nunca do
+     peso. Entao o espaco e sistema, igual a cor. Nada de margin inventada. */
+  --fc-e-1:  8px;    /* rotulo colado no que ele nomeia */
+  --fc-e-2: 14px;    /* entre linhas do mesmo grupo */
+  --fc-e-3: 22px;    /* entre paragrafos */
+  --fc-e-4: 34px;    /* entre grupos dentro de um bloco */
+  --fc-e-5: 56px;    /* entre blocos */
+  --fc-e-6: clamp(64px, 7vw, 104px);  /* entre secoes */
+
+  --fc-toque: 44px;  /* alvo minimo de toque, piso do WCAG 2.5.5 */
+
+  /* ---------- forma ---------- */
+  --fc-r-bloco:  28px;
+  --fc-r-cartao: 22px;
+  --fc-r-campo:  12px;
+  --fc-r-pilula: 999px;
+
+  /* ---------- vidro ---------- */
+  --fc-vidro-blur:  28px;
+  /* O vidro e ESCURO de proposito. Ele fica acima do scrim, entao um vidro
+     claro desfaz o piso de contraste que o scrim garantiu. Quem faz ler como
+     vidro e a borda branca mais o blur, nao o preenchimento. */
+  --fc-vidro-fundo: rgba(6,43,40,.16);
+  --fc-vidro-borda: rgba(255,255,255,.30);
+  --fc-vidro-fundo-hover: rgba(6,43,40,.26);
+
+  /* ---------- grao ---------- */
+  --fc-grao: .22;
+
+  /* ---------- movimento ----------
+     Curva simetrica, entra e sai no mesmo ritmo. A lentidao e o luxo. */
+  --fc-curva: cubic-bezier(.44,0,.56,1);
+  --fc-dur:   .4s;
+  --fc-sombra-acao: 0 12px 30px rgba(14,111,102,.34);
+}
+
+/* ============================================================
+   Utilitarios. Tudo que a marca precisa para existir numa pagina.
+   ============================================================ */
+
+/* Sem isso, campo com width:100% e padding estoura o cartao que o contem.
+   Ja quebrou uma vez, em 13/09/2026. */
+.fc-base *,
+.fc-base *::before,
+.fc-base *::after{ box-sizing: border-box; }
+
+.fc-base{
+  background: var(--fc-paper);
+  color: var(--fc-ink);
+  font-family: var(--fc-body);
+  font-size: var(--fc-t-corpo);
+  line-height: var(--fc-lh-corpo);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- o bloco de mesh ----------
+   Uso: <div class="fc-mesh"> ... </div>
+   O scrim e o grao entram sozinhos. Nao ha versao sem eles. */
+.fc-mesh{
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: var(--fc-r-bloco);
+  color: var(--fc-on-mesh);
+  background:
+    radial-gradient(75% 90% at 12% 22%, var(--fc-mesh-2) 0%, transparent 62%),
+    radial-gradient(65% 85% at 88% 14%, var(--fc-mesh-3) 0%, transparent 58%),
+    radial-gradient(85% 100% at 62% 96%, var(--fc-mesh-4) 0%, transparent 60%),
+    var(--fc-mesh-1);
+}
+/* scrim: garante o piso de contraste em qualquer ponto do gradiente */
+.fc-mesh::before{
+  content: "";
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  background: var(--fc-scrim-cor);
+  opacity: var(--fc-scrim-alfa);
+}
+/* grao: sem ele o gradiente vira plastico e denuncia geracao automatica */
+.fc-mesh::after{
+  content: "";
+  position: absolute; inset: 0; z-index: 2; pointer-events: none;
+  opacity: var(--fc-grao);
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+.fc-mesh > *{ position: relative; z-index: 3; }
+
+/* variacao mais quente, para segunda peca na mesma pagina */
+.fc-mesh--quente{
+  background:
+    radial-gradient(80% 90% at 20% 18%, var(--fc-mesh-2) 0%, transparent 60%),
+    radial-gradient(75% 85% at 84% 82%, var(--fc-mesh-4) 0%, transparent 58%),
+    var(--fc-mesh-1);
+}
+
+/* ---------- vidro ----------
+   So existe em cima de .fc-mesh. Sobre o creme, use .fc-cartao. */
+.fc-vidro{
+  background: var(--fc-vidro-fundo);
+  border: 1px solid var(--fc-vidro-borda);
+  border-radius: var(--fc-r-cartao);
+  backdrop-filter: blur(var(--fc-vidro-blur));
+  -webkit-backdrop-filter: blur(var(--fc-vidro-blur));
+  color: var(--fc-on-mesh);
+}
+
+.fc-cartao{
+  background: var(--fc-surface);
+  border: 1px solid var(--fc-hair);
+  border-radius: var(--fc-r-cartao);
+  color: var(--fc-ink);
+}
+
+/* ---------- tipografia ---------- */
+.fc-display{
+  font-family: var(--fc-display); font-weight: 500;
+  font-size: var(--fc-t-display); line-height: var(--fc-lh-titulo);
+  letter-spacing: -.028em; text-wrap: balance; margin: 0;
+}
+.fc-h2{
+  font-family: var(--fc-display); font-weight: 500;
+  font-size: var(--fc-t-h2); line-height: var(--fc-lh-h2);
+  letter-spacing: -.02em; text-wrap: balance; margin: 0;
+}
+.fc-h3{
+  font-family: var(--fc-display); font-weight: 500;
+  font-size: var(--fc-t-h3); line-height: var(--fc-lh-h3); margin: 0;
+}
+.fc-lede{
+  font-size: var(--fc-t-lede); line-height: var(--fc-lh-lede);
+  max-width: var(--fc-medida); margin: 0;
+}
+.fc-corpo{ font-size: var(--fc-t-corpo); margin: 0; max-width: var(--fc-medida); }
+
+/* legenda e rotulo usam COR mais fraca, nunca opacity.
+   opacity quebra o contraste calculado e reprova no gabarito. */
+.fc-legenda{
+  font-size: var(--fc-t-legenda); line-height: var(--fc-lh-legenda);
+  color: var(--fc-ink-3); margin: 0;
+}
+/* O rotulo e a propria fonte do corpo em caixa alta, nao uma terceira familia.
+   Mono num rotulo de consultoria medica le como fantasia de "tecnico". */
+.fc-rotulo{
+  font-family: var(--fc-body); font-size: var(--fc-t-rotulo); font-weight: 600;
+  letter-spacing: var(--fc-track-rotulo); text-transform: uppercase;
+  color: var(--fc-ink-3); margin: 0;
+}
+/* sobre mesh, legenda e rotulo ficam brancos puros. O scrim ja garante o piso.
+   Texto claro sobre fundo escuro le como mais leve, entao ganha mais entrelinha. */
+.fc-mesh .fc-legenda,
+.fc-mesh .fc-rotulo{ color: var(--fc-on-mesh); }
+.fc-mesh .fc-legenda{ line-height: 1.62; }
+.fc-mesh .fc-corpo,
+.fc-mesh .fc-lede{ line-height: 1.7; }
+
+.fc-numero{
+  font-family: var(--fc-display); font-weight: 300;
+  font-size: clamp(30px, 4.4vw, 44px); line-height: var(--fc-lh-numero);
+  letter-spacing: -.03em; font-variant-numeric: tabular-nums; margin: 0;
+}
+
+/* ---------- acao ---------- */
+.fc-btn{
+  display: inline-block; border: none; cursor: pointer;
+  font-family: var(--fc-body); font-size: var(--fc-t-corpo); font-weight: 500;
+  padding: 13px 26px; min-height: var(--fc-toque); border-radius: var(--fc-r-pilula);
+  background: var(--fc-accent); color: var(--fc-on-accent);
+  text-decoration: none;
+  transition: transform var(--fc-dur) var(--fc-curva),
+              box-shadow var(--fc-dur) var(--fc-curva),
+              background var(--fc-dur) var(--fc-curva);
+}
+.fc-btn:hover{ transform: translateY(-2px); box-shadow: var(--fc-sombra-acao); }
+.fc-btn:focus-visible{ outline: 3px solid var(--fc-ink); outline-offset: 3px; }
+/* dentro do mesh a tinta escura da 1.9:1 e o foco some. Ali o anel e branco. */
+.fc-mesh :focus-visible{ outline-color: var(--fc-on-mesh); }
+
+.fc-btn--vidro{
+  background: var(--fc-vidro-fundo);
+  border: 1px solid var(--fc-vidro-borda);
+  color: var(--fc-on-mesh);
+  backdrop-filter: blur(var(--fc-vidro-blur));
+  -webkit-backdrop-filter: blur(var(--fc-vidro-blur));
+}
+.fc-btn--vidro:hover{ background: var(--fc-vidro-fundo-hover); }
+
+/* ---------- pilula de fluxo ---------- */
+.fc-pilula{
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 22px; min-height: var(--fc-toque); border-radius: var(--fc-r-pilula);
+  font-size: var(--fc-t-corpo);
+  background: var(--fc-vidro-fundo);
+  border: 1px solid var(--fc-vidro-borda);
+  backdrop-filter: blur(var(--fc-vidro-blur));
+  -webkit-backdrop-filter: blur(var(--fc-vidro-blur));
+  color: var(--fc-on-mesh);
+}
+
+@media (prefers-reduced-motion: reduce){
+  .fc-btn{ transition: none; }
+  .fc-btn:hover{ transform: none; }
+}

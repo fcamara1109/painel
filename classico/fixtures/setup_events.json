@@ -1,0 +1,142 @@
+{
+ "schema": {
+  "fields": [
+   {
+    "name": "tenant",
+    "type": "STRING"
+   },
+   {
+    "name": "module",
+    "type": "STRING"
+   },
+   {
+    "name": "event_name",
+    "type": "STRING"
+   },
+   {
+    "name": "value",
+    "type": "STRING"
+   },
+   {
+    "name": "seq",
+    "type": "INTEGER"
+   }
+  ]
+ },
+ "rows": [
+  {
+   "f": [
+    {
+     "v": "exemplo_a"
+    },
+    {
+     "v": "scheduling"
+    },
+    {
+     "v": "setup_stage"
+    },
+    {
+     "v": "no ar"
+    },
+    {
+     "v": "1793631660001000"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "exemplo_c"
+    },
+    {
+     "v": "ai_attendant"
+    },
+    {
+     "v": "setup_planned"
+    },
+    {
+     "v": "sim"
+    },
+    {
+     "v": "1793631670002000"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "exemplo_a"
+    },
+    {
+     "v": "site"
+    },
+    {
+     "v": "setup_note"
+    },
+    {
+     "v": "Domínio chegou, falta apontar"
+    },
+    {
+     "v": "1793631680003000"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "exemplo_c"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "setup_priority"
+    },
+    {
+     "v": "alta"
+    },
+    {
+     "v": "1793631690004000"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "exemplo_b"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "setup_type"
+    },
+    {
+     "v": "recorrente"
+    },
+    {
+     "v": "1793631700005000"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "exemplo_c"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "setup_name"
+    },
+    {
+     "v": "Doutor Exemplo C Novo"
+    },
+    {
+     "v": "1793631710006000"
+    }
+   ]
+  }
+ ]
+}

@@ -194,6 +194,7 @@ SELECT
   chg(c.scheduled_patients, p.scheduled_patients) AS scheduled_patients_chg,
   chg(c.completed_patients, p.completed_patients) AS completed_patients_chg,
   chg(c.spend, p.spend) AS spend_chg,
+  chg(c.physician_fee, p.physician_fee) AS physician_fee_chg,
   chg(c.cpl, p.cpl) AS cpl_chg,
   chg(c.cpa, p.cpa) AS cpa_chg,
   chg(c.cost_per_scheduled, p.cost_per_scheduled) AS cost_per_scheduled_chg,

@@ -34,7 +34,10 @@
     const quadro = document.getElementById('onb-quadro');
     if (!quadro || quadro.hidden) return;
     const topo = quadro.getBoundingClientRect().top + window.scrollY;
-    quadro.style.height = Math.max(ALTURA_MINIMA, Math.floor(window.innerHeight - topo)) + 'px';
+    // no celular a barra fixa de baixo (.barra-m) cobre o fim da tela e o body reserva esse espaço: o mapa para antes dela (uma rolagem só)
+    const barra = document.querySelector('.barra-m');
+    const embaixo = barra && getComputedStyle(barra).position === 'fixed' ? parseFloat(getComputedStyle(document.body).paddingBottom) || 0 : 0;
+    quadro.style.height = Math.max(ALTURA_MINIMA, Math.floor(window.innerHeight - topo - embaixo)) + 'px';
   }
   window.addEventListener('resize', ajusta);
 

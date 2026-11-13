@@ -1,0 +1,10 @@
+{
+  "test_phone": "5500900009999",
+  "daily_cap": 20,
+  "templates": {
+    "surgery": "Oi {nome}, tudo bem? Aqui é a Júlia, assistente do Dr. Frederico, proctologista. Como tem evoluído o seu tratamento?",
+    "C": "Oi! Aqui é a Júlia, da equipe do Dr. Frederico, proctologista. Como você está? Ainda precisa de marcar consulta? Se precisar de ajuda com transporte, me avise.",
+    "B": "Oi {nome}, tudo bem? Aqui é a Júlia, da equipe do Dr. Frederico, proctologista. Como você está? Conseguiu fazer a consulta que tava procurando?",
+    "A": "Oi {nome}, tudo bem? Aqui é a Júlia, da equipe do Dr. Frederico, proctologista. Como você está? Conseguiu fazer a consulta que tava procurando?"
+  }
+}

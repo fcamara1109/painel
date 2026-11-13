@@ -1,0 +1,24 @@
+/* Página Atividades: linha do tempo por dia. Só usa os tokens da marca (tokens.css) e os componentes do index.html: .campo, .fc-rotulo, .nota, .erro. */
+.atv-filtros { display: flex; flex-wrap: wrap; gap: var(--fc-e-2); align-items: flex-end; }
+.atv-campo { display: flex; flex-direction: column; gap: var(--fc-e-1); width: 220px; max-width: 100%; }
+.atv-chips { display: flex; flex-wrap: wrap; gap: var(--fc-e-1); }
+.atv-chip { min-height: var(--fc-toque); padding: 0 var(--fc-e-2); border-radius: var(--fc-r-pilula); border: 1px solid var(--fc-hair-forte); background: var(--fc-surface); color: var(--fc-ink); font: inherit; font-size: var(--fc-t-legenda); cursor: pointer; }
+.atv-chip[aria-pressed="true"] { background: var(--fc-accent); color: var(--fc-on-accent); border-color: var(--fc-accent); }
+.atv-n { font-weight: 600; margin-left: 2px; }
+.atv-vazio, .atv-carregando { padding: var(--fc-e-4) var(--fc-e-2); text-align: center; color: var(--fc-ink-3); }
+
+.atv-dia { margin-top: var(--fc-e-3); }
+.atv-dia > h3 { font-family: var(--fc-display); font-size: var(--fc-t-h3); font-weight: 500; text-transform: capitalize; margin: 0 0 var(--fc-e-2); }
+.atv-linha { padding-left: 36px; border-left: 2px solid var(--fc-hair); margin-left: 14px; }
+.atv-item { position: relative; background: var(--fc-surface); border: 1px solid var(--fc-hair); border-radius: var(--fc-r-campo); padding: var(--fc-e-2) var(--fc-e-3); margin-bottom: var(--fc-e-2); }
+.atv-item::before { content: attr(data-ic); position: absolute; left: -53px; top: 10px; width: 30px; height: 30px; display: grid; place-items: center; background: var(--fc-paper-2); border-radius: 50%; font-size: 15px; }
+.atv-item header { display: flex; flex-wrap: wrap; gap: var(--fc-e-1) var(--fc-e-2); align-items: baseline; }
+.atv-item h4 { margin: 0; font-size: var(--fc-t-corpo); font-weight: 600; flex: 1 1 260px; min-width: 0; overflow-wrap: anywhere; }
+.atv-meta { font-size: var(--fc-t-rotulo); color: var(--fc-ink-3); }
+.atv-det { margin-top: var(--fc-e-1); color: var(--fc-ink-2); font-size: var(--fc-t-legenda); line-height: var(--fc-lh-legenda); display: grid; gap: 6px; }
+.atv-det:empty { display: none; }
+.atv-det p { margin: 0; }
+.atv-det ul { margin: 0; padding-left: 20px; }
+.atv-rot { font-size: var(--fc-t-rotulo); letter-spacing: var(--fc-track-rotulo); text-transform: uppercase; color: var(--fc-ink-3); }
+.atv-det a { color: var(--fc-accent-forte); }
+@media (max-width: 520px) { .atv-linha { padding-left: 28px; margin-left: 10px; } .atv-item::before { left: -45px; } }

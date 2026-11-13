@@ -1,0 +1,111 @@
+/* funil.css: estrutura da tela Funil (redesign, P3, 13/11/2026): ritmo do mês, histórico mês a mês, barra do funil, resumo. Só tokens --fc-*; o acabamento por tema entra no P6 (painel-a.css, painel-b.css). */
+
+/* alvo de toque dos botões dos controles segmentados (Dia, Semana, Mês, ROAS, CAC, 3/6/12 meses) */
+.seg button { min-width: var(--fc-toque); }
+.vazio-t, .sem-valor { font-size: var(--fc-t-corpo); line-height: var(--fc-lh-corpo); color: var(--fc-ink-2); }
+
+/* ritmo do mês */
+.ritmo-grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap: var(--fc-e-2); }
+.ritmo-cartao { padding: var(--fc-e-3); display: flex; flex-direction: column; gap: var(--fc-e-1); min-width: 0; }
+.ritmo-cartao .num { font-size: 32px; white-space: nowrap; }
+.ritmo-cartao .linha { display: flex; flex-wrap: wrap; gap: 0 var(--fc-e-1); font-size: var(--fc-t-legenda); }
+.ritmo-cartao .peq { font-size: var(--fc-t-rotulo); color: var(--fc-ink-3); }
+
+/* histórico mês a mês: barras (Ads e Honorário) e linha (ROAS ou CAC); a rolagem só aparece quando as colunas não cabem */
+.hist-legenda { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--fc-e-1) var(--fc-e-3); font-size: var(--fc-t-legenda); color: var(--fc-ink-2); }
+.hist-legenda li { display: inline-flex; align-items: center; gap: var(--fc-e-1); }
+.hist-legenda .sw { display: inline-block; width: 14px; height: 14px; border-radius: 3px; }
+.hist-legenda .sw.ads, .hist-b.ads { background: var(--fc-ambar); }
+.hist-legenda .sw.hon, .hist-b.hon { background: var(--fc-accent); }
+.hist-legenda .sw.lin { height: 3px; border-radius: 0; background: var(--fc-ink); }
+.hist-legenda .sw.proj { background: repeating-linear-gradient(45deg, var(--fc-ink-2) 0 2px, transparent 2px 5px); border: 1px solid var(--fc-ink-2); }
+.hist-leitura { min-height: 4.2em; font-size: var(--fc-t-legenda); line-height: var(--fc-lh-legenda); }
+.hist-leitura-t { font-weight: 600; font-size: var(--fc-t-corpo); }
+.hist-leitura dl { display: flex; flex-wrap: wrap; gap: 0 var(--fc-e-3); margin: 0; }
+.hist-leitura dt { color: var(--fc-ink-3); font-size: var(--fc-t-rotulo); }
+.hist-leitura dd { margin: 0; }
+.hist-rolagem { overflow-x: auto; }
+.hist-rolagem:focus-visible { outline: 3px solid var(--fc-accent); outline-offset: 3px; }
+.hist-grade { --hist-h: 160px; position: relative; display: grid; grid-template-columns: repeat(var(--n), minmax(var(--fc-toque), 1fr)); min-width: calc(var(--n) * var(--fc-toque)); }
+.hist-mes { display: flex; flex-direction: column; align-items: center; gap: 2px; min-height: var(--fc-toque); padding: 0 2px; border: 0; border-radius: var(--fc-r-campo); background: transparent; color: var(--fc-ink); font-family: var(--fc-body); font-size: var(--fc-t-rotulo); cursor: pointer; }
+.hist-mes[aria-pressed="true"] { background: var(--fc-paper-2); }
+.hist-barras { display: flex; align-items: flex-end; justify-content: center; gap: 3px; width: 100%; height: var(--hist-h); }
+.hist-b { position: relative; display: block; width: 40%; max-width: 22px; min-height: 2px; border-radius: 3px 3px 0 0; overflow: hidden; }
+/* mês corrente: projeção hachurada, o já realizado maciço por dentro */
+.hist-b[data-parcial] { background: repeating-linear-gradient(45deg, var(--fc-surface) 0 3px, transparent 3px 6px), var(--fc-ink-3); outline: 1px dashed var(--fc-ink-2); outline-offset: -1px; }
+.hist-b[data-parcial].ads { background: repeating-linear-gradient(45deg, var(--fc-surface) 0 3px, transparent 3px 6px), var(--fc-ambar); }
+.hist-b[data-parcial].hon { background: repeating-linear-gradient(45deg, var(--fc-surface) 0 3px, transparent 3px 6px), var(--fc-accent); }
+.hist-b i { position: absolute; left: 0; right: 0; bottom: 0; display: block; background: inherit; background-image: none; }
+.hist-b.ads i { background: var(--fc-ambar); }
+.hist-b.hon i { background: var(--fc-accent); }
+.hist-mes-nome { font-weight: 600; text-transform: lowercase; }
+.hist-lin-v { color: var(--fc-ink-2); white-space: nowrap; }
+.hist-linha { position: absolute; left: 0; right: 0; top: 0; height: var(--hist-h); pointer-events: none; }
+.hist-linha svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.hist-linha polyline { fill: none; stroke: var(--fc-ink); stroke-width: 2.5; vector-effect: non-scaling-stroke; stroke-linejoin: round; stroke-linecap: round; }
+.hist-ponto { position: absolute; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--fc-surface); background: var(--fc-ink); transform: translate(-50%, 50%); }
+.hist-tab { display: flex; flex-direction: column; gap: var(--fc-e-2); align-items: flex-start; }
+.hist-tab .rolagem { width: 100%; }
+
+/* funil: barra proporcional à maior etapa e marca do período anterior */
+.barra { position: relative; }
+.barra .marca { position: absolute; top: -3px; bottom: -3px; width: 3px; margin-left: -1px; border-radius: 2px; background: var(--fc-ink); }
+
+/* celular: sem seta gigante entre as etapas, cartões enxutos, resumo em 2 colunas */
+@media (max-width: 699px) {
+  #pg-funil .cn .seta { display: none; }
+  #pg-funil .passo { padding: var(--fc-e-2); }
+  #pg-funil .passo .num.vol { font-size: 40px; }
+  #pg-funil .cn .num { font-size: 24px; }
+  #pg-funil .cn { flex-direction: row; flex-wrap: wrap; justify-content: center; gap: var(--fc-e-1) var(--fc-e-2); padding: 0; }
+  #pg-funil .cn.quebra { padding: var(--fc-e-1) var(--fc-e-2); }
+  #pg-funil .faixa { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #pg-funil .faixa-cartao, #pg-funil .ritmo-cartao { padding: var(--fc-e-2); }
+  #pg-funil .faixa-cartao .num, #pg-funil .ritmo-cartao .num { font-size: 26px; }
+  #pg-funil .hist-grade { --hist-h: 96px; }
+  #pg-funil .hist-leitura { min-height: 0; }
+  #pg-funil .ritmo-grade { grid-template-columns: 1fr; gap: var(--fc-e-1); }
+  /* funil: etapa em linha (rótulo e variação à esquerda, número à direita) e a passagem numa faixa fina entre elas */
+  #pg-funil .passo { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "rot num" "lin num" "par par"; align-items: center; gap: 0 var(--fc-e-2); }
+  #pg-funil .passo .fc-rotulo { grid-area: rot; }
+  #pg-funil .passo .num.vol { grid-area: num; font-size: 40px; line-height: 1; }
+  #pg-funil .passo .linha { grid-area: lin; }
+  #pg-funil .passo .parte { grid-area: par; gap: 2px; margin-top: var(--fc-e-1); }
+  #pg-funil .cn { flex-direction: row; gap: var(--fc-e-1) var(--fc-e-2); min-height: var(--fc-toque); align-items: center; }
+  #pg-funil .cn .num { font-size: 22px; }
+  #pg-funil .ritmo-cartao { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 2px var(--fc-e-2); }
+  #pg-funil .ritmo-cartao .num { grid-column: 2; grid-row: 1 / span 2; font-size: 26px; }
+  #pg-funil .ritmo-cartao > .linha { grid-column: 1; }
+  #pg-funil .ritmo-cartao .fc-rotulo { grid-column: 1; }
+  #pg-funil .faixa-cartao .num { font-size: 22px; }
+  #pg-funil .faixa-cartao { gap: 2px; }
+  #pg-funil .passo .linha .peq, #pg-funil .faixa-cartao .linha .peq, #pg-funil .ritmo-cartao .linha .peq { display: none; }
+  #pg-funil .hist-legenda li:last-child { display: none; }
+  #pg-funil .ritmo-cartao .num { grid-row: 1 / span 2; }
+  #pg-funil .ritmo-cartao > .fc-legenda, #pg-funil .ritmo-cartao > .sem-valor { grid-column: 1 / -1; }
+  #pg-funil .funil .sub { display: none; }
+  #pg-funil .faixa-cartao .linha { display: none; }
+  #pg-funil .controles { gap: var(--fc-e-1) var(--fc-e-2); }
+  #pg-funil .controles .cmp { flex: 1 1 150px; min-width: 0; }
+  #pg-funil .hist-leitura { display: none; }
+  #pg-funil #cartoes.fl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--fc-e-1); }
+  #pg-funil .cn { flex-wrap: wrap; align-content: center; }
+  #pg-funil .ritmo-cartao .fc-rotulo { grid-column: 1 / -1; }
+  #pg-funil .ritmo-cartao .num { grid-row: 2 / span 2; }
+  #pg-funil .hist-grade { --hist-h: 44px; }
+  #pg-funil .faixa-cartao { padding: var(--fc-e-1) var(--fc-e-2); }
+  #pg-funil .passo .parte { margin-top: 0; }
+  #pg-funil #bloco-ritmo > .fc-legenda, #pg-funil #nota-canais { display: none; }
+  #pg-funil .passo .parte span { font-size: var(--fc-t-rotulo); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hist-mes { transition: none; }
+}
+
+/* filtro Canal sempre à vista (fora do painel recolhido): caixa de marcar com alvo de 44 px, o desenho continua pequeno */
+#filtro-canal { min-width: 180px; }
+.opcoes input[type="checkbox"] { appearance: none; -webkit-appearance: none; display: grid; place-items: center; flex: none; width: var(--fc-toque); height: var(--fc-toque); margin: 0 0 0 calc(var(--fc-e-1) * -1); background: transparent; cursor: pointer; }
+.opcoes input[type="checkbox"]::before { content: ""; width: 22px; height: 22px; box-sizing: border-box; border: 2px solid var(--fc-ink-2); border-radius: 6px; background: var(--fc-surface); }
+.opcoes input[type="checkbox"]:checked::before { border-color: var(--fc-accent); background: var(--fc-accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8.5l3.2 3.2L13 4.8' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center / 16px no-repeat; }
+.opcoes input[type="checkbox"]:focus-visible { outline: 3px solid var(--fc-accent); outline-offset: -3px; border-radius: var(--fc-r-campo); }

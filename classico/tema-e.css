@@ -1,0 +1,28 @@
+/* tema-e.css: tema E "Conversão". Sobrescreve os tokens --fc-* do tokens.css, traz a fonte (Plus Jakarta Sans) e a assinatura:
+   branco, tinta preta, marca-texto amarelo no botão, borda preta e sombra dura curta nos cartões, cabeçalho amarelo vivo.
+   Criado em 12/11/2026. */
+@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap");
+
+:root{
+  --fc-paper:#FFFFFF; --fc-paper-2:#F4F4F1; --fc-surface:#FFFFFF; --fc-hair:#D8D8D8; --fc-hair-forte:#111111;
+  --fc-ink:#111111; --fc-ink-2:#3B372F; --fc-ink-3:#55524A;
+  --fc-accent:#111111; --fc-accent-forte:#000000; --fc-on-accent:#FFFFFF;
+  /* gradiente vivo como na v2: amarelo forte que desliza sobre post-it */
+  --fc-mesh-1:#FFF3C2; --fc-mesh-2:#FFD84D; --fc-mesh-3:#FFF7D6; --fc-mesh-4:#FFE38A; --fc-on-mesh:#111111;
+  --fc-scrim-cor:#FFFFFF; --fc-scrim-alfa:0; --fc-grao:0;
+  --fc-menta:#2FA36B; --fc-ambar:#F5B82E;
+  --fc-ok:#0B6B47; --fc-atencao:#7A5410; --fc-erro:#A8341A;
+  --fc-display:'Plus Jakarta Sans', 'Helvetica Neue', Arial, sans-serif;
+  --fc-body:'Plus Jakarta Sans', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --fc-r-bloco:8px; --fc-r-cartao:6px; --fc-r-campo:6px; --fc-r-pilula:6px;
+  --fc-vidro-fundo:rgba(255,255,255,.7); --fc-vidro-borda:#111111; --fc-vidro-fundo-hover:#FFFFFF;
+  --fc-sombra-acao:3px 3px 0 #111111;
+  --fc-marca-texto:#FFDE6A;
+}
+.fc-mesh{ background-size:200% 200%; border-bottom:1.5px solid var(--fc-ink); }
+@media (prefers-reduced-motion:no-preference){ .fc-mesh{ animation:fc-vivo 16s var(--fc-curva) infinite alternate; } }
+@keyframes fc-vivo{ from{ background-position:0% 0%; } to{ background-position:100% 100%; } }
+.fc-cartao{ border:1.5px solid var(--fc-ink); box-shadow:3px 3px 0 var(--fc-ink); }
+/* botão principal = marca-texto com borda e sombra dura; o fantasma continua branco */
+.fc-btn, .btn:not(.ghost){ background:var(--fc-marca-texto); color:var(--fc-ink); border:1.5px solid var(--fc-ink); box-shadow:2px 2px 0 var(--fc-ink); }
+.fc-btn:hover{ box-shadow:3px 3px 0 var(--fc-ink); }

@@ -38,28 +38,28 @@
 
   // Tabela única do detalhe, uma aba por vez. Coluna: [campo, título, formato, nota "sem valor"]
   const ABAS = {
-    custo: [['cpm', 'CPM', 'money'], ['cpc', 'CPC', 'money'], ['cpl', 'CPL', 'money'], ['cpa', 'CPA', 'money'], ['cpr', 'CPR', 'money'], ['roas_honorario', 'ROAS honorário', 'x'], ['roi', 'ROI', 'roi']],
+    custo: [['cpm', 'CPM', 'money'], ['cpc', 'CPC', 'money'], ['cpl', 'CPL', 'money'], ['cpa', 'CPA', 'money'], ['cpr', 'CPR', 'money'], ['roas_honorario', 'ROAS honorário', 'x']],
     conv: [['ctr', 'CTR', 'pct'], ['click_to_lead', 'Clique para lead', 'pct'], ['lead_to_marked', 'Lead para marcação', 'pct'], ['marked_to_completed', 'Marcação para realizado', 'pct'], ['completed_to_upsell', 'Realizado para upsell', 'pct'], ['avg_ticket', 'Ticket médio', 'money', true], ['avg_fee', 'Honorário médio', 'money', true]],
     vol: [['spend', 'Investimento', 'money'], ['impressions', 'Impressões', 'int'], ['clicks', 'Cliques', 'int'], ['leads', 'Leads', 'int'], ['marked_patients', 'Marcações', 'int'], ['scheduled_patients', 'Agendamentos', 'int'], ['completed_patients', 'Realizados', 'int'], ['billed_amount', 'Faturado', 'money'], ['physician_fee', 'Honorário', 'money']],
   };
   const GRAO_TXT = { day: 'dia', week: 'semana', month: 'mês' };
 
-  // Etapas do funil, na ordem. Tudo vem pronto do funnel.sql (taxa, custo, % dos leads, variação); aqui só se escolhe o campo.
-  // volume e variação: campo e campo_chg; custo e variação: custo e custo_chg; "% dos leads": parte.
+  // Etapas do funil, na ordem. Tudo vem pronto do funnel.sql (taxa, % dos leads, variação); aqui só se escolhe o campo.
+  // volume e variação: campo e campo_chg; "% dos leads": parte. O custo por etapa não fica no cartão: está no detalhe por período.
   const ETAPAS = [
-    { campo: 'leads', rotulo: 'Leads', custo: 'cpl', custoRotulo: 'Custo por lead', parte: 'leads_of_leads' },
-    { campo: 'marked_patients', rotulo: 'Marcações', custo: 'cpa', custoRotulo: 'Custo por marcação (CPA)', parte: 'marked_of_leads' },
-    { campo: 'scheduled_patients', rotulo: 'Agendamentos', custo: 'cost_per_scheduled', custoRotulo: 'Custo por agendamento', parte: 'scheduled_of_leads' },
-    { campo: 'completed_patients', rotulo: 'Realizados', custo: 'cpr', custoRotulo: 'Custo por realizado', parte: 'completed_of_leads' },
+    { campo: 'leads', rotulo: 'Leads', parte: 'leads_of_leads' },
+    { campo: 'marked_patients', rotulo: 'Marcações', parte: 'marked_of_leads' },
+    { campo: 'scheduled_patients', rotulo: 'Agendamentos', parte: 'scheduled_of_leads' },
+    { campo: 'completed_patients', rotulo: 'Realizados', parte: 'completed_of_leads' },
   ];
   // Taxas de passagem entre uma etapa e a seguinte: campo da taxa (prev_ e _pp vêm do SQL).
   const PASSAGENS = ['lead_to_marked', 'marked_to_scheduled', 'scheduled_to_completed'];
-  // Faixa de baixo: [campo, rótulo, formato, unidade, quando "sobe" é bom]. null = neutro (gastar mais não é bom nem ruim).
-  // O sexto item é a variação: omitido = relativa (campo_chg); 'pp' = pontos percentuais (campo_pp). ROI usa pp: a variação relativa de um número que cruza o zero não faz sentido.
-  const FAIXA = [['spend', 'Gasto', 'money', '', null], ['cpa', 'CPA (por marcação)', 'money', '', false], ['roas_honorario', 'ROAS do honorário', 'ratio', 'x', true], ['roi', 'ROI', 'roi', '', true, 'pp']];
-  const FAIXA_DE_MIDIA = ['spend', 'cpa', 'roas_honorario', 'roi'];
+  // Resumo (4 números): [campo, rótulo, formato, unidade, quando "sobe" é bom]. null = neutro (gastar mais não é bom nem ruim).
+  // O "antes" sai do campo_chg do funnel.sql: antes = atual / (1 + variação).
+  const FAIXA = [['spend', 'Gasto', 'money', '', null], ['cpa', 'CPA (por marcação)', 'money', '', false], ['roas_honorario', 'ROAS do honorário', 'ratio', 'x', true], ['physician_fee', 'Honorário', 'money', '', true]];
+  const FAIXA_DE_MIDIA = ['spend', 'cpa', 'roas_honorario'];
   // Bloco "Por canal": [campo, título, formato]. A linha de cada canal é a linha 'total' dele no funnel.sql.
-  const COLS_CANAIS = [['spend', 'Gasto', 'money'], ['scheduled_patients', 'Agendamentos', 'int'], ['completed_patients', 'Consultas', 'int'], ['physician_fee', 'Honorário', 'money'], ['cost_per_scheduled', 'Custo por agendamento', 'money'], ['roas_honorario', 'ROAS', 'x'], ['roi', 'ROI', 'roi']];
+  const COLS_CANAIS = [['spend', 'Gasto', 'money'], ['scheduled_patients', 'Agendamentos', 'int'], ['completed_patients', 'Consultas', 'int'], ['physician_fee', 'Honorário', 'money'], ['cost_per_scheduled', 'Custo por agendamento', 'money'], ['roas_honorario', 'ROAS', 'x']];
 
   const TIPO_MARCACAO = { scheduled: 'Agendamento', referral: 'Encaminhamento' };
   const LISTAS = {
@@ -87,7 +87,6 @@
       case 'pct': return NF1.format(valor * 100) + '%';
       case 'ratio': return NF2.format(valor);
       case 'x': return NF2.format(valor) + 'x';
-      case 'roi': return (valor > 0 ? '+' : '') + NF1.format(valor * 100) + '%'; // ROI leva sinal: +20,3% é lucro, -15,0% é prejuízo
       case 'canal': return rotuloCanal(valor);
       case 'int': return NF0.format(valor);
       case 'date': return fmtData(valor);
@@ -197,10 +196,13 @@
     return [p.start, p.end];
   }
 
-  // 'setup' e 'onboarding' têm botão próprio no topo (à esquerda do seletor de cliente), fora do grupo Funil | Cirurgias | Pacientes. Nessas duas páginas o seletor de cliente some (o quadro e o mapa são de todos).
+  // Topo em dois andares (redesign, 13/11/2026): GLOBAIS no andar de cima, sempre iguais; LOCAIS só dentro de um cliente (seletor + Funil | Cirurgias | Pacientes).
+  // Sem ?pagina abre o Hoje.
+  const GLOBAIS = { hoje: 'Hoje', clientes: 'Clientes', setup: 'Setup', atividades: 'Atividades', onboarding: 'Onboarding' };
+  const LOCAIS = { funil: 'Funil', cirurgias: 'Cirurgias', pacientes: 'Pacientes' };
   function paginaDaUrl() {
     const p = new URLSearchParams(location.search).get('pagina');
-    return p === 'cirurgias' || p === 'setup' || p === 'pacientes' || p === 'onboarding' || p === 'atividades' ? p : 'funil';
+    return GLOBAIS[p] || LOCAIS[p] ? p : 'hoje';
   }
 
   // ------------------------------------------------------------ estado
@@ -220,6 +222,11 @@
     options: {},
     funnel: [],
     canais: [], // linhas do funnel.sql em todos os canais (e na visão 'all')
+    mensal: null, // funnel_month.sql do cliente: {tenant, rows} | {tenant, carregando} | {tenant, erro}; independe de canal, período e filtros
+    modo: 'roas', // terceiro número do ritmo e linha do histórico: 'roas' | 'cac'
+    meses: 6, // quantos meses o histórico mostra (3, 6 ou 12)
+    mesSel: null, // mês lido no histórico (null = o último)
+    tabHist: false, // tabela "Ver os números" aberta
     lists: { completed: { rows: [], page: 0 }, marked: { rows: [], page: 0 } },
   };
   let seq = 0;
@@ -289,8 +296,7 @@
     $('painel').hidden = true;
     $('login').hidden = false;
     $('btn-sair').hidden = true;
-    $('nav-pagina').hidden = true;
-    $('nav-setup').hidden = true;
+    document.body.classList.add('sem-login');
     $('estado-login').textContent = 'Sem login';
     $('login-msg').textContent = msg || 'Entre com a conta Google que tem acesso ao BigQuery.';
   }
@@ -299,8 +305,7 @@
     $('login').hidden = true;
     $('painel').hidden = false;
     $('btn-sair').hidden = false;
-    $('nav-pagina').hidden = false;
-    $('nav-setup').hidden = false;
+    document.body.classList.remove('sem-login');
     $('estado-login').textContent = 'Login ativo';
   }
 
@@ -539,9 +544,9 @@
       if (FIXTURE) {
         window.__consultas.push({ nome, params: JSON.parse(JSON.stringify(params)) });
         // Pacientes e mensagens são listas simples (fixtures/README_pacientes.md), não o formato do BigQuery; as mensagens são só as do telefone pedido.
-        if (nome === 'patients') return await fixtureBruto('patients');
+        if (nome === 'patients' || nome === 'patients_all') return await fixtureBruto(nome);
         if (nome === 'messages') return (await fixtureBruto('messages')).filter((m) => m.phone_key === params.phone_key).sort((a, b) => (a.sent_at || '').localeCompare(b.sent_at || '') || a.seq - b.seq);
-        return await fixture(['completed', 'marked', 'options', 'tenants', 'surgeries', 'setup_board', 'setup_events', 'onboarding_map', 'activities'].includes(nome) ? nome : 'funnel');
+        return await fixture(['completed', 'marked', 'options', 'tenants', 'surgeries', 'surgeries_all', 'setup_board', 'setup_events', 'onboarding_map', 'activities', 'funnel_month'].includes(nome) ? nome : 'funnel');
       }
       return await bqQuery(nome, params);
     } finally {
@@ -602,6 +607,7 @@
     }
     renderSeletor();
     atualizaAvisos();
+    if (state.mensal && state.mensal.rows) renderMensal(); // "sem dado de mídia" depende de tenants.spend_rows
   }
 
   function celula(valor, tipo, campo, extra) {
@@ -634,55 +640,26 @@
   const ISO = /^(\d{4})-(\d{2})-(\d{2})$/;
   const dataDeISO = (iso) => { const m = ISO.exec(iso); return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])); };
 
-  // Rótulo do eixo: mês, ou dd/mm. Semana que começa antes da data inicial mostra a data inicial (o que de fato entrou no período).
-  const rotuloCurto = (period, grao) => {
-    if (!ISO.test(period)) return '';
-    if (grao === 'month') return MESES[Number(period.slice(5, 7)) - 1];
-    const dia = grao === 'week' && period < state.start ? state.start : period;
-    return `${dia.slice(8, 10)}/${dia.slice(5, 7)}`;
-  };
-
-  // Último dia coberto pelo período que começa em `period`.
-  function fimDoPeriodo(period, grao) {
-    const d = dataDeISO(period);
-    if (grao === 'month') return isoLocal(new Date(d.getFullYear(), d.getMonth() + 1, 0));
-    return isoLocal(new Date(d.getFullYear(), d.getMonth(), d.getDate() + (grao === 'week' ? 6 : 0)));
-  }
-
-  // Linha do tempo por período (a série do funnel.sql). Escala a partir do zero (a altura é proporcional ao valor);
-  // menos de 3 pontos não forma tendência, então não há linha; o último período, se a data final o corta, vai tracejado.
-  function spark(campo, escuro) {
-    const per = periodosFunil();
-    const brutos = per.map((r, i) => [i, r[campo]]).filter(([, v]) => v !== null && v !== undefined);
-    if (brutos.length < 3) return '<div class="spark"></div>';
-    const piso = Math.min(0, ...brutos.map(([, v]) => v)); // ROI pode ficar negativo: o piso desce até o menor valor; sem negativo, o piso é o zero
-    const pts = brutos.map(([i, v]) => [i, v - piso]);
-    const hi = Math.max(...pts.map(([, v]) => v));
-    const i0 = pts[0][0], i1 = pts[pts.length - 1][0];
-    const xy = pts.map(([i, v]) => [((i - i0) / (i1 - i0)) * 100, 8 + (hi > 0 ? v / hi : 0) * 84]);
-    const ponto = ([x, y]) => `${x.toFixed(1)},${(100 - y).toFixed(1)}`;
-    const incompleto = i1 === per.length - 1 && fimDoPeriodo(per[i1].period, state.grain) > state.end;
-    const solido = (incompleto ? xy.slice(0, -1) : xy).map(ponto).join(' ');
-    const tracejado = incompleto ? `<polyline class="tracejado" points="${xy.slice(-2).map(ponto).join(' ')}"/>` : '';
-    const [ux, uy] = xy[xy.length - 1];
-    return `<div class="spark${escuro ? ' escuro' : ''}"><div class="area"><svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" aria-label="Tendência por período"><polyline class="solido" points="${solido}"/>${tracejado}</svg><span class="ponta${incompleto ? ' parcial' : ''}" aria-hidden="true" style="left:${ux.toFixed(1)}%;bottom:${uy.toFixed(1)}%"></span></div><div class="eixo"><span>${esc(rotuloCurto(per[i0].period, state.grain))}</span><span>${esc(rotuloCurto(per[i1].period, state.grain))}</span></div></div>`;
-  }
-
   const SETA = '<svg class="seta" width="56" height="14" viewBox="0 0 56 14" aria-hidden="true"><path d="M2 7h50M46 2l6 5-6 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
   const ESQ_NUM = '<span class="esq esq-numero"></span>';
 
-  function passoHtml(e, total, esperando) {
+  // Valor do período anterior a partir da variação relativa do SQL (antes = atual / (1 + variação)); sem base devolve null.
+  const valorAntes = (valor, chg) => (valor === null || valor === undefined || chg === null || chg === undefined || 1 + chg === 0 ? null : valor / (1 + chg));
+
+  // Cartão da etapa: volume, variação, barra proporcional à maior etapa e marca do período anterior. Sem custo (está no detalhe).
+  function passoHtml(e, total, esperando, maior) {
     if (esperando) {
-      return `<div class="passo" data-card="${e.campo}"><p class="fc-rotulo">${esc(e.rotulo)}</p><p class="num vol" aria-hidden="true">${ESQ_NUM}</p><hr><div class="custo-bloco"><span class="rot">${esc(e.custoRotulo)}</span><p class="num custo" aria-hidden="true">${ESQ_NUM}</p></div></div>`;
+      return `<div class="passo" data-card="${e.campo}"><p class="fc-rotulo">${esc(e.rotulo)}</p><p class="num vol" aria-hidden="true">${ESQ_NUM}</p></div>`;
     }
+    const vol = total ? total[e.campo] : null;
+    const chg = total ? total[`${e.campo}_chg`] : null;
+    const antes = valorAntes(vol, chg);
     const parte = total ? total[e.parte] : null;
-    const largura = parte === null || parte === undefined ? 0 : Math.min(100, parte * 100);
-    const custo = total ? total[e.custo] : null;
-    const temCusto = custo !== null && custo !== undefined;
-    const nota = !temCusto && semMidia() ? '<span class="peq">sem dado de mídia</span>' : '';
-    const dVol = total ? `<span class="linha" data-var="vol">${contraAnterior(total[`${e.campo}_chg`], true)}</span>` : '';
-    const dCusto = total && temCusto ? `<span class="linha" data-var="custo">${variacao(total[`${e.custo}_chg`], false)}</span>` : '';
-    return `<div class="passo" data-card="${e.campo}"><p class="fc-rotulo">${esc(e.rotulo)}</p><p class="num vol"><span class="v">${esc(fmt(total && total[e.campo], 'int'))}</span></p>${dVol}<div class="parte"><span>${esc(fmt(parte, 'pct'))} dos leads</span><div class="barra" aria-hidden="true"><i style="width:${largura.toFixed(1)}%"></i></div></div><hr><div class="custo-bloco"><span class="rot">${esc(e.custoRotulo)}</span><p class="num custo" data-custo="${e.custo}"><span class="vc">${esc(fmt(custo, 'money'))}</span></p>${dCusto}${nota}</div>${spark(e.campo)}</div>`;
+    const pos = (v) => (v === null || v === undefined || !(maior > 0) ? 0 : Math.min(100, (v / maior) * 100));
+    const marca = antes === null ? '' : `<span class="marca" data-marca="antes" style="left:${pos(antes).toFixed(1)}%"></span>`;
+    const dVol = total ? `<span class="linha" data-var="vol">${contraAnterior(chg, true)}</span>` : '';
+    const dAntes = antes === null ? '' : `<span class="peq">antes ${esc(fmt(Math.round(antes), 'int'))}</span>`;
+    return `<div class="passo" data-card="${e.campo}"><p class="fc-rotulo">${esc(e.rotulo)}</p><p class="num vol"><span class="v">${esc(fmt(vol, 'int'))}</span></p>${dVol}<div class="parte"><div class="barra" aria-hidden="true"><i style="width:${pos(vol).toFixed(1)}%"></i>${marca}</div><span>${esc(fmt(parte, 'pct'))} dos leads${dAntes ? ' · ' : ''}${dAntes}</span></div></div>`;
   }
 
   function conexaoHtml(chave, total, esperando) {
@@ -693,23 +670,29 @@
       : `<span class="antes">antes ${esc(fmt(total[`prev_${chave}`], 'pct'))}</span><span class="pp" data-var="pp">${variacao(pp, true, 'pp')}</span>`;
     const eQueda = !!total && total.biggest_drop === chave;
     const queda = eQueda ? '<span class="queda">Maior queda</span>' : '';
-    return `<div class="cn${eQueda ? ' quebra' : ''}" data-passagem="${chave}"><p class="num taxa">${esc(fmt(total && total[chave], 'pct'))}</p>${SETA}${base}${queda}</div>`;
+    return `<div class="cn${eQueda ? ' quebra' : ''}" data-passagem="${chave}"${eQueda ? ' data-maior-queda' : ''}><p class="num taxa">${esc(fmt(total && total[chave], 'pct'))}</p>${SETA}${base}${queda}</div>`;
   }
 
-  function faixaHtml([campo, rotulo, tipo, unidade, bomSobe, variacaoEm], total, esperando) {
+  // Cartão do resumo: valor, variação contra o anterior e "antes X". Cliente sem mídia: "sem dado de mídia" nos três de mídia.
+  function faixaHtml([campo, rotulo, tipo, unidade, bomSobe], total, esperando) {
     if (esperando) return `<div class="faixa-cartao fc-cartao" data-card="${campo}"><div class="txt"><p class="fc-rotulo">${esc(rotulo)}</p><p class="num" aria-hidden="true">${ESQ_NUM}</p></div></div>`;
     const valor = total ? total[campo] : null;
+    const tem = valor !== null && valor !== undefined;
     const nota = semMidia() && FAIXA_DE_MIDIA.includes(campo) ? '<p class="fc-legenda">sem dado de mídia</p>' : '';
-    const dlt = total && valor !== null && valor !== undefined ? `<span class="linha">${contraAnterior(total[`${campo}_${variacaoEm || 'chg'}`], bomSobe, variacaoEm)}</span>` : '';
-    const un = unidade && valor !== null && valor !== undefined ? `<span class="un">${esc(unidade)}</span>` : '';
-    return `<div class="faixa-cartao fc-cartao" data-card="${campo}"><div class="txt"><p class="fc-rotulo">${esc(rotulo)}</p><p class="num"><span class="v">${esc(fmt(valor, tipo))}</span>${un}</p>${dlt}${nota}</div>${spark(campo, true)}</div>`;
+    const chg = total ? total[`${campo}_chg`] : null;
+    const dlt = total && tem ? `<span class="linha">${contraAnterior(chg, bomSobe)}</span>` : '';
+    const antes = valorAntes(valor, chg);
+    const dAntes = antes === null ? '' : `<p class="fc-legenda antes">antes ${esc(fmt(antes, tipo))}${esc(unidade)}</p>`;
+    const un = unidade && tem ? `<span class="un">${esc(unidade)}</span>` : '';
+    return `<div class="faixa-cartao fc-cartao" data-card="${campo}"><div class="txt"><p class="fc-rotulo">${esc(rotulo)}</p><p class="num"><span class="v">${esc(fmt(valor, tipo))}</span>${un}</p>${dlt}${dAntes}${nota}</div></div>`;
   }
 
   function renderCartoes(esperando) {
     const total = esperando ? null : totalFunil();
+    const maior = total ? Math.max(0, ...ETAPAS.flatMap((e) => [total[e.campo], valorAntes(total[e.campo], total[`${e.campo}_chg`])]).filter((v) => v !== null && v !== undefined)) : 0;
     const itens = [];
     ETAPAS.forEach((e, i) => {
-      itens.push(passoHtml(e, total, esperando));
+      itens.push(passoHtml(e, total, esperando, maior));
       if (i < PASSAGENS.length) itens.push(conexaoHtml(PASSAGENS[i], total, esperando));
     });
     $('cartoes').innerHTML = itens.join('');
@@ -793,7 +776,7 @@
       return `<tr${canal === 'all' || canal === 'selected' ? ' class="total"' : ''} data-linha-canal="${esc(canal)}"><td data-col="channel">${esc(rotuloCanal(canal))}</td>${cels}</tr>`;
     }).join('');
     document.querySelector('#bloco-canais .rolagem').innerHTML = `<table data-tabela="canais"><thead><tr><th>Canal</th>${cab}</tr></thead><tbody>${corpo}</tbody></table>`;
-    $('nota-canais').textContent = 'Gasto = mídia + custo fixo do canal (o valor do mês, rateado por dia). ROI = (honorário - gasto) ÷ gasto.';
+    $('nota-canais').textContent = 'Gasto = mídia + custo fixo do canal (o valor do mês, rateado por dia).';
   }
 
   function renderDetalhe() {
@@ -876,6 +859,149 @@
     renderDetalhe();
     renderLista('completed');
     renderLista('marked');
+  }
+
+  // ------------------------------------------------------------ ritmo do mês e histórico mês a mês (sql/funnel_month.sql)
+  // Uma consulta por cliente, sempre SEM o canal, o período e os filtros da tela: o histórico não muda quando eles mudam.
+  const mensalLinhas = () => (state.mensal && state.mensal.rows) || [];
+  const mulK = (v, k) => (v === null || v === undefined ? null : v * k);
+  const brl0 = (v) => (v === null || v === undefined ? VAZIO : 'R$ ' + NF0.format(v));
+  const roas1 = (v) => (v === null || v === undefined ? VAZIO : NF1.format(v) + 'x');
+  const mesPorExtenso = (per) => MESES_POR_EXTENSO[Number(per.slice(5, 7)) - 1];
+  const maiuscula = (t) => t.charAt(0).toUpperCase() + t.slice(1);
+  const SEM_MIDIA = 'sem dado de mídia';
+
+  // Run rate = parcial x dias do mês / dias corridos (partial_until). Sem a linha parcial do mês corrente, não há ritmo.
+  function ritmoDados() {
+    const m = mensalLinhas();
+    const cur = m[m.length - 1];
+    if (!cur || !cur.partial_until) return null;
+    const [ano, mes] = cur.period.split('-').map(Number);
+    const diasMes = new Date(ano, mes, 0).getDate();
+    const dia = Number(cur.partial_until.slice(8, 10));
+    const ant = new Date(ano, mes - 2, 1);
+    const perAnt = `${ant.getFullYear()}-${String(ant.getMonth() + 1).padStart(2, '0')}`;
+    const k = diasMes / dia;
+    return { cur, prev: m.find((x) => x.period === perAnt) || null, k, dia, diasMes, fee: mulK(cur.physician_fee, k), spend: mulK(cur.spend, k) };
+  }
+
+  const varMes = (a, b, bomSobe, mes) => {
+    const f = a === null || a === undefined || b === null || b === undefined || b === 0 ? null : a / b - 1;
+    return f === null ? '<span class="sem-base">sem base</span>' : `${variacao(f, bomSobe)} <span class="peq">contra ${esc(mes)}</span>`;
+  };
+
+  function cartaoRitmo(campo, rotulo, valor, txt, varHtml, real) {
+    const num = valor === null || valor === undefined
+      ? `<p class="sem-valor">${esc(txt)}</p>`
+      : `<p class="num"><span class="v">${esc(txt)}</span></p><p class="linha">${varHtml}</p><p class="fc-legenda">${esc(real)}</p>`;
+    return `<article class="ritmo-cartao fc-cartao" data-card="${campo}"><p class="fc-rotulo">${esc(rotulo)}</p>${num}</article>`;
+  }
+
+  function ritmoHtml() {
+    const R = ritmoDados();
+    if (!R) return '<h2 class="fc-h3" id="t-ritmo">Ritmo do mês</h2><p class="vazio-t">Sem dado neste mês</p>';
+    const cac = state.modo === 'cac';
+    const mp = R.prev ? mesPorExtenso(R.prev.period) : 'o mês anterior';
+    const p = R.prev || {};
+    const mes = mesPorExtenso(R.cur.period);
+    const sem = semMidia();
+    const gasto = sem ? null : R.spend;
+    const terceiro = sem ? null : (cac ? R.cur.cpr : R.cur.roas_honorario);
+    const seg = `<div class="seg" role="group" aria-label="Terceiro número"><button type="button" data-modo="roas" aria-pressed="${!cac}">ROAS</button><button type="button" data-modo="cac" aria-pressed="${cac}">CAC</button></div>`;
+    const cartoes = [
+      cartaoRitmo('physician_fee', 'Honorário (run rate)', R.fee, brl0(R.fee), varMes(R.fee, p.physician_fee, true, mp), `Realizado até hoje: ${brl0(R.cur.physician_fee)}`),
+      cartaoRitmo('spend', 'Investimento em Ads (run rate)', gasto, sem ? SEM_MIDIA : brl0(gasto), varMes(gasto, p.spend, null, mp), `Realizado até hoje: ${brl0(R.cur.spend)}`),
+      cac
+        ? cartaoRitmo('cpr', 'CAC (run rate)', terceiro, sem ? SEM_MIDIA : fmt(terceiro, 'money'), varMes(terceiro, p.cpr, false, mp), `Realizado até hoje: ${fmt(terceiro, 'money')}`)
+        : cartaoRitmo('roas_honorario', 'ROAS do honorário (run rate)', terceiro, sem ? SEM_MIDIA : roas1(terceiro), varMes(terceiro, p.roas_honorario, true, mp), `Realizado até hoje: ${roas1(terceiro)}`),
+    ].join('');
+    return `<div class="cab"><h2 class="fc-h3" id="t-ritmo">Ritmo de ${esc(mes)}</h2>${seg}</div><p class="fc-legenda">Projeção: o que já veio em ${R.dia} dias, estendido para ${R.diasMes} dias.</p><div class="ritmo-grade">${cartoes}</div>`;
+  }
+
+  // Leitura de um mês (toque ou foco na coluna). Mês corrente: projeção.
+  function leituraMes(per, R) {
+    const x = mensalLinhas().find((r) => r.period === per);
+    if (!x) return '';
+    const sem = semMidia();
+    const k = x.partial_until && R ? R.k : 1;
+    const item = (rot, val) => `<div><dt>${rot}</dt><dd>${esc(val)}</dd></div>`;
+    const realizados = x.completed_patients === null || x.completed_patients === undefined ? VAZIO : NF0.format(Math.round(x.completed_patients * k));
+    return `<p class="hist-leitura-t">${esc(maiuscula(mesPorExtenso(per)))}${x.partial_until ? ' (projeção)' : ''}</p><dl>${item('Ads', sem ? SEM_MIDIA : brl0(mulK(x.spend, k)))}${item('Honorário', brl0(mulK(x.physician_fee, k)))}${item('Realizados', realizados)}${item('ROAS', sem ? SEM_MIDIA : roas1(x.roas_honorario))}${item('CAC', sem ? SEM_MIDIA : fmt(x.cpr, 'money'))}</dl>`;
+  }
+
+  function tabelaMensal(rows, R) {
+    const sem = semMidia();
+    const linha = (rot, ads, hon, real, roas, cac, cls) => `<tr${cls ? ` class="${cls}"` : ''}><td>${esc(rot)}</td><td>${esc(sem ? SEM_MIDIA : ads)}</td><td>${esc(hon)}</td><td>${esc(real)}</td><td>${esc(sem ? SEM_MIDIA : roas)}</td><td>${esc(sem ? SEM_MIDIA : cac)}</td></tr>`;
+    const corpo = rows.map((x) => linha(mesPorExtenso(x.period) + (x.partial_until ? ` (até ${fmtData(x.partial_until).slice(0, 5)})` : ''), brl0(x.spend), brl0(x.physician_fee), fmt(x.completed_patients, 'int'), roas1(x.roas_honorario), fmt(x.cpr, 'money'))).join('');
+    const rr = R ? linha(`run rate de ${mesPorExtenso(R.cur.period)}`, brl0(R.spend), brl0(R.fee), NF0.format(Math.round((R.cur.completed_patients || 0) * R.k)), roas1(R.cur.roas_honorario), fmt(R.cur.cpr, 'money'), 'total') : '';
+    return `<div class="rolagem" data-rolagem tabindex="0"><table data-tabela="mensal"><thead><tr><th>Mês</th><th>Ads</th><th>Honorário</th><th>Realizados</th><th>ROAS</th><th>CAC</th></tr></thead><tbody>${corpo}${rr}</tbody></table></div>`;
+  }
+
+  function historicoHtml() {
+    const todas = mensalLinhas();
+    if (!todas.length) return '<h2 class="fc-h3" id="t-hist">Mês a mês</h2><p class="vazio-t">Sem dado neste mês</p>';
+    const R = ritmoDados();
+    const rows = todas.slice(-state.meses);
+    const sem = semMidia();
+    const cac = state.modo === 'cac';
+    const vals = rows.map((x) => {
+      const parc = !!x.partial_until;
+      const k = parc && R ? R.k : 1;
+      return { x, per: x.period, parc, ads: sem ? null : mulK(x.spend, k), hon: mulK(x.physician_fee, k), lin: sem ? null : (cac ? x.cpr : x.roas_honorario) };
+    });
+    const maxV = Math.max(0, ...vals.flatMap((v) => [v.ads, v.hon]).filter((v) => v !== null && v !== undefined));
+    const maxL = Math.max(0, ...vals.map((v) => v.lin).filter((v) => v !== null && v !== undefined)) * 1.15;
+    const alt = (v) => (v === null || v === undefined || !(maxV > 0) ? 0 : (v / maxV) * 100);
+    const sel = vals.some((v) => v.per === state.mesSel) ? state.mesSel : vals[vals.length - 1].per;
+    const n = vals.length;
+    const barra = (cls, rotulo, proj, real, parc) => (proj === null || proj === undefined ? ''
+      : `<span class="hist-b ${cls}" data-barra="${rotulo}"${parc ? ' data-parcial' : ''} style="height:${alt(proj).toFixed(1)}%">${parc && proj > 0 ? `<i style="height:${Math.min(100, (real / proj) * 100).toFixed(1)}%"></i>` : ''}</span>`);
+    const cols = vals.map((v) => {
+      const rotLin = v.lin === null || v.lin === undefined ? VAZIO : (cac ? 'R$ ' + NF0.format(v.lin) : roas1(v.lin));
+      const nome = `${MESES[Number(v.per.slice(5, 7)) - 1]}${v.parc ? '*' : ''}`;
+      return `<button type="button" class="hist-mes" data-mes="${v.per}"${v.parc ? ' data-parcial' : ''} aria-pressed="${v.per === sel}" aria-label="${esc(mesPorExtenso(v.per))}: ${esc(brl0(v.hon))} de honorário"><span class="hist-barras">${barra('ads', 'ads', v.ads, v.x.spend, v.parc)}${barra('hon', 'honorario', v.hon, v.x.physician_fee, v.parc)}</span><span class="hist-mes-nome">${esc(nome)}</span><span class="hist-lin-v">${esc(rotLin)}</span></button>`;
+    }).join('');
+    const pts = vals.map((v, i) => (v.lin === null || v.lin === undefined || !(maxL > 0) ? null : [((i + 0.5) / n) * 100, 8 + (v.lin / maxL) * 84]));
+    const ok = pts.filter(Boolean);
+    const linha = ok.length > 1 ? `<svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><polyline points="${ok.map(([x, y]) => `${x.toFixed(1)},${(100 - y).toFixed(1)}`).join(' ')}"/></svg>` : '';
+    const pontos = ok.map(([x, y]) => `<span class="hist-ponto" style="left:${x.toFixed(1)}%;bottom:${y.toFixed(1)}%"></span>`).join('');
+    const meses = [3, 6, 12].map((m) => `<button type="button" data-meses="${m}" aria-pressed="${state.meses === m}">${m} meses</button>`).join('');
+    const legenda = `<ul class="hist-legenda"><li><i class="sw ads"></i>Investimento em Ads</li><li><i class="sw hon"></i>Honorário</li><li><i class="sw lin"></i>${cac ? 'CAC' : 'ROAS'} (número sob o mês)</li><li><i class="sw proj"></i>* Mês corrente: projeção</li></ul>`;
+    return `<div class="cab"><h2 class="fc-h3" id="t-hist">Mês a mês</h2><div class="seg" role="group" aria-label="Quantos meses">${meses}</div></div>${legenda}${sem ? `<p class="fc-legenda">Investimento em Ads, ROAS e CAC: ${SEM_MIDIA}.</p>` : ''}<div class="hist-leitura" aria-live="polite">${leituraMes(sel, R)}</div><div class="hist-rolagem" data-rolagem tabindex="0"><div class="hist-grade" style="--n:${n}"><div class="hist-linha" aria-hidden="true">${linha}${pontos}</div>${cols}</div></div><div class="hist-tab"><button type="button" class="btn ghost" data-act="tab-hist" aria-expanded="${state.tabHist}"><span>Ver os números</span>${CHEVRON}</button>${state.tabHist ? tabelaMensal(rows, R) : ''}</div>`;
+  }
+
+  function renderMensal() {
+    const r = $('bloco-ritmo'), h = $('bloco-historico');
+    const mm = state.mensal;
+    if (!mm || mm.carregando) {
+      r.innerHTML = `<h2 class="fc-h3" id="t-ritmo">Ritmo do mês</h2>${ESQUELETO_TABELA}`;
+      h.innerHTML = `<h2 class="fc-h3" id="t-hist">Mês a mês</h2>${ESQUELETO_TABELA}`;
+      return;
+    }
+    if (mm.erro) {
+      r.innerHTML = `<h2 class="fc-h3" id="t-ritmo">Ritmo do mês</h2><p class="erro" role="alert">Não consegui carregar o histórico mensal. ${esc(mm.erro)}</p><button type="button" class="btn ghost" data-act="tentar-mensal">Tentar de novo</button>`;
+      h.innerHTML = '<h2 class="fc-h3" id="t-hist">Mês a mês</h2><p class="vazio-t">Sem dado neste mês</p>';
+      return;
+    }
+    r.innerHTML = ritmoHtml();
+    h.innerHTML = historicoHtml();
+  }
+
+  let seqMensal = 0;
+  async function carregaMensal() {
+    const meu = ++seqMensal;
+    const tenant = state.tenant;
+    state.mensal = { tenant, carregando: true };
+    renderMensal();
+    try {
+      const rows = await consulta('funnel_month', { tenant });
+      if (meu !== seqMensal) return;
+      state.mensal = { tenant, rows };
+    } catch (e) {
+      if (e instanceof AuthError || meu !== seqMensal) return;
+      state.mensal = { tenant, erro: e.message };
+    }
+    renderMensal();
   }
 
   // ------------------------------------------------------------ página Cirurgias (só leitura)
@@ -1097,8 +1223,25 @@
     }
   }
 
+  function atualizaTitulo() {
+    const p = state.pagina;
+    $('t-funil-pagina').textContent = `${rotuloCliente(state.tenant)} · Funil`;
+    document.title = LOCAIS[p] ? `${rotuloCliente(state.tenant)} · ${LOCAIS[p]} · Painel` : `${GLOBAIS[p]} · Painel`;
+  }
+
+  // Felipe, 13/11/2026: só Hoje e Funil foram redesenhados; as outras telas não se repetem aqui, abrem na versão antiga (classico/).
+  const NO_CLASSICO = new Set(['cirurgias', 'pacientes', 'setup', 'atividades', 'onboarding']);
   function mudaPagina(pagina) {
+    if (NO_CLASSICO.has(pagina)) {
+      const q = new URLSearchParams(location.search);
+      q.set('pagina', pagina);
+      q.set('tenant', state.tenant);
+      location.assign(`classico/index.html?${q}`);
+      return;
+    }
     state.pagina = pagina;
+    $('pg-hoje').hidden = pagina !== 'hoje';
+    $('pg-clientes').hidden = pagina !== 'clientes';
     $('pg-funil').hidden = pagina !== 'funil';
     $('pg-cirurgias').hidden = pagina !== 'cirurgias';
     $('pg-pacientes').hidden = pagina !== 'pacientes';
@@ -1106,10 +1249,13 @@
     $('pg-onboarding').hidden = pagina !== 'onboarding';
     $('pg-atividades').hidden = pagina !== 'atividades';
     document.querySelector('.pagina').classList.toggle('pagina-cheia', pagina === 'onboarding'); // o mapa vai até o fim da tela: sem o padding de baixo
-    document.querySelector('.topo-cliente').hidden = pagina === 'setup' || pagina === 'onboarding' || pagina === 'atividades'; // o quadro, o mapa e a linha do tempo são de todos os clientes: sem seletor
+    document.querySelector('[data-nav="local"]').hidden = !LOCAIS[pagina]; // andar local só dentro de um cliente
     document.querySelectorAll('[data-pagina]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.pagina === pagina)));
+    $('mais-painel').hidden = true;
+    $('btn-mais').setAttribute('aria-expanded', 'false');
+    atualizaTitulo();
     const q = new URLSearchParams(location.search);
-    if (pagina === 'funil') q.delete('pagina'); else q.set('pagina', pagina);
+    if (pagina === 'hoje') q.delete('pagina'); else q.set('pagina', pagina);
     if (q.toString() !== location.search.slice(1)) {
       try { history.replaceState(null, '', `${location.pathname}${q.toString() ? '?' + q : ''}`); } catch (e) { /* ok */ }
     }
@@ -1127,7 +1273,7 @@
 
   function renderFiltros() {
     const caixa = $('filtros');
-    const abertos = new Set([...caixa.querySelectorAll('details[open]')].map((d) => d.dataset.filtro));
+    const abertos = new Set([...document.querySelectorAll('#filtro-canal details[open], #filtros details[open]')].map((d) => d.dataset.filtro));
     // Canal: múltipla escolha como os outros filtros, sem marcação = Todos; a lista vem dos canais que existem nos dados do período.
     const canais = (state.options.channel || []).map((o) => ({ value: o.value, n: o.n }));
     for (const c of state.canal) if (!canais.some((o) => o.value === c)) canais.push({ value: c, n: 0 });
@@ -1137,7 +1283,9 @@
         : '<div class="vazio">Sem valores no período.</div>';
       return `<div class="filtro-campo"><span class="fc-rotulo">${esc(rotulo)}</span><details class="filtro" id="f-${chave}" data-filtro="${chave}" ${abertos.has(chave) ? 'open' : ''}><summary><span class="val">${esc(resumoFiltro(chave))}</span>${CHEVRON}</summary><div class="opcoes">${itens}</div></details></div>`;
     };
-    caixa.innerHTML = campo('canal', 'Canal', canais, new Set(state.canal), rotuloCanal) + FILTROS.map(([chave, rotulo]) => {
+    // O Canal fica fora do painel recolhido (é o filtro mais usado); os 7 outros ficam dentro de Filtros.
+    $('filtro-canal').innerHTML = campo('canal', 'Canal', canais, new Set(state.canal), rotuloCanal);
+    caixa.innerHTML = FILTROS.map(([chave, rotulo]) => {
       const opcoes = (state.options[chave] || []).slice();
       for (const v of state.filters[chave]) if (!opcoes.some((o) => o.value === v)) opcoes.push({ value: v, n: 0 });
       return campo(chave, rotulo, opcoes, new Set(state.filters[chave]), (v) => v);
@@ -1164,6 +1312,7 @@
 
   async function recarrega(comOpcoes) {
     if (!FIXTURE && !token) return;
+    if (state.pagina === 'hoje' || state.pagina === 'clientes') return carregaHoje();
     if (state.pagina === 'cirurgias') return carregaCirurgias();
     if (state.pagina === 'pacientes') return carregaPacientes();
     if (state.pagina === 'setup') return carregaSetup();
@@ -1181,6 +1330,7 @@
     app.setAttribute('aria-busy', 'true');
     $('estado-carga').hidden = false;
     renderEsperando();
+    if (!state.mensal || state.mensal.tenant !== state.tenant) carregaMensal(); // uma vez por cliente; não reconsulta quando canal, período ou filtro mudam
     try {
       if (!state.tenants) await carregaClientes();
       if (meu !== seq) return;
@@ -1442,6 +1592,22 @@
       else renderDetalhe();
     }));
 
+    // Ritmo e histórico: alternância ROAS/CAC, 3/6/12 meses, mês lido, tabela e nova tentativa. Nenhum grava nem reconsulta (só a nova tentativa).
+    const refoca = (sel) => { const b = document.querySelector(sel); if (b) b.focus(); };
+    $('pg-funil').addEventListener('click', (e) => {
+      const b = e.target.closest('#bloco-ritmo button, #bloco-historico button');
+      if (!b) return;
+      if (b.dataset.modo) { state.modo = b.dataset.modo; renderMensal(); refoca(`[data-modo="${state.modo}"]`); return; }
+      if (b.dataset.meses) { state.meses = Number(b.dataset.meses); renderMensal(); refoca(`[data-meses="${state.meses}"]`); return; }
+      if (b.dataset.act === 'tab-hist') { state.tabHist = !state.tabHist; renderMensal(); refoca('[data-act="tab-hist"]'); return; }
+      if (b.dataset.act === 'tentar-mensal') { carregaMensal(); return; }
+      if (b.dataset.mes) {
+        state.mesSel = b.dataset.mes;
+        document.querySelectorAll('.hist-mes').forEach((c) => c.setAttribute('aria-pressed', String(c === b)));
+        document.querySelector('.hist-leitura').innerHTML = leituraMes(state.mesSel, ritmoDados());
+      }
+    });
+
     $('btn-filtros').addEventListener('click', () => {
       const painel = $('painel-filtros');
       painel.hidden = !painel.hidden;
@@ -1462,12 +1628,32 @@
       if (!FIXTURE) iniciaLogin();
     });
 
+    $('btn-conta').addEventListener('click', () => {
+      const abre = $('conta-painel').hidden;
+      $('conta-painel').hidden = !abre;
+      $('btn-conta').setAttribute('aria-expanded', String(abre));
+    });
+    $('btn-mais').addEventListener('click', () => {
+      const abre = $('mais-painel').hidden;
+      $('mais-painel').hidden = !abre;
+      $('btn-mais').setAttribute('aria-expanded', String(abre));
+    });
+    $('btn-mais-conta').addEventListener('click', () => { $('mais-painel').hidden = true; $('btn-mais').setAttribute('aria-expanded', 'false'); $('btn-conta').click(); });
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('conta-painel').hidden) { $('conta-painel').hidden = true; $('btn-conta').setAttribute('aria-expanded', 'false'); $('btn-conta').focus(); } });
+    document.addEventListener('click', (e) => { if (!e.target.closest('[data-menu="conta"]') && !$('conta-painel').hidden) { $('conta-painel').hidden = true; $('btn-conta').setAttribute('aria-expanded', 'false'); } });
+    $('c-tema').addEventListener('change', (e) => window.FcTema.troca(e.target.value));
+    document.addEventListener('fc-tema', ligaTemaPainel);
+    $('lk-marca').addEventListener('click', (e) => { e.preventDefault(); if (state.pagina !== 'hoje') { mudaPagina('hoje'); recarrega(true); } });
+
     $('c-tenant').addEventListener('change', (e) => {
       state.tenant = e.target.value;
       guardaTenantNaUrl();
+      atualizaTitulo();
       for (const k of Object.keys(state.filters)) state.filters[k] = []; // as opções mudam por cliente
       state.canal = [];
       state.options = {};
+      state.mensal = null;
+      state.mesSel = null;
       if (state.todo) { // "Todo o período" acompanha o primeiro dado do novo cliente; sem ele, o período fica como está
         const primeiro = primeiroDado();
         if (primeiro) { state.start = primeiro; state.end = hojeIso(); } else state.todo = false;
@@ -1479,7 +1665,7 @@
 
     ligaPeriodo();
 
-    $('filtros').addEventListener('change', (e) => {
+    for (const host of [$('filtro-canal'), $('filtros')]) host.addEventListener('change', (e) => {
       const caixa = e.target.closest('details');
       if (!caixa || e.target.type !== 'checkbox') return;
       const chave = caixa.dataset.filtro;
@@ -1514,11 +1700,83 @@
     }
   }
 
+  // O painel só tem A e B (Felipe, 13/11/2026). O tema.js canônico guarda A, B ou E para tudo: um E salvo (do kit) abre o painel no A.
+  // O painel-x.css (componentes do painel) acompanha o tema-x.css que o tema.js troca.
+  function ligaTemaPainel() {
+    let t = window.FcTema.atual();
+    if (t !== 'a' && t !== 'b') { window.FcTema.troca('a'); return; } // a troca dispara o evento de novo, já com 'a'
+    const l = $('painel-tema');
+    const novo = l.getAttribute('href').replace(/painel-[a-z]\.css/, `painel-${t}.css`);
+    if (l.getAttribute('href') !== novo) l.setAttribute('href', novo);
+    $('c-tema').value = t;
+  }
+
+  // ------------------------------------------------------------ Hoje e Clientes (todos os clientes de uma vez)
+  // O desenho e a regra de "o que precisa de você" moram em hoje.js. Aqui: as fontes (cada uma falha sozinha) e o login.
+  // Fontes: clientes (tenants), quadro de setup mais os eventos depois da foto, pacientes e cirurgias de todos os clientes (sem @tenant),
+  // e o estado do acompanhamento (action=state) de cada cliente que tem pacientes.
+  let seqHoje = 0;
+  const FONTES_HOJE = [
+    ['clientes', 'a lista de clientes', () => carregaClientes()],
+    ['setup', 'o quadro de setup', () => consulta('setup_board', {})],
+    ['ajustes', 'os ajustes recentes do setup', () => consulta('setup_events', {})],
+    ['pacientes', 'os pacientes', () => consulta('patients_all', {})],
+    ['cirurgias', 'as listas de cirurgia', () => consulta('surgeries_all', {})],
+  ];
+
+  async function carregaHoje() {
+    const meu = ++seqHoje;
+    const modo = state.pagina === 'clientes' ? 'clientes' : 'hoje';
+    const ctx = { esc, modo, alvo: $(modo === 'clientes' ? 'clientes-corpo' : 'hoje-corpo'), hoje: hojeIso(), diasEntre, nome: rotuloCliente, atualiza: () => carregaHoje() };
+    window.PainelHoje.render(null, ctx);
+    const app = $('painel');
+    app.classList.add('carregando');
+    app.setAttribute('aria-busy', 'true');
+    try {
+      const rs = await Promise.allSettled(FONTES_HOJE.map((f) => f[2]()));
+      if (meu !== seqHoje) return;
+      if (rs.some((r) => r.status === 'rejected' && r.reason instanceof AuthError)) return; // a sessão caiu: o login já apareceu
+      const falhas = [];
+      const v = {};
+      rs.forEach((r, i) => {
+        if (r.status === 'rejected') falhas.push({ fonte: FONTES_HOJE[i][0], rotulo: FONTES_HOJE[i][1] });
+        else v[FONTES_HOJE[i][0]] = r.value;
+      });
+      if (falhas.length === FONTES_HOJE.length) { window.PainelHoje.render(false, ctx); return; }
+      const pacientes = v.pacientes || [];
+      const donos = [...new Set(pacientes.map((p) => p.tenant))];
+      const estados = {};
+      const sem = [];
+      const es = await Promise.allSettled(donos.map((t) => acaoPaciente('state', { tenant: t })));
+      if (meu !== seqHoje) return;
+      if (es.some((r) => r.status === 'fulfilled' && r.value.semLogin)) return;
+      es.forEach((r, i) => {
+        const resp = r.status === 'fulfilled' && r.value.resp && r.value.resp.status === 'ok' ? r.value.resp : null;
+        if (resp) estados[donos[i]] = resp; else sem.push(rotuloCliente(donos[i]));
+      });
+      if (sem.length) falhas.push({ fonte: 'acompanhamento', rotulo: `o acompanhamento de ${sem.join(', ')}` });
+      window.PainelHoje.render({
+        tenants: state.tenants || [], foto: (v.setup || [])[0] || null, eventos: v.ajustes || [], pacientes, cirurgias: v.cirurgias || [],
+        estados, falhas, lidoEm: new Date(),
+      }, ctx);
+    } catch (e) {
+      if (e instanceof AuthError) return;
+      if (meu === seqHoje) window.PainelHoje.render(false, ctx);
+    } finally {
+      if (meu === seqHoje) {
+        app.classList.remove('carregando');
+        app.removeAttribute('aria-busy');
+      }
+    }
+  }
+
   function inicia() {
+    ligaTemaPainel();
     mostraPeriodo();
     renderSeletor();
     renderFiltros();
     renderCartoes(true);
+    renderMensal();
     atualizaTituloDetalhe();
     $('selo-exemplo').hidden = !FIXTURE;
     mudaPagina(state.pagina);

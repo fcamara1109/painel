@@ -1,0 +1,40 @@
+/* hoje.css: estrutura das telas Hoje e Clientes (redesign, P2, 13/11/2026). Só tokens --fc-*; o acabamento por tema entra no P6 (painel-a.css, painel-b.css). */
+#hoje-corpo, #clientes-corpo { display: flex; flex-direction: column; gap: var(--fc-e-3); }
+#hoje-corpo > div, #clientes-corpo > div { display: flex; flex-direction: column; gap: var(--fc-e-3); }
+.hj-sub { font-size: var(--fc-t-lede); line-height: var(--fc-lh-lede); color: var(--fc-ink); }
+.hj-h2 { font-size: var(--fc-t-h3); line-height: var(--fc-lh-h3); margin: 0 0 var(--fc-e-2); }
+.hj-bloco { padding: var(--fc-e-3); background: var(--fc-surface); border: 1px solid var(--fc-hair-forte); border-radius: var(--fc-r-cartao); }
+
+.hj-itens { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.hj-item { display: flex; align-items: center; justify-content: space-between; gap: var(--fc-e-2) var(--fc-e-3); flex-wrap: wrap; padding: var(--fc-e-2) 0; border-top: 1px solid var(--fc-hair); }
+.hj-item:first-child { border-top: 0; }
+.hj-item-txt { flex: 1 1 280px; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.hj-item-cli { font-weight: 600; font-size: var(--fc-t-corpo); }
+.hj-item-sinal { font-size: var(--fc-t-corpo); line-height: var(--fc-lh-corpo); color: var(--fc-ink-2); }
+.hj-item .btn { text-decoration: none; }
+.hj-vazio { font-size: var(--fc-t-corpo); padding: var(--fc-e-1) 0; }
+
+.hj-grupo { display: flex; flex-direction: column; gap: var(--fc-e-2); }
+.hj-grupo + .hj-grupo { margin-top: var(--fc-e-3); }
+.hj-grupo-t { display: flex; align-items: baseline; gap: var(--fc-e-2); margin: 0; font-size: var(--fc-t-corpo); font-weight: 600; }
+.hj-grupo-n { font-size: var(--fc-t-legenda); font-weight: 400; color: var(--fc-ink-3); }
+.hj-cartoes { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--fc-e-2); }
+.hj-cli { display: flex; flex-direction: column; gap: var(--fc-e-1); min-height: var(--fc-toque); padding: var(--fc-e-2); background: var(--fc-surface); border: 1px solid var(--fc-hair-forte); border-radius: var(--fc-r-campo); color: var(--fc-ink); text-decoration: none; }
+.hj-cli:hover { border-color: var(--fc-accent); }
+.hj-cli-nome { font-size: var(--fc-t-corpo); font-weight: 600; }
+.hj-cli-meta { font-size: var(--fc-t-legenda); color: var(--fc-ink-3); }
+.hj-selos { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--fc-e-1); }
+.hj-selo { padding: 2px var(--fc-e-2); border: 1px solid var(--fc-hair-forte); border-radius: var(--fc-r-pilula); font-size: var(--fc-t-legenda); color: var(--fc-ink-2); }
+.hj-selo[data-alerta] { border-color: var(--fc-erro); color: var(--fc-erro); font-weight: 600; }
+
+.hj-aviso, .hj-erro { display: flex; align-items: center; justify-content: space-between; gap: var(--fc-e-2); flex-wrap: wrap; padding: var(--fc-e-2) var(--fc-e-3); border: 1px solid var(--fc-erro); border-radius: var(--fc-r-campo); background: var(--fc-surface); font-size: var(--fc-t-corpo); }
+.hj-erro { flex-direction: column; align-items: flex-start; }
+.hj-rodape { font-size: var(--fc-t-legenda); color: var(--fc-ink-3); }
+.hj-rodape p { display: flex; align-items: center; gap: var(--fc-e-1); flex-wrap: wrap; }
+
+.hj-esq { background: var(--fc-paper-2); border-radius: var(--fc-r-campo); animation: hj-pulso 1.4s ease-in-out infinite alternate; }
+.hj-esq-linha { height: 56px; margin-bottom: var(--fc-e-1); }
+.hj-esq-cartao { height: 104px; }
+@keyframes hj-pulso { from { background: var(--fc-paper-2); } to { background: var(--fc-hair); } }
+@media (prefers-reduced-motion: reduce) { .hj-esq { animation: none; } }
+@media (max-width: 699px) { .hj-cartoes { grid-template-columns: minmax(0, 1fr); } }
