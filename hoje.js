@@ -238,7 +238,7 @@
       if (r.event_name !== 'setup_baseline') return;
       try {
         const j = JSON.parse(String(r.value || ''));
-        por[r.tenant] = /^\d{4}-\d{2}$/.test(j.period) && Number.isFinite(Number(j.physician_fee)) ? { p: j.period, v: Number(j.physician_fee) } : null;
+        por[r.tenant] = /^\d{4}-\d{2}$/.test(j.period) && Number.isFinite(Number(j.physician_fee)) ? { p: j.period, v: Number(j.physician_fee), agendaToda: true } : null;
       } catch (e) { por[r.tenant] = null; }
     });
     return por;
@@ -272,7 +272,7 @@
       return `<div class="ob-metricas">${tile(esc, { rotulo: 'Resultado', grande: 'Nenhum paciente ainda', vazio: true, sub: esc(`${BRL0.format(med.gasto)} investidos no teste`), href: funil, ir: 'funil', aria: 'Resultado: nenhum paciente ainda. Abrir o Funil' })}</div>`;
     }
     const fee = med.fee, roas = med.roas;
-    const subFee = med.antesFee ? `${variacao(fee, med.antesFee.v)} <span>era ${esc(BRL0.format(med.antesFee.v))} em ${mesCurto(med.antesFee.p)}</span>` : '<span>sem base de antes</span>';
+    const subFee = med.antesFee ? (med.antesFee.agendaToda ? `<span>só o que geramos · agenda toda era ${esc(BRL0.format(med.antesFee.v))} em ${mesCurto(med.antesFee.p)}</span>` : `${variacao(fee, med.antesFee.v)} <span>era ${esc(BRL0.format(med.antesFee.v))} em ${mesCurto(med.antesFee.p)}</span>`) : '<span>sem base de antes</span>';
     const subRoas = med.antesRoas ? `${variacao(roas, med.antesRoas.v)} <span>era ${esc(N1.format(med.antesRoas.v))} em ${mesCurto(med.antesRoas.p)}</span>` : '<span>sem base de antes</span>';
     return `<div class="ob-metricas">` +
       tile(esc, { rotulo: 'Honorário por mês', grande: fee === null ? 'sem dado' : BRL0.format(fee), sub: subFee, barras: barras(med.serieFee), href: funil, ir: 'funil', aria: `Honorário por mês, run rate: ${fee === null ? 'sem dado' : BRL0.format(fee)}. Abrir o Funil` }) +
@@ -399,7 +399,7 @@
     const legenda = Object.keys(SITUACAO).map((k) => `<li><span aria-hidden="true">${SITUACAO[k][0]}</span> ${esc(SITUACAO[k][1])}</li>`).join('');
     return `<div data-estado="ok">${avisos}${grupos}` +
       `<footer class="hj-rodape"><ul class="ob-legenda" aria-label="Legenda da situação">${legenda}</ul>` +
-      `<p>Run rate: o mês corrente esticado até o fim. Resultado abre o Funil, Setup abre o Setup. Lido às ${hhmm(dados.lidoEm || new Date())} · <button type="button" class="btn ghost" data-act="atualizar">Atualizar</button></p></footer></div>`;
+      `<p>Run rate: o mês corrente esticado até o fim. Resultado abre o Funil, Setup abre o Setup. Honorário mostra só o que geramos; o antes é a agenda toda. Segunda versão: valor por hora, % de ocupação e eficiência da aquisição (de cada R$ 100 investidos, quanto volta). Lido às ${hhmm(dados.lidoEm || new Date())} · <button type="button" class="btn ghost" data-act="atualizar">Atualizar</button></p></footer></div>`;
   }
 
   function render(dados, ctx) {
