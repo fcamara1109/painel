@@ -12,7 +12,7 @@
   'use strict';
 
   const PRIO_ORDEM = ['alta', 'media', 'baixa', 'cortesia', 'outros'];
-  const PRIO_ROTULO = { alta: 'Alta', media: 'Média', baixa: 'Baixa', cortesia: 'Cortesia', outros: 'Sem prioridade' };
+  const PRIO_ROTULO = { alta: 'Alta', media: 'Média', baixa: 'Baixa', cortesia: 'Cortesia', outros: 'Admin' };
   const PRIO_SELO = { alta: 'Alta', media: 'Média', baixa: 'Baixa', cortesia: 'Cortesia' }; // sem prioridade não tem selo
   const SEMANA = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
   const LISTA_VELHA_DIAS = 15;
@@ -245,7 +245,7 @@
   }
   function tile(esc, o) {
     const sub = o.sub ? `<span class="ob-sub">${o.sub}</span>` : '';
-    const corpo = `<span class="fc-rotulo">${esc(o.rotulo)}</span><span class="ob-grande"${o.vazio ? ' data-vazio="1"' : ''}>${esc(o.grande)}</span>${sub}${o.barras || ''}`;
+    const corpo = `<span class="fc-rotulo">${esc(o.rotulo)}</span><span class="ob-linha"><span class="ob-grande"${o.vazio ? ' data-vazio="1"' : ''}>${esc(o.grande)}</span>${o.barras || ''}</span>${sub}`;
     return o.href ? `<a class="ob-tile" href="${esc(o.href)}" data-ir="${o.ir}" aria-label="${esc(o.aria)}">${corpo}</a>` : `<div class="ob-tile">${corpo}</div>`;
   }
   function metricasHtml(c, med, esc) {
@@ -334,8 +334,12 @@
     const grupos = PRIO_ORDEM.map((pr) => {
       const g = clientes.filter((c) => c.prio === pr);
       if (!g.length) return '';
-      return `<div class="hj-grupo" data-prio="${pr}"><h2 class="hj-grupo-t">${PRIO_ROTULO[pr]}<span class="hj-grupo-n">${plural(g.length, 'cliente', 'clientes')}</span></h2>` +
-        `<div class="ob-grade">${g.map((c) => cartaoObj(c, medidas((dados.mensais || {})[c.tenant]), metas[c.tenant], esc)).join('')}</div></div>`;
+      const cab = `<span class="ob-prio">${PRIO_ROTULO[pr]}</span><span class="hj-grupo-n">${plural(g.length, 'cliente', 'clientes')}</span>`;
+      const grade = `<div class="ob-grade">${g.map((c) => cartaoObj(c, medidas((dados.mensais || {})[c.tenant]), metas[c.tenant], esc)).join('')}</div>`;
+      // Cortesia e Admin (sem prioridade) vêm recolhidos: o foco é nos clientes que pagam ou vão pagar.
+      return pr === 'cortesia' || pr === 'outros'
+        ? `<details class="hj-grupo ob-grupo" data-prio="${pr}"><summary class="ob-grupo-t">${cab}</summary>${grade}</details>`
+        : `<section class="hj-grupo ob-grupo" data-prio="${pr}" aria-label="${esc(PRIO_ROTULO[pr])}"><h2 class="ob-grupo-t">${cab}</h2>${grade}</section>`;
     }).join('');
     const legenda = Object.keys(SITUACAO).map((k) => `<li><span aria-hidden="true">${SITUACAO[k][0]}</span> ${esc(SITUACAO[k][1])}</li>`).join('');
     return `<div data-estado="ok">${avisos}${grupos}` +
