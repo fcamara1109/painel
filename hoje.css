@@ -86,7 +86,10 @@ a.ob-tile:focus-visible, .ob-setup:focus-visible { outline: 3px solid var(--fc-i
 .ob-barra i { display: block; height: 100%; background: var(--fc-ok); }
 .ob-canais { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--fc-e-1); }
 .ob-canais li { display: inline-flex; align-items: center; gap: var(--fc-e-1); padding: 0 var(--fc-e-1); border: 1px solid var(--fc-hair-forte); border-radius: var(--fc-r-pilula); font-size: var(--fc-t-legenda); color: var(--fc-ink-2); }
-.ob-est { font-size: var(--fc-t-rotulo); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+.ob-canais li svg, .ob-canais li img { width: 20px; height: 20px; display: block; }
+.ob-canais li { padding: var(--fc-e-1); }
+.ob-canais li[data-estagio="planejado"], .ob-canais li[data-estagio="desligado"] { border-style: dashed; }
+.ob-canais li[data-estagio="planejado"] > *, .ob-canais li[data-estagio="desligado"] > * { filter: grayscale(1); }
 .ob-canais li[data-estagio="no ar"] { border-color: var(--fc-ok); color: var(--fc-ok); }
 .ob-canais li[data-estagio="em montagem"] { border-color: var(--fc-atencao); color: var(--fc-atencao); }
 .ob-canais li[data-estagio="travado"] { border-color: var(--fc-erro); color: var(--fc-erro); }
