@@ -9,17 +9,18 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- Fonte única de cor, fonte, espaço e forma (marca da casa). Não copiar valores: o publicar.sh copia o tokens.css canônico. -->
-<link rel="stylesheet" href="tokens.css?v=40f8903aa5">
+<link rel="stylesheet" href="tokens.css?v=34540115a4">
 <!-- Tema (A, B, E): sobrescreve os tokens e traz a fonte; o tema.js troca este href pelo último salvo e liga o seletor do topo. -->
-<link rel="stylesheet" id="fc-tema" href="tema-a.css?v=40f8903aa5">
-<script src="tema.js?v=40f8903aa5"></script>
+<link rel="stylesheet" id="fc-tema" href="tema-a.css?v=34540115a4">
+<script src="tema.js?v=34540115a4"></script>
 <!-- Componentes do painel por tema (só A e B; o E fica no kit da marca). O painel.js troca este href junto com o tema. -->
-<link rel="stylesheet" id="painel-tema" href="painel-a.css?v=40f8903aa5">
-<link rel="stylesheet" href="cirurgias.css?v=40f8903aa5">
-<link rel="stylesheet" href="pacientes.css?v=40f8903aa5">
-<link rel="stylesheet" href="atividades.css?v=40f8903aa5">
-<link rel="stylesheet" href="hoje.css?v=40f8903aa5">
-<link rel="stylesheet" href="funil.css?v=40f8903aa5">
+<link rel="stylesheet" id="painel-tema" href="painel-a.css?v=34540115a4">
+<link rel="stylesheet" href="cirurgias.css?v=34540115a4">
+<link rel="stylesheet" href="pacientes.css?v=34540115a4">
+<link rel="stylesheet" href="atividades.css?v=34540115a4">
+<link rel="stylesheet" href="setup.css?v=34540115a4">
+<link rel="stylesheet" href="hoje.css?v=34540115a4">
+<link rel="stylesheet" href="funil.css?v=34540115a4">
 <style>
 body { margin: 0; }
 :focus-visible { outline: 3px solid var(--fc-accent); outline-offset: 2px; }
@@ -246,17 +247,16 @@ small.sv { display: block; color: var(--fc-ink-3); font-size: var(--fc-t-rotulo)
 
 /* página Cirurgias: o estilo da fila está em cirurgias.css */
 #pg-funil, #pg-cirurgias, #pg-setup, #pg-onboarding, #pg-atividades { display: flex; flex-direction: column; gap: var(--fc-e-3); }
-/* página Setup: o quadro vive num iframe sem script (setup.js); o estilo dele é o do arquivo gerado pelo ops_log.py.
-   A altura é a do conteúdo (o setup.js mede e põe; 480px é só até medir): quem rola é a página, não o iframe. */
-#set-quadro { display: block; width: 100%; height: 480px; border: 0; background: var(--fc-paper); }
-/* página Onboarding: o mapa vive num iframe com script próprio e sandbox (onboarding.js). A altura vai até o fim da tela (o onboarding.js mede
-   e põe; 480px é só até medir): a rolagem é a de dentro do iframe, para as abas sticky do mapa seguirem no topo, e a página não rola. */
+/* página Setup: o quadro é desenho do painel (setup.js, estilo em setup.css). */
+/* página Onboarding: o mapa vive num iframe com script próprio e sandbox (onboarding.js). O iframe tem a altura inteira do mapa (o onboarding.js
+   recebe a medida de dentro; 480px é só até medir): quem rola é a página, nunca o iframe. As abas do mapa sobem para a página (#onb-abas). */
 #onb-quadro { display: block; width: 100%; height: 480px; border: 0; background: var(--fc-paper); }
-/* o título da página é o hero do próprio mapa (o h2 do painel é só para leitor de tela); sobra a linha com a data, compacta, e o padding de baixo
-   da página some aqui (o mapa encosta no fim da tela; as outras páginas mantêm o padding). */
-#pg-onboarding { gap: var(--fc-e-1); }
+#pg-onboarding { gap: var(--fc-e-2); }
 #pg-onboarding .cir-cab .sub { margin-top: 0; max-width: none; }
-.pagina.pagina-cheia { padding-bottom: 0; }
+.onb-abas { display: flex; flex-wrap: wrap; gap: var(--fc-e-1); border-bottom: 1px solid var(--fc-hair); }
+.onb-abas[hidden] { display: none; }
+.onb-aba { min-height: var(--fc-toque); padding: 0 var(--fc-e-3); background: none; border: 0; border-bottom: 3px solid transparent; color: var(--fc-ink-2); font: inherit; font-size: var(--fc-t-corpo); cursor: pointer; }
+.onb-aba[aria-selected="true"] { color: var(--fc-ink); border-bottom-color: var(--fc-accent); font-weight: 600; }
 td.txt small.sv { white-space: nowrap; }
 
 @media (prefers-reduced-motion: reduce) {
@@ -499,19 +499,32 @@ td.txt small.sv { white-space: nowrap; }
         <div class="pc-toast" id="pc-toast" role="status" aria-live="polite"></div>
       </section>
 
-      <section id="pg-setup" aria-labelledby="t-setup" hidden>
+      <section id="pg-setup" data-tela="setup" aria-labelledby="t-setup" hidden>
         <div class="cir-cab">
-          <h2 class="fc-h2" id="t-setup">Setup dos clientes</h2>
+          <h1 class="fc-h2" id="t-setup">Setup dos clientes</h1>
           <p class="sub" id="set-sub"></p>
         </div>
         <div class="erro" id="set-erro" hidden></div>
         <p class="nota" id="set-vazio" hidden>Ainda não há foto do quadro. Ela é gerada a cada 30 minutos; se passou disso, avise o Felipe.</p>
-        <iframe id="set-quadro" title="Quadro de setup dos clientes" sandbox="allow-same-origin" hidden></iframe>
+        <div class="set-quadro" id="set-quadro" hidden>
+          <ul class="set-totais" id="set-totais"></ul>
+          <details class="set-leg" id="set-legenda-box">
+            <summary>O que significam os símbolos</summary>
+            <ul class="set-legenda" id="set-legenda"></ul>
+          </details>
+          <ul class="set-avisos" id="set-avisos" role="status" aria-label="Avisos do quadro" hidden></ul>
+          <p class="set-dica">Toque numa célula, no cliente ou no módulo para ver o histórico. Na gaveta, "Mudar estado" muda e grava; Cmd ou Ctrl com clique numa célula abre a gaveta já com o menu.</p>
+          <div class="set-grade" id="set-grade">
+            <div class="set-rolagem" id="set-rolagem" role="region" aria-label="Quadro de setup dos clientes" tabindex="0"></div>
+            <aside class="set-gaveta" id="set-gaveta" data-gaveta tabindex="-1" aria-labelledby="set-g-t" hidden></aside>
+          </div>
+          <div class="set-aviso" id="set-aviso" role="status" aria-live="polite" hidden></div>
+        </div>
       </section>
 
-      <section id="pg-atividades" aria-labelledby="t-atividades" hidden>
+      <section id="pg-atividades" data-tela="atividades" aria-labelledby="t-atividades" hidden>
         <div class="cir-cab">
-          <h2 class="fc-h2" id="t-atividades">Atividades dos clientes</h2>
+          <h1 class="fc-h2" id="t-atividades">Atividades dos clientes</h1>
           <p class="sub" id="atv-sub"></p>
         </div>
         <div class="erro" id="atv-erro" hidden></div>
@@ -519,11 +532,12 @@ td.txt small.sv { white-space: nowrap; }
         <div id="atv-lista"></div>
       </section>
 
-      <section id="pg-onboarding" aria-labelledby="t-onboarding" hidden>
+      <section id="pg-onboarding" data-tela="onboarding" aria-labelledby="t-onboarding" hidden>
         <div class="cir-cab">
-          <h2 class="fc-h2 cir-so-leitor" id="t-onboarding">Mapa do onboarding</h2>
+          <h1 class="fc-h2" id="t-onboarding">Mapa do onboarding</h1>
           <p class="sub" id="onb-sub"></p>
         </div>
+        <div class="onb-abas" id="onb-abas" data-onb="abas" role="tablist" aria-label="Seções do mapa" hidden></div>
         <p class="nota" id="onb-carregando" role="status" hidden>Carregando o mapa do onboarding...</p>
         <div class="erro" id="onb-erro" hidden></div>
         <p class="nota" id="onb-vazio" hidden>Ainda não há mapa publicado. Quem publica é o Felipe, com o build.py do mapa.</p>
@@ -531,15 +545,15 @@ td.txt small.sv { white-space: nowrap; }
     </section>
   </main>
 </div>
-<script src="config.js?v=40f8903aa5"></script>
-<script src="followup.js?v=40f8903aa5"></script>
-<script src="cirurgias.js?v=40f8903aa5"></script>
-<script src="pacientes.js?v=40f8903aa5"></script>
-<script src="setup.js?v=40f8903aa5"></script>
-<script src="onboarding.js?v=40f8903aa5"></script>
-<script src="modulos.js?v=40f8903aa5"></script>
-<script src="atividades.js?v=40f8903aa5"></script>
-<script src="hoje.js?v=40f8903aa5"></script>
-<script src="painel.js?v=40f8903aa5"></script>
+<script src="config.js?v=34540115a4"></script>
+<script src="followup.js?v=34540115a4"></script>
+<script src="cirurgias.js?v=34540115a4"></script>
+<script src="pacientes.js?v=34540115a4"></script>
+<script src="setup.js?v=34540115a4"></script>
+<script src="onboarding.js?v=34540115a4"></script>
+<script src="modulos.js?v=34540115a4"></script>
+<script src="atividades.js?v=34540115a4"></script>
+<script src="hoje.js?v=34540115a4"></script>
+<script src="painel.js?v=34540115a4"></script>
 </body>
 </html>

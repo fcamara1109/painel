@@ -1,16 +1,15 @@
 // Página Setup: o quadro de setup dos clientes, com edição (botão Setup no topo do painel; ?pagina=setup abre direto).
 // O painel.js carrega o dado (login, token, consulta ao BigQuery) e chama PainelSetup.render(foto, sobre, ctx):
-//   foto  = a linha de analytics.setup_board: { generated_at, events_until, html, body }. O html vem SEM script; entra num iframe
-//           sem permissão de rodar script (sandbox), então nada que venha do BigQuery executa. `body` é o JSON do quadro.
-//           O iframe tem a altura do conteúdo (medida aqui): quem rola na vertical é a página. O título do hero da foto é tirado (a página
-//           já tem o dela); gaveta e aviso, que são fixos no iframe, são encostados na parte visível da janela (ancora).
+//   foto  = a linha de analytics.setup_board: { generated_at, events_until, html, body }. `body` é o JSON do quadro (escopos de célula, cliente e
+//           módulo, mapa de estados, papéis). O `html` da foto NÃO entra na página: o DOMParser (inerte, não roda nada) só lê dele a estrutura
+//           (quem é coluna, quais módulos em quais grupos, avisos, legenda, opções do menu, totais). Tudo que aparece é montado aqui com textContent.
+//           Desde o P5 (13/11/2026) o quadro é desenho do próprio painel, nos temas A e B, e não mais um iframe: a ordem das colunas por prioridade
+//           e os grupos (só os que têm cliente) saem do estado de AGORA, com os eventos aplicados sobre a foto.
 //   sobre = o último de cada campo dos seis eventos setup_* (planejado, estágio, nota, prioridade, tipo, nome), em todo o raw.events, sem
-//           corte por horário (a consulta é idempotente: o que a foto já tem volta com o mesmo valor). Pintados por cima da foto.
-//           Cobertura: células, totais, resumo por cliente, nome, tipo (chip), nota e prioridade (gaveta). Fica pra próxima foto: a ordem e os
-//           grupos das colunas por prioridade, e as linhas novas do histórico.
+//           corte por horário (a consulta é idempotente: o que a foto já tem volta com o mesmo valor). Valem por cima da foto, na ordem do seq.
 //   ctx   = { anota(eventos) }: o POST no webhook setup-anotar (painel.js). Devolve 'ok' | 'sem_login' | 'sem_permissao' | 'falha'.
-// Cmd+clique (ou Ctrl+clique) numa célula abre o menu de estados. Escolher pinta na hora, grava e desfaz a pintura se a gravação falhar.
-// Clique simples abre o histórico da célula, do cliente ou do módulo.
+// Clique numa célula, num cliente ou num módulo abre a gaveta com o histórico. Na gaveta, "Mudar estado" abre o menu de estados (Cmd/Ctrl+clique
+// numa célula abre a gaveta já com o menu). Escolher pinta na hora, grava e desfaz a pintura se a gravação falhar.
 (function () {
   'use strict';
 
@@ -22,384 +21,463 @@
     falha: 'Não consegui gravar. A mudança foi desfeita.',
     nada: 'Nada mudou nesta célula.',
   };
+  const PRIO_ORDEM = ['alta', 'media', 'baixa', 'cortesia', 'outros'];
+  const PRIO_ROTULO = { alta: 'Alta', media: 'Média', baixa: 'Baixa', cortesia: 'Cortesia', outros: 'Sem prioridade' };
+  const normPrio = (p) => {
+    const s = String(p || '').toLowerCase().replace('é', 'e');
+    return PRIO_ORDEM.indexOf(s) >= 0 ? s : 'outros';
+  };
 
+  // O quadro de agora. Zerado a cada render.
   let ctxAtual = null;
-  let obs = null; // o ResizeObserver do quadro de agora (do painel: dentro do iframe sem script nada roda)
-  let reancora = null; // encosta gaveta e aviso na janela, se abertos; o painel rola, a janela muda de tamanho: chama de novo
-  window.addEventListener('scroll', () => { if (reancora) reancora(); }, { passive: true });
-  window.addEventListener('resize', () => { if (reancora) reancora(); });
+  let S = null; // { D, est, sobre: doBq, locais, fila, k (escopo da gaveta), menu, origem, timer }
 
-  function el(doc, tag, txt) { const e = doc.createElement(tag); if (txt !== undefined) e.textContent = txt; return e; }
+  function el(tag, classe, txt) {
+    const e = document.createElement(tag);
+    if (classe) e.className = classe;
+    if (txt !== undefined) e.textContent = txt;
+    return e;
+  }
+  function attrs(e, a) { Object.keys(a).forEach((k) => e.setAttribute(k, a[k])); return e; }
   function limpa(n) { while (n.firstChild) n.removeChild(n.firstChild); }
+  const slot = (cls) => { const s = el('span', 'set-slot'); s.appendChild(el('i', 'set-f ' + cls)); return s; };
+  const maiuscula = (t) => t.charAt(0).toUpperCase() + t.slice(1);
 
-  // O quadro dentro do iframe: a gaveta de histórico e o editor. `doc` é o documento do iframe; `D` o `body` da foto.
-  function ligaQuadro(quadro, D, sobre) {
-    const doc = quadro.contentDocument;
-    const win = doc.defaultView;
-    const ed = doc.getElementById('ed');
-    const aviso = doc.getElementById('aviso');
-    const gaveta = doc.getElementById('painel');
-    if (!ed || !aviso || !gaveta) return;
-    const titulo = doc.querySelector('.topo h1'); // o título e a hora da foto já estão na página (h2 e subtítulo): do hero ficam os totais
-    if (titulo) titulo.parentNode.remove();
-    const ops = Array.prototype.slice.call(ed.querySelectorAll('.ed-op'));
-    const TINTAS = D.tintas;
-    const cels = {};
-    const orig = {};
-    const doBq = {}; // k -> { planned, stage } do que veio depois da foto
-    const locais = {}; // k -> [{ planned, stage, pendente }] o que este navegador gravou ou está gravando
-    const fila = {}; // k -> promessa da última gravação da célula: uma de cada vez, a seguinte só sai depois da anterior responder
-    let alvo = null;
-    let timer = null;
-    let origem = null;
-
-    Array.prototype.forEach.call(doc.querySelectorAll('td[data-tenant]'), (td) => {
-      const k = td.getAttribute('data-tenant') + '|' + td.getAttribute('data-module');
-      cels[k] = td;
-      orig[k] = {
-        forma: td.querySelector('i.f').className,
-        tinta: TINTAS.filter((c) => td.classList.contains(c)),
-        aria: td.querySelector('button').getAttribute('aria-label'),
-      };
+  // ------------------------------------------------------------ a foto: estrutura lida do html (inerte) e estado de agora
+  function leFoto(html) {
+    const doc = new DOMParser().parseFromString(html || '', 'text/html');
+    const todos = (sel) => Array.prototype.slice.call(doc.querySelectorAll(sel));
+    const grupos = [];
+    todos('tbody tr').forEach((tr) => {
+      if (tr.classList.contains('g')) {
+        const th = tr.querySelector('th.gr');
+        grupos.push({ nome: th ? th.textContent.trim() : '', mods: [] });
+        return;
+      }
+      const b = tr.querySelector('th.mod button.nm[data-k^="m:"]');
+      if (b && grupos.length) grupos[grupos.length - 1].mods.push(b.getAttribute('data-k').slice(2));
     });
+    const forma = (e) => { const i = e.querySelector('i.f'); return i ? i.className.replace(/^f\s+/, '') : ''; };
+    return {
+      cols: todos('thead th.cli button.nm').map((b) => b.getAttribute('data-k').slice(2)),
+      grupos,
+      avisos: todos('ul.avisos li').map((li) => li.textContent.trim()),
+      legenda: todos('ul.legenda li').map((li) => ({ cls: forma(li), texto: li.textContent.trim() })),
+      ops: todos('#ed .ed-op').map((b) => ({ planned: b.getAttribute('data-planned'), stage: b.getAttribute('data-stage'), cls: forma(b), rotulo: b.textContent.trim() })),
+      totais: todos('.totals li').map((li) => ({ n: (li.querySelector('.fc-numero') || {}).textContent || '0', legenda: (li.querySelector('.fc-legenda') || {}).textContent || '' })),
+    };
+  }
 
-    const escopo = (k) => D.escopos['x:' + k.replace('|', ':')] || {};
-    const semEstagio = (v) => (v === D.sem ? '' : v);
+  const escopo = (k) => S.D.escopos[k] || {};
+  const semEstagio = (v) => (v === S.D.sem ? '' : v);
+  const cliNome = (t) => escopo('c:' + t).titulo || t;
+  const modNome = (m) => escopo('m:' + m).titulo || m;
+  const celChave = (k) => k.slice(2).replace(':', '|');
+  const mexida = (k) => !!S.sobre[k] || (S.locais[k] || []).length > 0;
 
-    // O nome novo do cliente: cabeçalho, título da gaveta e texto do leitor de tela das células dele.
-    function renomeia(tenant, nome) {
-      const c = D.escopos['c:' + tenant];
-      const antigo = c.titulo;
-      c.titulo = nome;
-      Object.keys(D.escopos).forEach((chave) => {
-        if (chave.indexOf('x:' + tenant + ':') === 0) D.escopos[chave].titulo = nome + D.escopos[chave].titulo.slice(antigo.length);
-      });
-      Object.keys(orig).forEach((k) => {
-        if (k.split('|')[0] === tenant) orig[k].aria = nome + orig[k].aria.slice(antigo.length);
-      });
-      const nm = doc.querySelector('th button.nm[data-k="c:' + tenant + '"]');
-      if (nm && nm.firstChild && nm.firstChild.nodeType === 3) nm.firstChild.nodeValue = nome;
-    }
-
-    // O tipo novo no chip do cabeçalho: o desenho é copiado de outro chip do mesmo tipo, se houver (o texto sempre muda).
-    function retipa(tenant, tipo) {
-      const nm = doc.querySelector('th button.nm[data-k="c:' + tenant + '"]');
-      if (!nm) return;
-      const chave = tipo.replace(/ /g, '-');
-      let chip = nm.querySelector('.tp');
-      if (!chip) { chip = el(doc, 'span'); chip.className = 'tp'; nm.appendChild(chip); }
-      const igual = Array.prototype.filter.call(doc.querySelectorAll('.tp'), (c) => c !== chip && c.getAttribute('data-tipo') === chave && c.querySelector('svg'))[0];
-      limpa(chip);
-      chip.setAttribute('data-tipo', chave);
-      if (igual) chip.appendChild(igual.querySelector('svg').cloneNode(true));
-      chip.appendChild(doc.createTextNode(tipo));
-    }
-
-    // O que veio depois da foto: o último de cada campo. Planejado e estágio vão pra célula; nota, prioridade, tipo e nome, pro escopo deles.
-    (sobre || []).forEach((r) => {
+  // O que veio depois da foto: o último de cada campo, na ordem do seq. Planejado e estágio vão pra célula (S.sobre); nota, prioridade, tipo e
+  // nome, direto no escopo (a foto em memória é nossa; o html dela nunca entra na página).
+  function aplicaEventos(sobre) {
+    (sobre || []).slice().sort((a, b) => Number(a.seq) - Number(b.seq)).forEach((r) => {
       const mod = r.module || '';
       if (r.event_name === EVENTO.planned || r.event_name === EVENTO.stage) {
         const k = r.tenant + '|' + mod;
-        if (!cels[k]) return;
-        const o = doBq[k] = doBq[k] || {};
+        if (!S.celulas[k]) return;
+        const o = S.sobre[k] = S.sobre[k] || {};
         if (r.event_name === EVENTO.planned) o.planned = r.value;
         if (r.event_name === EVENTO.stage) o.stage = semEstagio(r.value);
         return;
       }
       if (r.event_name === EVENTO.note) { // tenant e módulo = a célula; só tenant = o cliente; só módulo = o módulo
-        const alvoNota = D.escopos[r.tenant && mod ? 'x:' + r.tenant + ':' + mod : r.tenant ? 'c:' + r.tenant : 'm:' + mod];
-        if (alvoNota) alvoNota.nota = r.value;
+        const alvo = S.D.escopos[r.tenant && mod ? 'x:' + r.tenant + ':' + mod : r.tenant ? 'c:' + r.tenant : 'm:' + mod];
+        if (alvo) alvo.nota = r.value;
         return;
       }
-      const cli = D.escopos['c:' + r.tenant];
+      const cli = S.D.escopos['c:' + r.tenant];
       if (!cli) return;
       if (r.event_name === EVENTO.priority) cli.priority = r.value;
-      if (r.event_name === EVENTO.type) { cli.client_type = r.value; retipa(r.tenant, r.value); }
-      if (r.event_name === EVENTO.name) renomeia(r.tenant, r.value);
+      if (r.event_name === EVENTO.type) cli.client_type = r.value;
+      if (r.event_name === EVENTO.name) cli.titulo = r.value;
     });
+  }
 
-    const mexida = (k) => !!doBq[k] || (locais[k] || []).length > 0;
+  // Planejado e estágio da célula: a foto, depois o que veio depois dela, depois o que este navegador gravou (em ordem).
+  // `soConfirmado`: sem o que ainda está gravando (é de onde sai o que a próxima gravação da célula tem de mandar).
+  function efetivo(k, soConfirmado) {
+    const x = escopo('x:' + k.replace('|', ':'));
+    const e = { planned: x.planned || '', stage: x.stage || '' };
+    const b = S.sobre[k] || {};
+    if (b.planned !== undefined) e.planned = b.planned;
+    if (b.stage !== undefined) e.stage = b.stage;
+    (S.locais[k] || []).forEach((p) => {
+      if (soConfirmado && p.pendente) return;
+      if (p.planned) e.planned = p.planned;
+      if (p.stage !== undefined) e.stage = p.stage;
+    });
+    return e;
+  }
 
-    // Planejado e estágio da célula: a foto, depois o que veio depois dela, depois o que este navegador gravou (em ordem).
-    // `soConfirmado`: sem o que ainda está gravando (é de onde sai o que a próxima gravação da célula tem de mandar).
-    function efetivo(k, soConfirmado) {
-      const x = escopo(k);
-      const e = { planned: x.planned || '', stage: x.stage || '' };
-      const b = doBq[k] || {};
-      if (b.planned !== undefined) e.planned = b.planned;
-      if (b.stage !== undefined) e.stage = b.stage;
-      (locais[k] || []).forEach((p) => {
-        if (soConfirmado && p.pendente) return;
-        if (p.planned) e.planned = p.planned;
-        if (p.stage !== undefined) e.stage = p.stage;
-      });
-      return e;
-    }
+  // A forma da célula: o mapa de estados que vem na foto (planejado|estágio|tem histórico). Célula mexida tem histórico.
+  function formaDe(k) {
+    const e = efetivo(k);
+    const hist = ((escopo('x:' + k.replace('|', ':')).historico || []).length > 0 || mexida(k)) ? 1 : 0;
+    return S.D.estados[e.planned + '|' + e.stage + '|' + hist] || S.D.estados['||0'];
+  }
 
-    // Os totais do topo e a linha 'No ar / planejados' de cada cliente, refeitos do estado de cada célula (a regra é a de Estado.resumo do
-    // ops_log.py; os estágios de cada papel vêm na foto, D.roles).
-    function recalcula() {
-      const R = D.roles;
-      const por = {};
-      let noAr = 0;
-      let plan = 0;
-      let trav = 0;
-      let mont = 0;
-      Object.keys(cels).forEach((k) => {
-        const t = k.split('|')[0];
-        const c = por[t] = por[t] || { plan: 0, noAr: 0 };
-        const e = efetivo(k);
-        if (e.planned !== D.sim) return;
-        if (e.stage !== R.off) { c.plan += 1; plan += 1; }
-        if (e.stage === R.live) { c.noAr += 1; noAr += 1; } else if (e.stage === R.stuck) trav += 1; else if (e.stage === R.building) mont += 1;
-      });
-      const itens = doc.querySelectorAll('.totals li');
-      const poe = (i, numero, legenda) => {
-        if (!itens[i]) return;
-        itens[i].querySelector('.fc-numero').textContent = String(numero);
-        if (legenda !== undefined) itens[i].querySelector('.fc-legenda').textContent = legenda;
-      };
-      poe(0, noAr, itens[0] ? itens[0].querySelector('.fc-legenda').textContent.replace(/\d+/, String(plan)) : '');
-      poe(1, trav);
-      poe(2, mont);
-      const colunas = doc.querySelectorAll('tbody.resumo td');
-      Array.prototype.forEach.call(doc.querySelectorAll('thead th.cli button.nm'), (b, i) => {
-        const c = por[b.getAttribute('data-k').slice(2)];
-        if (c && colunas[i]) colunas[i].textContent = c.noAr + '/' + c.plan;
-      });
-    }
+  // Colunas na ordem de AGORA: prioridade (com os eventos), depois a ordem da foto. Só os grupos que têm cliente existem.
+  function colunas() {
+    const ordem = {};
+    S.est.cols.forEach((t, i) => { ordem[t] = i; });
+    return S.est.cols.map((t) => ({ t, prio: normPrio(escopo('c:' + t).priority) }))
+      .sort((a, b) => PRIO_ORDEM.indexOf(a.prio) - PRIO_ORDEM.indexOf(b.prio) || ordem[a.t] - ordem[b.t]);
+  }
 
-    function desenha(k) {
-      const td = cels[k];
-      const icone = td.querySelector('i.f');
-      const botao = td.querySelector('button');
-      const o = orig[k];
-      const marca = td.querySelector('.pend');
-      if (marca) td.removeChild(marca);
-      TINTAS.forEach((c) => td.classList.remove(c));
-      if (!mexida(k)) {
-        icone.className = o.forma;
-        o.tinta.forEach((c) => td.classList.add(c));
-        botao.setAttribute('aria-label', o.aria);
-        recalcula();
-        return;
-      }
+  // Os totais do topo e a linha 'No ar / planejados' de cada cliente, refeitos do estado de cada célula (a regra é a de Estado.resumo do
+  // ops_log.py; os estágios de cada papel vêm na foto, D.roles). As tarefas abertas ficam as da foto.
+  function contas() {
+    const R = S.D.roles;
+    const por = {};
+    let noAr = 0; let plan = 0; let trav = 0; let mont = 0;
+    Object.keys(S.celulas).forEach((k) => {
+      const t = k.split('|')[0];
+      const c = por[t] = por[t] || { plan: 0, noAr: 0 };
       const e = efetivo(k);
-      const s = D.estados[e.planned + '|' + e.stage + '|1']; // célula mexida tem histórico
-      const corte = o.aria.lastIndexOf(': ') + 2;
-      const pendente = (locais[k] || []).some((p) => p.pendente);
-      icone.className = 'f ' + s.f;
-      s.t.forEach((c) => td.classList.add(c));
-      botao.setAttribute('aria-label', o.aria.slice(0, corte) + s.a + (pendente ? ' (gravando)' : ''));
-      if (pendente) {
-        const m = el(doc, 'span');
-        const dica = el(doc, 'span', 'gravando');
-        m.className = 'pend';
-        dica.className = 'sr';
-        m.appendChild(dica);
-        m.title = 'gravando';
-        td.appendChild(m);
-      }
-      recalcula();
-    }
-
-    // O iframe tem a altura do conteúdo: quem rola é a página. Mede o corpo (o que é fixo ou absoluto não conta), mais o menu se estiver
-    // aberto (ele pode passar do fim da tabela) e a barra de rolagem de lado do iframe, se houver (tabela larga rola na horizontal).
-    function ajusta() {
-      const barra = Math.max(0, win.innerHeight - doc.documentElement.clientHeight);
-      const menu = ed.hidden ? 0 : ed.getBoundingClientRect().bottom;
-      quadro.style.height = (Math.ceil(Math.max(doc.body.getBoundingClientRect().height, menu)) + barra) + 'px';
-    }
-
-    // Gaveta e aviso são fixos NO IFRAME, que agora é do tamanho do quadro: sem isto ficariam no fim da página, longe de quem clicou.
-    // Encosta os dois no fim da parte visível da janela (e a altura máxima da gaveta passa a ser 70% da janela, não do iframe).
-    function ancora() {
-      const fora = Math.max(0, quadro.getBoundingClientRect().bottom - window.innerHeight); // quanto do quadro passa do fim da janela
-      gaveta.style.bottom = fora + 'px';
-      gaveta.style.maxHeight = Math.round(window.innerHeight * 0.7) + 'px';
-      aviso.style.bottom = 'calc(' + fora + 'px + var(--fc-e-3))';
-    }
-    reancora = () => { if (!gaveta.hidden || !aviso.hidden) ancora(); };
-
-    function mostra(txt) {
-      aviso.textContent = txt;
-      ancora();
-      aviso.hidden = false;
-      window.clearTimeout(timer); // o timer é do painel: no iframe sem script ele nunca dispararia
-      timer = window.setTimeout(() => { aviso.hidden = true; }, 4500);
-    }
-
-    function fechaEditor() {
-      const td = alvo ? alvo.td : null;
-      ed.hidden = true;
-      ajusta();
-      alvo = null;
-      const b = td ? td.querySelector('button') : null;
-      if (b) b.focus();
-    }
-
-    function abreEditor(td) {
-      const k = td.getAttribute('data-tenant') + '|' + td.getAttribute('data-module');
-      const e = efetivo(k);
-      let foco = null;
-      alvo = { td, k };
-      ops.forEach((op) => {
-        const p = op.getAttribute('data-planned');
-        const s = op.getAttribute('data-stage');
-        const sim = p === D.sim;
-        const atual = (e.planned === D.sim) === sim && (s === '' ? !sim : s === D.sem ? e.stage === '' : e.stage === s);
-        op.classList.toggle('on', atual);
-        op.setAttribute('aria-checked', atual ? 'true' : 'false');
-        if (atual || !foco) foco = op;
-      });
-      ed.hidden = false;
-      const r = td.getBoundingClientRect();
-      const esquerda = Math.max(8, Math.min(r.left, win.innerWidth - ed.offsetWidth - 8));
-      ed.style.left = (esquerda + win.pageXOffset) + 'px';
-      ed.style.top = (r.bottom + win.pageYOffset + 4) + 'px';
-      ajusta();
-      if (foco) foco.focus();
-    }
-
-    // Escolheu um estado: pinta na hora, grava e, se a gravação falhar, desfaz. A gravação é uma de cada vez por célula: o que vai no pedido
-    // sai da comparação com o que já foi CONFIRMADO, calculada só quando a anterior respondeu. Assim um clique não herda o estado de outro
-    // que ainda não gravou (ou que falhou), e os pedidos da mesma célula chegam ao servidor na ordem dos cliques.
-    async function escolhe(op) {
-      const a = alvo;
-      const p = op.getAttribute('data-planned');
-      const s = op.getAttribute('data-stage');
-      const tenant = a.td.getAttribute('data-tenant');
-      const modulo = a.td.getAttribute('data-module');
-      const diferencas = (c) => ({ planned: !!p && p !== c.planned, stage: !!s && (s === D.sem ? c.stage !== '' : s !== c.stage) });
-      const agora = diferencas(efetivo(a.k));
-      fechaEditor();
-      if (!agora.planned && !agora.stage) { mostra(MSG.nada); return; }
-      const pedido = { pendente: true };
-      if (p) pedido.planned = p;
-      if (s) pedido.stage = semEstagio(s);
-      (locais[a.k] = locais[a.k] || []).push(pedido);
-      desenha(a.k);
-      const anterior = fila[a.k] || Promise.resolve();
-      const minha = anterior.then(async () => {
-        const falta = diferencas(efetivo(a.k, true));
-        const eventos = [];
-        if (falta.planned) eventos.push({ event_name: EVENTO.planned, tenant, body: { module: modulo, value: p } });
-        if (falta.stage) eventos.push({ event_name: EVENTO.stage, tenant, body: { module: modulo, value: s } });
-        let resultado = 'ok'; // nada a gravar: o que a célula confirmada já tem é o que o clique pede
-        if (eventos.length) {
-          try { resultado = await ctxAtual.anota(eventos); } catch (err) { resultado = 'falha'; }
-        }
-        if (resultado === 'ok') {
-          pedido.pendente = false;
-        } else {
-          locais[a.k] = locais[a.k].filter((x) => x !== pedido);
-        }
-        return resultado;
-      });
-      fila[a.k] = minha;
-      const resultado = await minha;
-      desenha(a.k);
-      mostra(resultado === 'ok' ? MSG.ok : (MSG[resultado] || MSG.falha));
-    }
-
-    // Gaveta de histórico (a mesma do quadro de antes): célula, cliente ou módulo.
-    function lista(id, itens, vazio) {
-      const ul = doc.getElementById(id);
-      limpa(ul);
-      if (!itens.length) { const v = el(doc, 'li', vazio); v.className = 'q'; ul.appendChild(v); return; }
-      itens.forEach((t) => ul.appendChild(el(doc, 'li', t)));
-    }
-
-    function abreGaveta(k, btn) {
-      const x = D.escopos[k];
-      if (!x) return;
-      origem = btn;
-      doc.getElementById('p-titulo').textContent = x.titulo;
-      let estado = '';
-      if (x.tipo === 'cel') {
-        const e = efetivo(k.slice(2).replace(':', '|'));
-        estado = 'Planejado: ' + (e.planned || 'não definido') + ' · Estágio: ' + (e.stage || 'não definido');
-      }
-      if (x.tipo === 'cli') estado = [x.priority ? 'Prioridade: ' + x.priority : '', x.client_type ? 'Tipo: ' + x.client_type : ''].filter(Boolean).join(' · ');
-      doc.getElementById('p-estado').textContent = estado;
-      doc.getElementById('p-nota').textContent = x.nota ? 'Última nota: ' + x.nota : 'Sem nota.';
-      doc.getElementById('p-precisa').textContent = x.precisa ? 'O que precisa: ' + x.precisa : '';
-      lista('p-tarefas', x.tarefas.map((t) => '#' + t.numero + ' ' + t.nome), 'Nenhuma tarefa aberta.');
-      lista('p-hist', x.historico.map((h) => h.quando + ' · ' + h.texto), 'Sem histórico.');
-      ancora();
-      gaveta.hidden = false;
-      gaveta.focus({ preventScroll: true });
-    }
-
-    function fechaGaveta() {
-      gaveta.hidden = true;
-      if (origem) origem.focus();
-      origem = null;
-    }
-
-    ops.forEach((op) => op.addEventListener('click', () => { if (alvo) escolhe(op); }));
-    doc.addEventListener('click', (ev) => {
-      const td = ev.target.closest ? ev.target.closest('td[data-tenant]') : null;
-      if ((ev.metaKey || ev.ctrlKey) && td) { ev.preventDefault(); abreEditor(td); return; }
-      const b = ev.target.closest ? ev.target.closest('button[data-k]') : null;
-      if (b) { abreGaveta(b.getAttribute('data-k'), b); return; }
-      if (!ed.hidden && !ed.contains(ev.target)) fechaEditor();
-      if (!gaveta.hidden && !gaveta.contains(ev.target)) fechaGaveta();
+      if (e.planned !== S.D.sim) return;
+      if (e.stage !== R.off) { c.plan += 1; plan += 1; }
+      if (e.stage === R.live) { c.noAr += 1; noAr += 1; } else if (e.stage === R.stuck) trav += 1; else if (e.stage === R.building) mont += 1;
     });
-    doc.getElementById('p-fechar').addEventListener('click', fechaGaveta);
-    doc.addEventListener('keydown', (ev) => {
-      if (ev.key !== 'Escape') return;
-      if (!ed.hidden) fechaEditor();
-      else if (!gaveta.hidden) fechaGaveta();
+    return { por, noAr, plan, trav, mont };
+  }
+
+  // ------------------------------------------------------------ desenho
+  function totaisUl() {
+    const c = contas();
+    const t = S.est.totais;
+    const ul = el('ul', 'set-totais');
+    ul.id = 'set-totais';
+    const itens = [
+      [c.noAr, t[0] ? t[0].legenda.replace(/\d+/, String(c.plan)) : ''],
+      [c.trav, t[1] ? t[1].legenda : ''],
+      [c.mont, t[2] ? t[2].legenda : ''],
+    ];
+    if (t[3]) itens.push([t[3].n, t[3].legenda]);
+    itens.forEach(([n, l]) => {
+      const li = el('li');
+      li.appendChild(el('span', 'set-tot-n fc-numero', String(n)));
+      li.appendChild(el('span', 'set-tot-t fc-legenda', l));
+      ul.appendChild(li);
     });
-    Object.keys(cels).forEach(desenha); // nome novo, estado novo e totais refeitos antes de o gabarito (e a pessoa) mexerem
-    ajusta();
-    if (obs) obs.disconnect();
-    obs = window.ResizeObserver ? new ResizeObserver(ajusta) : null; // largura da janela, fonte que chega: o corpo muda de altura
-    if (obs) obs.observe(doc.body);
-    quadro.dataset.pronto = 'sim'; // o quadro está desenhado e os cliques ligados (o gabarito espera por isto)
+    return ul;
+  }
+
+  function tabela() {
+    const cols = colunas();
+    const c = contas();
+    const t = attrs(el('table', 'set-tab'), { 'data-quadro': '' });
+    t.appendChild(el('caption', 'set-sr', 'Estado de cada módulo, um cliente por coluna'));
+    const gp = [];
+    cols.forEach((x) => { const u = gp[gp.length - 1]; if (u && u.prio === x.prio) u.n += 1; else gp.push({ prio: x.prio, n: 1 }); });
+    const cab = el('thead');
+    const r1 = el('tr');
+    r1.appendChild(attrs(el('th', 'set-canto', 'Prioridade'), { scope: 'col' }));
+    gp.forEach((g) => r1.appendChild(attrs(el('th', 'set-gp set-gi', PRIO_ROTULO[g.prio]), { 'data-prio': g.prio, colspan: String(g.n), scope: 'colgroup' })));
+    const r2 = el('tr');
+    r2.appendChild(attrs(el('th', 'set-canto', 'Módulo'), { scope: 'col' }));
+    cols.forEach((x) => {
+      const th = attrs(el('th', 'set-cli set-gi'), { 'data-p': x.prio, scope: 'col' });
+      const b = attrs(el('button', 'set-nm'), { type: 'button', 'data-k': 'c:' + x.t });
+      b.appendChild(el('span', 'set-nm-t', cliNome(x.t)));
+      const tipo = escopo('c:' + x.t).client_type;
+      if (tipo) b.appendChild(attrs(el('span', 'set-tp', tipo), { 'data-tipo': tipo.replace(/ /g, '-') }));
+      th.appendChild(b);
+      r2.appendChild(th);
+    });
+    cab.appendChild(r1);
+    cab.appendChild(r2);
+    t.appendChild(cab);
+    const resumo = el('tbody', 'set-resumo');
+    const rr = el('tr');
+    rr.appendChild(attrs(el('th', 'set-mod set-res', 'No ar / planejados'), { scope: 'row' }));
+    cols.forEach((x) => {
+      const n = c.por[x.t] || { noAr: 0, plan: 0 };
+      rr.appendChild(attrs(el('td', 'set-tot set-gi', n.noAr + '/' + n.plan), { 'data-p': x.prio }));
+    });
+    resumo.appendChild(rr);
+    t.appendChild(resumo);
+    S.est.grupos.forEach((g) => {
+      const tb = el('tbody');
+      const rg = el('tr', 'set-g');
+      rg.appendChild(attrs(el('th', 'set-gr', g.nome), { scope: 'rowgroup', colspan: String(cols.length + 1) }));
+      tb.appendChild(rg);
+      g.mods.forEach((m) => {
+        const tr = el('tr');
+        const th = attrs(el('th', 'set-mod'), { scope: 'row' });
+        const bm = attrs(el('button', 'set-nm'), { type: 'button', 'data-k': 'm:' + m });
+        bm.textContent = modNome(m);
+        th.appendChild(bm);
+        tr.appendChild(th);
+        cols.forEach((x) => {
+          const k = x.t + '|' + m;
+          const e = S.celulas[k];
+          const td = attrs(el('td', 'set-gi'), { 'data-p': x.prio, 'data-tenant': x.t, 'data-module': m });
+          if (!e) { tr.appendChild(td); return; }
+          const f = formaDe(k);
+          (f.t || []).forEach((cl) => td.classList.add('set-t-' + cl));
+          const pend = (S.locais[k] || []).some((p) => p.pendente);
+          const b = attrs(el('button', 'set-cel' + (S.k === 'x:' + x.t + ':' + m ? ' sel' : '')), {
+            type: 'button', 'data-k': 'x:' + x.t + ':' + m, 'data-cel': k,
+            'aria-label': cliNome(x.t) + ' · ' + modNome(m) + ': ' + f.a + (pend ? ' (gravando)' : ''),
+          });
+          b.appendChild(slot(f.f));
+          td.appendChild(b);
+          if (pend) {
+            const marca = attrs(el('span', 'pend'), { title: 'gravando' });
+            marca.appendChild(el('span', 'set-sr', 'gravando'));
+            td.appendChild(marca);
+          }
+          tr.appendChild(td);
+        });
+        tb.appendChild(tr);
+      });
+      t.appendChild(tb);
+    });
+    return t;
+  }
+
+  function item(dt, dd) {
+    const d = el('div');
+    d.appendChild(el('dt', '', dt));
+    d.appendChild(el('dd', '', dd));
+    return d;
+  }
+  function bloco(rot, filho) {
+    const d = el('div', 'set-g-bloco');
+    d.appendChild(el('p', 'set-g-rot', rot));
+    d.appendChild(filho);
+    return d;
+  }
+  function lista(itens, vazio) {
+    if (!itens.length) return el('p', 'set-dim', vazio);
+    const ul = el('ul');
+    itens.forEach((t) => ul.appendChild(el('li', '', t)));
+    return ul;
+  }
+
+  function gaveta() {
+    const g = document.getElementById('set-gaveta');
+    limpa(g);
+    if (!S.k) { g.hidden = true; return; }
+    g.hidden = false;
+    const k = S.k;
+    const x = escopo(k);
+    const tipo = k.charAt(0);
+    const p = k.split(':');
+    const titulo = tipo === 'x' ? cliNome(p[1]) + ' · ' + modNome(p[2]) : tipo === 'c' ? cliNome(p[1]) : modNome(p[1]);
+    const cab = el('div', 'set-g-cab');
+    cab.appendChild(attrs(el('h2', 'set-g-t', titulo), { id: 'set-g-t' }));
+    cab.appendChild(attrs(el('button', 'set-fechar', 'Fechar'), { type: 'button', 'data-act': 'fecha-gaveta' }));
+    g.appendChild(cab);
+    if (tipo === 'x') {
+      const ck = celChave(k);
+      const e = efetivo(ck);
+      const f = formaDe(ck);
+      const est = el('div', 'set-g-estado');
+      est.appendChild(slot(f.f));
+      est.appendChild(el('span', '', maiuscula(f.a) + ((S.locais[ck] || []).some((q) => q.pendente) ? ' (gravando...)' : '')));
+      g.appendChild(est);
+      const dl = el('dl', 'set-g-dl');
+      dl.appendChild(item('Planejado', e.planned || 'não definido'));
+      dl.appendChild(item('Estágio', e.stage || 'não definido'));
+      g.appendChild(dl);
+      const ctl = el('div', 'set-g-ctl');
+      const bt = attrs(el('button', 'set-mudar', 'Mudar estado'), { type: 'button', 'data-act': 'mudar-estado', 'aria-expanded': String(S.menu), 'aria-controls': 'set-menu' });
+      ctl.appendChild(bt);
+      const menu = attrs(el('div', 'set-menu'), { id: 'set-menu', role: 'menu', 'aria-label': 'Novo estado' });
+      menu.hidden = !S.menu;
+      S.est.ops.forEach((op, i) => {
+        const atual = (e.planned === S.D.sim) === (op.planned === S.D.sim) && (op.stage === '' ? op.planned !== S.D.sim : op.stage === S.D.sem ? e.stage === '' : e.stage === op.stage);
+        const b = attrs(el('button', 'set-op'), { type: 'button', role: 'menuitemradio', 'data-act': 'op-estado', 'data-op': String(i), 'aria-checked': String(atual) });
+        b.appendChild(slot(op.cls));
+        b.appendChild(document.createTextNode(maiuscula(op.rotulo)));
+        menu.appendChild(b);
+      });
+      ctl.appendChild(menu);
+      g.appendChild(ctl);
+    } else if (tipo === 'c') {
+      const dl = el('dl', 'set-g-dl');
+      dl.appendChild(item('Prioridade', PRIO_ROTULO[normPrio(x.priority)]));
+      dl.appendChild(item('Tipo', x.client_type || 'a definir'));
+      g.appendChild(dl);
+    }
+    g.appendChild(bloco('Última nota', el('p', x.nota ? '' : 'set-dim', x.nota ? 'Última nota: ' + x.nota : 'Sem nota.')));
+    if (x.precisa) g.appendChild(bloco('O que precisa', el('p', '', 'O que precisa: ' + x.precisa)));
+    g.appendChild(bloco('Tarefas abertas', lista((x.tarefas || []).map((t) => '#' + t.numero + ' ' + t.nome), 'Nenhuma tarefa aberta.')));
+    g.appendChild(bloco('Histórico', lista((x.historico || []).map((h) => h.quando + ' · ' + h.texto), 'Sem histórico.')));
+  }
+
+  // Refaz tudo que muda com o estado (totais, tabela, gaveta) e devolve o foco ao que estava focado (pelo data-k). A rolagem lateral da tabela fica.
+  function refaz() {
+    const raiz = document.getElementById('set-quadro');
+    const ativo = document.activeElement;
+    const chave = ativo && raiz.contains(ativo) ? ativo.getAttribute('data-k') : null;
+    const rol = document.getElementById('set-rolagem');
+    const esquerda = rol.scrollLeft;
+    const tot = document.getElementById('set-totais');
+    tot.parentNode.replaceChild(totaisUl(), tot);
+    limpa(rol);
+    rol.appendChild(tabela());
+    rol.scrollLeft = esquerda;
+    gaveta();
+    document.getElementById('set-grade').classList.toggle('com-gaveta', !!S.k);
+    if (chave) {
+      const alvo = raiz.querySelector('[data-k="' + chave.replace(/"/g, '') + '"]');
+      if (alvo) alvo.focus({ preventScroll: true });
+    }
+  }
+
+  function mostra(txt) {
+    const a = document.getElementById('set-aviso');
+    a.textContent = txt;
+    a.hidden = false;
+    window.clearTimeout(S.timer);
+    S.timer = window.setTimeout(() => { a.hidden = true; }, 4500);
+  }
+
+  // ------------------------------------------------------------ gaveta: abrir, fechar, mudar estado
+  function abreGaveta(k, menu) {
+    if (!S.D.escopos[k]) return;
+    S.origem = document.querySelector('#set-quadro [data-k="' + k + '"]');
+    S.k = k;
+    S.menu = !!menu && k.charAt(0) === 'x';
+    refaz();
+    const g = document.getElementById('set-gaveta');
+    g.focus({ preventScroll: true });
+    if (window.matchMedia && matchMedia('(max-width: 999px)').matches) g.scrollIntoView({ block: 'nearest' });
+  }
+
+  function fechaGaveta() {
+    const k = S.k;
+    S.k = null;
+    S.menu = false;
+    refaz();
+    const b = k ? document.querySelector('#set-quadro [data-k="' + k + '"]') : null;
+    if (b) b.focus({ preventScroll: true });
+  }
+
+  // Escolheu um estado: pinta na hora, grava e, se a gravação falhar, desfaz. A gravação é uma de cada vez por célula: o que vai no pedido
+  // sai da comparação com o que já foi CONFIRMADO, calculada só quando a anterior respondeu. Assim um clique não herda o estado de outro
+  // que ainda não gravou (ou que falhou), e os pedidos da mesma célula chegam ao servidor na ordem dos cliques.
+  async function escolhe(op) {
+    const kx = S.k;
+    const ck = celChave(kx);
+    const [, tenant, modulo] = kx.split(':');
+    const p = op.planned;
+    const s = op.stage;
+    const diferencas = (c) => ({ planned: !!p && p !== c.planned, stage: !!s && (s === S.D.sem ? c.stage !== '' : s !== c.stage) });
+    const agora = diferencas(efetivo(ck));
+    S.menu = false;
+    if (!agora.planned && !agora.stage) { refaz(); mostra(MSG.nada); return; }
+    const pedido = { pendente: true };
+    if (p) pedido.planned = p;
+    if (s) pedido.stage = semEstagio(s);
+    (S.locais[ck] = S.locais[ck] || []).push(pedido);
+    refaz();
+    const anterior = S.fila[ck] || Promise.resolve();
+    const minha = anterior.then(async () => {
+      const falta = diferencas(efetivo(ck, true));
+      const eventos = [];
+      if (falta.planned) eventos.push({ event_name: EVENTO.planned, tenant, body: { module: modulo, value: p } });
+      if (falta.stage) eventos.push({ event_name: EVENTO.stage, tenant, body: { module: modulo, value: s } });
+      let resultado = 'ok'; // nada a gravar: o que a célula confirmada já tem é o que o clique pede
+      if (eventos.length) {
+        try { resultado = await ctxAtual.anota(eventos); } catch (err) { resultado = 'falha'; }
+      }
+      if (resultado === 'ok') {
+        pedido.pendente = false;
+      } else {
+        if (S) S.locais[ck] = (S.locais[ck] || []).filter((x) => x !== pedido); // a tela pode ter sido refeita durante a gravação: S.locais é outro
+      }
+      return resultado;
+    });
+    S.fila[ck] = minha;
+    const resultado = await minha;
+    refaz();
+    mostra(resultado === 'ok' ? MSG.ok : (MSG[resultado] || MSG.falha));
+  }
+
+  document.addEventListener('click', (ev) => {
+    const raiz = document.getElementById('set-quadro');
+    if (!S || !raiz || raiz.hidden || !raiz.contains(ev.target)) return;
+    const a = ev.target.closest('[data-act]');
+    if (a) {
+      const act = a.getAttribute('data-act');
+      if (act === 'fecha-gaveta') fechaGaveta();
+      else if (act === 'mudar-estado') {
+        S.menu = !S.menu;
+        refaz();
+        const b = raiz.querySelector('[data-act="mudar-estado"]');
+        if (b) b.focus({ preventScroll: true });
+      } else if (act === 'op-estado' && S.k) escolhe(S.est.ops[Number(a.getAttribute('data-op'))]);
+      return;
+    }
+    const b = ev.target.closest('button[data-k]');
+    if (b) abreGaveta(b.getAttribute('data-k'), (ev.metaKey || ev.ctrlKey) && b.getAttribute('data-k').charAt(0) === 'x');
+  });
+  document.addEventListener('keydown', (ev) => {
+    const raiz = document.getElementById('set-quadro');
+    if (ev.key !== 'Escape' || !S || !raiz || raiz.hidden || !S.k) return;
+    if (S.menu) {
+      S.menu = false;
+      refaz();
+      const b = raiz.querySelector('[data-act="mudar-estado"]');
+      if (b) b.focus({ preventScroll: true });
+    } else fechaGaveta();
+  });
+
+  // ------------------------------------------------------------ render
+  function dataBr(txt) {
+    const m = /^(\d{4})-(\d\d)-(\d\d)[ T](\d\d:\d\d)/.exec(txt || '');
+    return m ? m[3] + '/' + m[2] + ' ' + m[4] : String(txt || '');
   }
 
   function render(foto, sobre, ctx) {
-    const quadro = document.getElementById('set-quadro');
+    const raiz = document.getElementById('set-quadro');
     const vazio = document.getElementById('set-vazio');
     const sub = document.getElementById('set-sub');
     ctxAtual = ctx;
-    if (obs) { obs.disconnect(); obs = null; }
-    reancora = null;
-    if (!foto) {
-      // sem foto (ainda não rodou, ou passou de 7 dias): não desenha quadro velho nem em branco
-      quadro.hidden = true;
+    S = null;
+    delete raiz.dataset.pronto;
+    let D = null;
+    if (foto) { try { D = JSON.parse(foto.body); } catch (e) { D = null; } }
+    if (!D) {
+      // sem foto (ainda não rodou, ou passou de 7 dias) ou foto ilegível: não desenha quadro velho nem em branco
+      raiz.hidden = true;
       vazio.hidden = false;
       sub.textContent = '';
-      quadro.removeAttribute('srcdoc');
-      delete quadro.dataset.pronto;
+      limpa(document.getElementById('set-rolagem'));
       return;
     }
     vazio.hidden = true;
-    quadro.hidden = false;
-    sub.textContent = 'Foto de ' + foto.generated_at + '. Estados, notas, nomes, tipos e totais mudam na hora; a ordem por prioridade e o histórico entram na próxima foto (até 30 minutos).';
-    let D;
-    try { D = JSON.parse(foto.body); } catch (e) { D = null; }
-    if (!D) {
-      quadro.hidden = true;
-      vazio.hidden = false;
-      return;
-    }
-    delete quadro.dataset.pronto;
-    quadro.addEventListener('load', function ligar() {
-      quadro.removeEventListener('load', ligar);
-      ligaQuadro(quadro, D, sobre);
-    });
-    quadro.srcdoc = window.FcTema ? FcTema.injeta(foto.html) : foto.html; // o quadro segue o tema escolhido no topo
+    const est = leFoto(foto.html);
+    const celulas = {};
+    Object.keys(D.escopos).forEach((chave) => { if (chave.indexOf('x:') === 0) celulas[celChave(chave)] = true; });
+    S = { D, est, celulas, sobre: {}, locais: {}, fila: {}, k: null, menu: false, origem: null, timer: null };
+    aplicaEventos(sobre);
+    sub.textContent = 'Foto de ' + dataBr(foto.generated_at) + '. Estados, notas, nomes, tipos, prioridades e totais mudam na hora; o histórico entra na próxima foto (até 30 minutos).';
+    // legenda e avisos: da foto, como texto
+    const leg = document.getElementById('set-legenda');
+    limpa(leg);
+    est.legenda.forEach((l) => { const li = el('li'); li.appendChild(slot(l.cls)); li.appendChild(document.createTextNode(l.texto)); leg.appendChild(li); });
+    document.getElementById('set-legenda-box').hidden = !est.legenda.length;
+    const av = document.getElementById('set-avisos');
+    limpa(av);
+    est.avisos.forEach((t) => av.appendChild(el('li', '', t)));
+    av.hidden = !est.avisos.length;
+    document.getElementById('set-aviso').hidden = true;
+    raiz.hidden = false;
+    refaz();
+    raiz.dataset.pronto = 'sim'; // o quadro está desenhado e os cliques ligados (o gabarito espera por isto)
   }
-
-  // trocou o tema no topo: troca só o CSS dentro do quadro (redesenhar perderia as edições que ainda não estão na foto)
-  document.addEventListener('fc-tema', () => {
-    const doc = document.getElementById('set-quadro').contentDocument;
-    const l = doc && doc.getElementById('fc-tema');
-    if (l) l.href = FcTema.href(FcTema.atual());
-  });
 
   window.PainelSetup = { render };
 })();

@@ -29,7 +29,7 @@
   const COMANDOS = [['send', 'Enviar agora', 'E'], ['schedule', 'Agendar', 'A'], ['skip', 'Pular hoje', 'P'], ['snooze', 'Soneca', 'S'], ['discard', 'Descartar', 'D'], ['convert', 'Converteu', 'C']];
   const DIA_MAX = 4;
 
-  const ui = { tenant: null, view: 'due_today', aud: '', busca: '', closedOpen: false, diasAbertos: {}, sel: null, panel: null, pane: 'conversa', pendente: null, logOpen: false, avisoPadrao: null };
+  const ui = { tenant: null, view: 'due_today', aud: '', busca: '', closedOpen: false, diasAbertos: {}, sel: null, panel: null, pane: 'conversa', pendente: null, logOpen: false, ferrOpen: false, avisoPadrao: null, viewUrl: null };
   const conversas = {}; // phone_key -> { estado: 'carregando' | 'ok' | 'erro', msgs }, só desta sessão
   const rascunhos = {}; // phone_key -> texto editado antes de enviar
   const emCurso = {}; // phone_key -> { nome, id }: ação esperando o servidor (22 a 35 s com telefone); o paciente fica "processando" e a fila segue
@@ -183,14 +183,34 @@
   const textoDe = (p) => (rascunhos[p.phone_key] !== undefined ? rascunhos[p.phone_key] : modelo(p));
 
   // ---------------------------------------------------------------- coluna da esquerda
-  function coberturaHtml(legenda) {
-    const cv = S.cov, ativos = FU_SITUATIONS.filter((x) => cv.counts[x.key] > 0);
-    const segs = ativos.map((x) => `<button type="button" class="pc-cob-seg pc-s-${x.key}" style="flex-grow:${cv.counts[x.key]}" data-act="sit" data-val="${x.key}" aria-pressed="${ui.view === x.key}" aria-label="${S.ctx.esc(x.label)}: ${cv.counts[x.key]}" title="${S.ctx.esc(x.label)}: ${cv.counts[x.key]}"></button>`).join('');
-    const alertas = SOLTOS.filter((k) => cv.counts[k] > 0).map((k) => `<button type="button" class="pc-btn-alerta" data-act="sit" data-val="${k}" aria-pressed="${ui.view === k}">${ic('warn')}${cv.counts[k]}${k === 'unsegmented' ? ' sem audiência: definir' : ' sem próximo passo: ver'}</button>`).join('');
-    const leg = legenda ? `<div class="pc-cob-leg">${ativos.map((x) => `<button type="button" class="pc-leg" data-act="sit" data-val="${x.key}"><i class="pc-dot pc-s-${x.key}"></i>${S.ctx.esc(x.label)} <b>${cv.counts[x.key]}</b></button>`).join('')}</div>` : '';
-    return `<div class="pc-cob"><div class="pc-cob-bar" role="group" aria-label="Situação de cada paciente">${segs}</div>`
-      + `<p class="pc-cob-txt pc-${cv.ok ? 'ok' : 'alerta'}">${cv.ok ? ic('ok') : (legenda ? ic('warn') : '')}${cv.total} acompanhados: ${cv.ok ? 'nenhum esquecido' : `${cv.total - cv.covered} sem próximo passo`}</p>${leg}${legenda ? '' : alertas}</div>`;
+  // Cobertura: faixa de largura inteira acima da grade (topo baixo: a lista e a conversa ficam acima da dobra). Barra por situação, legenda com nome
+  // e contagem (não só cor), os dois alertas sempre na tela (mesmo com 0). Tudo clicável: filtra a lista pela situação.
+  const COBERTURA = ['due_today', 'julia_talking', 'scheduled', 'waiting', 'converted', 'discarded', 'do_not_contact'];
+  function bandaCobertura() {
+    let b = $('pc-cob');
+    if (!b) {
+      b = document.createElement('section');
+      b.id = 'pc-cob';
+      b.className = 'pc-cobertura fc-cartao';
+      b.setAttribute('data-cobertura', '');
+      b.setAttribute('aria-label', 'Cobertura do acompanhamento');
+      $('pc-nav-m').parentNode.insertBefore(b, $('pc-nav-m'));
+    }
+    return b;
   }
+  function coberturaHtml() {
+    const cv = S.cov, esc = S.ctx.esc;
+    const ativos = COBERTURA.filter((k) => cv.counts[k] > 0);
+    const segs = ativos.map((k) => `<button type="button" class="pc-cob-seg pc-s-${k}" style="flex-grow:${cv.counts[k]}" data-act="sit" data-val="${k}" aria-pressed="${ui.view === k}" aria-label="${esc(SIT[k].label)}: ${cv.counts[k]}" title="${esc(SIT[k].label)}: ${cv.counts[k]}"></button>`).join('');
+    const alerta = (k, texto) => (cv.counts[k] > 0
+      ? `<button type="button" class="pc-btn-alerta" data-alerta="${k}" data-act="sit" data-val="${k}" aria-pressed="${ui.view === k}">${ic('warn')}<b>${cv.counts[k]}</b> ${texto}</button>`
+      : `<span class="pc-alerta-zero" data-alerta="${k}"><b>0</b> ${texto}</span>`);
+    const leg = COBERTURA.map((k) => `<button type="button" class="pc-leg" data-act="sit" data-val="${k}" aria-pressed="${ui.view === k}"><i class="pc-dot pc-s-${k}"></i>${esc(SIT[k].label)} <b>${cv.counts[k]}</b></button>`).join('');
+    return `<div class="pc-cob-topo"><p class="pc-cob-txt pc-${cv.ok ? 'ok' : 'alerta'}">${cv.ok ? ic('ok') : ic('warn')}${cv.total} acompanhados: ${cv.ok ? 'nenhum esquecido' : `${cv.total - cv.covered} sem próximo passo`}</p>`
+      + `<div class="pc-cob-alertas">${alerta('unsegmented', 'sem audiência: definir')}${alerta('no_next_step', 'sem próximo passo: ver')}</div></div>`
+      + `<div class="pc-cob-bar" role="group" aria-label="Situação de cada paciente">${segs}</div><div class="pc-cob-leg" role="group" aria-label="Legenda da situação">${leg}</div>`;
+  }
+  function desenhaCobertura() { bandaCobertura().innerHTML = coberturaHtml(); }
   function filtrosHtml() {
     const { esc } = S.ctx;
     let visoes = VISOES.map(([k, nome]) => {
@@ -255,8 +275,7 @@
     const cab = lista.length ? `Paciente ${pos} de ${lista.length}` : 'Nenhum paciente';
     const fila0 = ui.view === 'due_today' && !ui.aud && !lista.length && !buscando();
     const vazio = buscando() ? 'Ninguém com esse telefone ou nome.' : ui.view === 'unsegmented' ? 'Zerou: nenhum telefone sem audiência.' : (ui.view === 'due_today' ? 'Ninguém está devido agora.' : 'Ninguém neste filtro.');
-    // fila vazia: o resumo do meio já traz a barra, então a lista não repete
-    box.innerHTML = (fila0 ? '' : coberturaHtml(false)) + filtrosHtml()
+    box.innerHTML = filtrosHtml()
       + (fila0 ? '' : `<div class="pc-posicao"><h2 class="fc-h3" id="pc-posicao">${S.ctx.esc(cab)}</h2></div>`)
       + `<div class="pc-itens">${fila0 ? '<p class="pc-vazio-lista">Fila zerada. Veja o resumo.</p>' : listaHtml(vazio)}</div>`;
     const nova = box.querySelector('.pc-itens');
@@ -324,7 +343,7 @@
     const ag = padrao.modo === 'agendar';
     const btn = (k, nome, tecla, i) => {
       const off = desligado || (bloqueio && (k === 'send' || k === 'send_now' || k === 'schedule'));
-      return `<button type="button" class="pc-btn${i === 0 ? '' : ' pc-ghost'}${k === 'discard' ? ' pc-perigo' : ''}" data-act="cmd" data-cmd="${k}"${tecla ? ` aria-keyshortcuts="${tecla}"` : ''}${off ? ' disabled' : ''}>${nome}${tecla ? ` <kbd>${tecla}</kbd>` : ''}</button>`;
+      return `<button type="button" class="pc-btn${i === 0 ? '' : ' pc-ghost'}${k === 'discard' ? ' pc-perigo' : ''}" data-act="cmd" data-cmd="${k}"${tecla ? ` aria-keyshortcuts="${tecla}"` : ''}${off ? ' disabled' : ''}>${nome}</button>`;
     };
     return `<div class="pc-acoes" role="group" aria-label="Ações para ${S.ctx.esc(nomeDe(p))}">${COMANDOS.map(([k, nome, tecla], i) => (k === 'send' && ag ? btn(k, `Agendar ${quando(padrao.data, padrao.hora)}`, tecla, i) + btn('send_now', 'Enviar agora', '', 1) : btn(k, nome, tecla, i))).join('')}</div>`;
   }
@@ -332,24 +351,26 @@
     const { esc } = S.ctx;
     const opts = `<option value="" selected disabled>Escolha a audiência</option>${FU_CONTACTABLE.map((a) => `<option value="${a}">${esc(FU_AUDIENCE_LABEL[a])}</option>`).join('')}`;
     const ligado = !!S.estado;
+    if (!ligado) return semAcaoHtml();
     return `<section class="pc-acao fc-cartao" aria-label="Definir audiência"><h3 class="pc-acao-t">Definir audiência</h3>`
       + `<p class="fc-legenda">${p.audience === 'lost' ? `Nenhuma regra encaixou ${esc(nomeDe(p))}, então ela ficou em Perdidos e a Júlia não contata.` : `Sem audiência, a Júlia não pode contatar ${esc(nomeDe(p))}.`} Escolha onde esta pessoa entra no acompanhamento. A escolha fica no log.</p>`
       + `<div class="pc-def-campos"><div><label class="pc-rot" for="pc-def-aud">Audiência</label><select class="pc-campo" id="pc-def-aud"${ligado ? '' : ' disabled'}>${opts}</select></div>`
-      + `<button type="button" class="pc-btn" data-act="define"${ligado ? '' : ' disabled'}>Definir audiência</button></div>${resHtml(p)}${ligado ? '' : semAcaoHtml()}</section>`;
+      + `<button type="button" class="pc-btn" data-act="define"${ligado ? '' : ' disabled'}>Definir audiência</button></div>${resHtml(p)}</section>`;
   }
-  const semAcaoHtml = () => `<div class="pc-aviso">${ic('info')}<span>As ações não estão disponíveis agora: não consegui falar com o servidor. Recarregue a página para tentar de novo. Por enquanto ela só mostra a situação de cada paciente.</span></div>`;
+  // sem o state do servidor: um bloco de estado no lugar das ações (os botões ficam ocultos, não cinzas no mesmo lugar)
+  const semAcaoHtml = () => `<section class="pc-acao fc-cartao" aria-label="Ações"><div class="pc-aviso pc-desligadas" data-estado="acoes-desligadas" role="alert">${ic('warn')}<span>As ações não estão disponíveis agora: não consegui falar com o servidor. Recarregue a página. Por enquanto ela só mostra a situação de cada paciente.</span><button type="button" class="pc-btn pc-ghost" data-act="recarregar">Recarregar</button></div></section>`;
   const resHtml = (p) => (resultados[p.phone_key] ? `<div class="pc-aviso pc-perigo">${ic('warn')}<span>${S.ctx.esc(resultados[p.phone_key].texto)}</span></div>` : '');
   function processandoHtml(p) {
     return `<section class="pc-acao fc-cartao" aria-label="Ações"><div class="pc-aviso pc-processando" role="status"><span class="pc-giro" aria-hidden="true"></span><span>${S.ctx.esc(ROTULO_CURSO[emCurso[p.phone_key].nome])} para ${S.ctx.esc(nomeDe(p))}... O servidor pode levar até 40 segundos. Siga com os outros pacientes, o resultado aparece no item e no Log.</span></div>${acoesHtml(p, true, null)}</section>`;
   }
   function composerHtml(p) {
     const { esc } = S.ctx;
+    if (!S.estado) return semAcaoHtml();
     if (emCurso[p.phone_key]) return processandoHtml(p);
     if (fuAudienceSettable(p)) return defineHtml(p);
     if (travado(p)) {
       return `<section class="pc-acao fc-cartao" aria-label="Ações"><div class="pc-aviso">${ic('lock')}<span>${esc(p.audience === 'attended' ? 'Paciente atendido: não recebe mensagem de acompanhamento.' : 'Paciente perdido: não recebe mensagem.')}</span></div>${acoesHtml(p, true, null)}</section>`;
     }
-    if (!S.estado) return `<section class="pc-acao fc-cartao" aria-label="Ações">${semAcaoHtml()}${acoesHtml(p, true, null)}</section>`;
     const b = fuSendBlock(p, S.fx), bloqueio = b ? b[1] : null, solto = situacao(p) === 'no_next_step';
     return `<section class="pc-acao fc-cartao" aria-label="Mensagem e ações"><div><label class="pc-so-leitor" for="pc-draft">Mensagem, já preenchida; pode editar antes de enviar</label>`
       + `<textarea class="pc-campo pc-rascunho" id="pc-draft">${esc(textoDe(p))}</textarea></div>`
@@ -373,7 +394,7 @@
     const ultHtml = ult.length ? `<ul class="pc-res-l">${ult.map((p) => linha(p, `${tentCurta(p)}, sai em ${dd(fuNextStep(p, S.fx))} se não responder`)).join('')}</ul>` : '<p class="pc-vazio-nota">Ninguém na tentativa final.</p>';
     const julHtml = jul.length ? `<ul class="pc-res-l">${jul.map((p) => linha(p, `respondeu ${haDias(p.last_message_at)}`)).join('')}</ul>` : '<p class="pc-vazio-nota">Nenhuma conversa aberta.</p>';
     const usados = S.estado && S.estado.daily_cap !== undefined ? ` ${S.enviadosHoje} de ${S.estado.daily_cap} envios usados.` : '';
-    return `<section class="pc-fim-dia fc-cartao"><div><h2 class="fc-h2">Pronto por hoje</h2><p class="fc-corpo">Ninguém mais está devido.${usados}</p></div>${coberturaHtml(true)}`
+    return `<section class="pc-fim-dia fc-cartao"><div><h2 class="fc-h2">Pronto por hoje</h2><p class="fc-corpo">Ninguém mais está devido.${usados}</p></div>`
       + `<div class="pc-res-bloco"><h3 class="pc-sec-t">Próximos 7 dias</h3><div class="pc-dias">${dias}</div>${depois}</div>`
       + `<div class="pc-res-duas"><div class="pc-res-bloco"><h3 class="pc-sec-t">Última tentativa</h3><p class="pc-vazio-nota">Já fizeram todas as tentativas e saem sozinhos se não responderem.</p>${ultHtml}</div>`
       + `<div class="pc-res-bloco"><h3 class="pc-sec-t">Com a Júlia</h3><p class="pc-vazio-nota">Responderam, a Júlia está na conversa.</p>${julHtml}</div></div></section>`;
@@ -404,8 +425,9 @@
     const corpo = tem
       ? `<dl>${p.consult_date ? `<div><dt>Última consulta</dt><dd>${esc(`${dd(p.consult_date)} (${haDias(p.consult_date)})`)}</dd></div>` : ''}`
         + `${p.diagnosis ? `<div><dt>Diagnóstico</dt><dd>${esc(p.diagnosis)}</dd></div>` : ''}`
-        + `${p.procedure ? `<div><dt>Procedimento indicado</dt><dd>${esc(p.procedure)}</dd></div>` : ''}</dl>`
-      : '<div class="pc-pront-vazio"><p class="fc-corpo">Sem consulta registrada</p><p class="fc-legenda">Quando o sistema da clínica registrar uma consulta, o prontuário aparece aqui.</p></div>';
+        + `${p.procedure ? `<div><dt>Procedimento indicado</dt><dd>${esc(p.procedure)}</dd></div>` : ''}`
+        + `<div><dt>${p.origin ? 'Origem' : 'Telefone'}</dt><dd>${esc(p.origin ? `${p.origin} · telefone final ${final4(p)}` : `Final ${final4(p)}`)}</dd></div></dl>`
+      : `<div class="pc-pront-vazio"><p class="fc-corpo">Sem consulta registrada</p><p class="fc-legenda">Quando o sistema da clínica registrar uma consulta, o prontuário aparece aqui.</p></div><dl><div><dt>${p.origin ? 'Origem' : 'Telefone'}</dt><dd>${esc(p.origin ? `${p.origin} · telefone final ${final4(p)}` : `Final ${final4(p)}`)}</dd></div></dl>`;
     const url = window.PainelCirurgias.linkErp(p.erp, 'prontuario', p.erp_patient_id);
     const sistema = url ? window.PainelCirurgias.ERPS[p.erp].nome : '';
     const link = url ? `<a class="pc-link-asa" href="${esc(url)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(`Abrir ${nomeDe(p)}, telefone final ${final4(p)}, no ${sistema} (abre em nova aba)`)}">Abrir no ${esc(sistema)} ${ic('ext')}</a>` : '';
@@ -427,9 +449,10 @@
     if (contatavel(p)) itens.push(`<li><b>Tentativas</b> ${esc(tentCurta(p))}</li>`);
     if (contatavel(p)) itens.push(`<li><b>Próximo contato</b> ${prox ? esc(prox === S.fx.now ? 'hoje' : dd(prox)) : 'sem data'}</li>`);
     if (p.snooze_until && fuDaysBetween(S.fx.now, p.snooze_until) > 0) itens.push(`<li><b>Soneca até</b> ${esc(dd(p.snooze_until))}</li>`);
-    return '<section class="pc-perfil fc-cartao" aria-label="Perfil">'
-      + (p.origin ? `<section><h2 class="pc-sec-t">Origem</h2><p>${esc(p.origin)} · telefone final ${esc(final4(p))}</p></section>` : `<section><h2 class="pc-sec-t">Telefone</h2><p>Final ${esc(final4(p))}</p></section>`)
-      + (itens.length ? `<section><h2 class="pc-sec-t">Acompanhamento</h2><ul class="pc-fatos">${itens.join('')}</ul></section>` : '')
+    if (p.last_message_at) itens.push(`<li><b>Última mensagem</b> ${esc(haDias(p.last_message_at))}</li>`);
+    // Acompanhamento é um cartão à parte do Prontuário (decisão do Felipe, 13/11/2026)
+    return '<section class="pc-perfil fc-cartao" aria-label="Acompanhamento"><h2 class="pc-sec-t">Acompanhamento</h2>'
+      + (itens.length ? `<ul class="pc-fatos">${itens.join('')}</ul>` : '<p class="pc-vazio-nota">Sem acompanhamento ativo.</p>')
       + agendadoHtml(p) + '</section>';
   }
   function desenhaDir() {
@@ -444,7 +467,10 @@
     $('pc-contador').innerHTML = cap === null ? `<span class="pc-cont-n">${n}</span> ${n === 1 ? 'envio' : 'envios'} hoje`
       : `<span class="pc-cont-n">${n}</span> de ${cap} hoje${n >= cap ? ' (teto atingido)' : ''}`;
     $('pc-nav-m').innerHTML = [['lista', 'Lista'], ['conversa', 'Conversa'], ['pront', 'Prontuário']].map(([k, nome]) => `<button type="button" data-act="pane" data-val="${k}" aria-pressed="${ui.pane === k}">${nome}</button>`).join('');
-    $('pc-grade').dataset.pane = ui.pane;
+    const grade = $('pc-grade');
+    grade.removeAttribute('data-pane'); // o index.html nasce com data-pane na grade; agora cada coluna é um [data-pane] e a grade guarda só qual está à vista
+    grade.dataset.ver = ui.pane;
+    [['lista', 'pc-lista'], ['conversa', 'pc-meio'], ['pront', 'pc-dir']].forEach(([k, id]) => { $(id).closest('.pc-col').dataset.pane = k; });
   }
 
   // ---------------------------------------------------------------- seleção, conversa sob demanda e ações
@@ -485,7 +511,7 @@
     const ae = document.activeElement, foco = ae && ae.dataset ? (ae.dataset.cmd || null) : null, focoSel = ae && ae.dataset && ae.dataset.filter ? ae.id : null;
     const campo = ae && (ae.id === 'pc-draft' || ae.id === 'pc-busca' || CAMPOS_PAINEL.indexOf(ae.id) >= 0) ? { id: ae.id, ini: ae.selectionStart, fim: ae.selectionEnd } : null;
     const foiAct = !foco && !focoSel && ae && ae.dataset && ae.dataset.act ? { act: ae.dataset.act, val: ae.dataset.val } : null; // o redesenho troca o HTML: o teclado volta pro mesmo lugar
-    desenhaTopo(); desenhaLista(); desenhaMeio(); desenhaDir(); desenhaLog();
+    desenhaTopo(); desenhaCobertura(); desenhaLista(); desenhaMeio(); desenhaDir(); desenhaLog();
     if (foiAct) {
       const alvo = foiAct.act === 'pick' || foiAct.act === 'pick_sit' ? document.querySelector('#pg-pacientes .pc-item[aria-current="true"]') : document.querySelector(`#pg-pacientes [data-act="${foiAct.act}"]${foiAct.val !== undefined ? `[data-val="${foiAct.val}"]` : ''}`);
       if (alvo) alvo.focus({ preventScroll: true });
@@ -526,10 +552,13 @@
   function logHtml() {
     const { esc } = S.ctx, ult = registro[registro.length - 1];
     const linhas = registro.slice(-14).reverse().map((e) => `<div class="pc-logl"><span class="pc-hora">${hhmm(e.ts)}</span>${esc(frase(e))}</div>`).join('') || '<p class="pc-vazio-nota">Nada gravado ainda.</p>';
-    return `<div class="pc-logcab"><button type="button" class="pc-btn pc-ghost pc-log-t" data-act="log_toggle" aria-expanded="${ui.logOpen}" aria-controls="pc-logcorpo">${ic('chev', 'pc-chev')}Log (${registro.length})</button>`
+    // Ferramentas: recolhido, no fim da página. Log da sessão, baixar, copiar e a dica dos atalhos (que não aparece mais dentro dos botões).
+    return `<details class="pc-ferr" data-ferramentas${ui.ferrOpen ? ' open' : ''}><summary class="pc-ferr-t">${ic('chev', 'pc-chev')}Ferramentas <span class="pc-ferr-n">log da sessão e atalhos</span></summary><div class="pc-ferr-corpo">`
+      + `<div class="pc-logcab"><button type="button" class="pc-btn pc-ghost pc-log-t" data-act="log_toggle" aria-expanded="${ui.logOpen}" aria-controls="pc-logcorpo">${ic('chev', 'pc-chev')}Log (${registro.length})</button>`
       + `<span class="pc-log-ult">${ui.logOpen ? '' : (ult ? `última: ${esc(frase(ult))}` : 'nada gravado')}</span>`
       + `<button type="button" class="pc-btn pc-ghost" data-act="log_dl">${ic('down')}Baixar log (JSON)</button><button type="button" class="pc-btn pc-ghost" data-act="log_copy">${ic('copy')}Copiar</button></div>`
-      + `<div class="pc-logcorpo" id="pc-logcorpo"${ui.logOpen ? '' : ' hidden'}>${linhas}</div>`;
+      + `<div class="pc-logcorpo" id="pc-logcorpo"${ui.logOpen ? '' : ' hidden'}>${linhas}</div>`
+      + '<p class="pc-dica-atalhos" data-dica="atalhos">Atalhos com um paciente aberto: E envia agora, A agenda, P pula hoje, S soneca, D descarta, C marca que converteu.</p></div></details>';
   }
   function desenhaLog() {
     const bar = $('pc-logbar');
@@ -707,9 +736,13 @@
       case 'log_toggle': ui.logOpen = !ui.logOpen; desenhaLog(); break;
       case 'log_dl': baixaLog(); break;
       case 'log_copy': copiaLog(); break;
+      case 'recarregar': location.reload(); break;
       default: break;
     }
   });
+  document.addEventListener('toggle', (e) => { // o evento não sobe: só a captura pega; o redesenho do Log mantém Ferramentas como o Felipe deixou
+    if (e.target && e.target.matches && e.target.matches('#pg-pacientes [data-ferramentas]')) ui.ferrOpen = e.target.open;
+  }, true);
   function mudaPadrao(t) { // o controle "Envio padrão": a última escolha vale; muda só os botões, sem redesenhar (o teclado não perde o lugar)
     const campo = $('pc-padrao-hora'), dia = $('pc-padrao-data'), p = selecionado();
     if (t.dataset.padrao === 'modo' && t.value === 'agora') definePadrao({ modo: 'agora' });
@@ -753,6 +786,33 @@
     if (b && !b.disabled) { e.preventDefault(); comando(cmd); }
   });
 
+  // ---------------------------------------------------------------- carregando: texto com a hora de início; passou de 10 s, avisa que o BigQuery está lento
+  const LENTO_MS = 10000;
+  let carr = null, timerLento = null; // carr: { hora, lento } enquanto a primeira leitura não volta
+  const carrTxt = () => (carr.lento ? 'Ainda carregando, o BigQuery está lento. Pode levar mais um pouco.' : `Carregando os pacientes... desde ${carr.hora}.`);
+  function paraCarregando() {
+    clearTimeout(timerLento);
+    carr = null;
+  }
+  function carregandoHtml(ctx) {
+    if (!carr) {
+      carr = { hora: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }), lento: false };
+      timerLento = setTimeout(() => {
+        if (!carr) return;
+        carr.lento = true;
+        const t = document.querySelector('#pg-pacientes [data-estado="carregando"] .pc-carr-t');
+        if (t) t.textContent = carrTxt();
+      }, LENTO_MS);
+    }
+    return `<div data-estado="carregando" role="status"><p class="pc-carr-t">${carrTxt()}</p>${ctx.esqueleto}</div>`;
+  }
+  // ?view=unsegmented (o Hoje manda): abre a lista já nessa situação, uma vez por valor
+  function viewDaUrl() {
+    const v = new URLSearchParams(location.search).get('view');
+    if (!v || v === ui.viewUrl || !SIT[v]) return;
+    ui.viewUrl = v; ui.view = v; ui.aud = ''; ui.busca = ''; ui.sel = null;
+  }
+
   // ---------------------------------------------------------------- entrada
   // entrada: null = carregando; false = falhou (o painel já mostra o erro); { linhas, estado } = pronto (estado null = ações desligadas)
   function render(entrada, ctx) {
@@ -762,14 +822,16 @@
     }
     if (!entrada) {
       S = null;
-      for (const id of ['pc-lista', 'pc-meio', 'pc-dir', 'pc-contador', 'pc-nav-m', 'pc-logbar']) $(id).innerHTML = '';
-      if (entrada === null) $('pc-lista').innerHTML = `<div class="pc-vazio-lista">${ctx.esqueleto}</div>`;
+      for (const id of ['pc-lista', 'pc-meio', 'pc-dir', 'pc-contador', 'pc-nav-m', 'pc-logbar', 'pc-cob']) if ($(id)) $(id).innerHTML = '';
+      if (entrada === null) $('pc-lista').innerHTML = carregandoHtml(ctx); else paraCarregando();
       return;
     }
+    paraCarregando();
+    viewDaUrl();
     S = monta(entrada, ctx);
     if (!S.todos.length) {
       S = null;
-      for (const id of ['pc-meio', 'pc-dir', 'pc-contador', 'pc-nav-m', 'pc-logbar']) $(id).innerHTML = '';
+      for (const id of ['pc-meio', 'pc-dir', 'pc-contador', 'pc-nav-m', 'pc-logbar', 'pc-cob']) if ($(id)) $(id).innerHTML = '';
       $('pc-lista').innerHTML = '<p class="pc-vazio-lista">Nenhum paciente em acompanhamento para este cliente.</p>';
       return;
     }

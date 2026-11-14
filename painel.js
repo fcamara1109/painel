@@ -1162,7 +1162,7 @@
     const meu = ++seqAtv;
     diasAtv = dias || diasAtv;
     const fim = hojeIso();
-    const ctx = { esc, inicio: PER.somaDias(fim, -(diasAtv - 1)), fim, dias: diasAtv, carrega: (n) => carregaAtividades(n) };
+    const ctx = { esc, inicio: PER.somaDias(fim, -(diasAtv - 1)), fim, dias: diasAtv, tenant: new URLSearchParams(location.search).get('tenant') || '', carrega: (n) => carregaAtividades(n) }; // tenant: o ?tenant= (atalho "Atividades deste cliente"); sem ele, todos
     $('atv-erro').hidden = true;
     window.PainelAtividades.render(null, ctx);
     const app = $('painel');
@@ -1229,16 +1229,7 @@
     document.title = LOCAIS[p] ? `${rotuloCliente(state.tenant)} · ${LOCAIS[p]} · Painel` : `${GLOBAIS[p]} · Painel`;
   }
 
-  // Felipe, 13/11/2026: só Hoje e Funil foram redesenhados; as outras telas não se repetem aqui, abrem na versão antiga (classico/).
-  const NO_CLASSICO = new Set(['cirurgias', 'pacientes', 'setup', 'atividades', 'onboarding']);
   function mudaPagina(pagina) {
-    if (NO_CLASSICO.has(pagina)) {
-      const q = new URLSearchParams(location.search);
-      q.set('pagina', pagina);
-      q.set('tenant', state.tenant);
-      location.assign(`classico/index.html?${q}`);
-      return;
-    }
     state.pagina = pagina;
     $('pg-hoje').hidden = pagina !== 'hoje';
     $('pg-clientes').hidden = pagina !== 'clientes';
@@ -1248,7 +1239,6 @@
     $('pg-setup').hidden = pagina !== 'setup';
     $('pg-onboarding').hidden = pagina !== 'onboarding';
     $('pg-atividades').hidden = pagina !== 'atividades';
-    document.querySelector('.pagina').classList.toggle('pagina-cheia', pagina === 'onboarding'); // o mapa vai até o fim da tela: sem o padding de baixo
     document.querySelector('[data-nav="local"]').hidden = !LOCAIS[pagina]; // andar local só dentro de um cliente
     document.querySelectorAll('[data-pagina]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.pagina === pagina)));
     $('mais-painel').hidden = true;
