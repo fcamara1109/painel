@@ -1714,7 +1714,48 @@
     ['cirurgias', 'as listas de cirurgia', () => consulta('surgeries_all', {})],
   ];
 
+  // Tela Objetivos (rota hoje): clientes, quadro de setup, ajustes (inclui setup_goal) e o funil mensal de cada cliente com mídia. Cada fonte falha sozinha.
+  async function carregaObjetivos() {
+    const meu = ++seqHoje;
+    const ctx = { esc, modo: 'hoje', alvo: $('hoje-corpo'), hoje: hojeIso(), diasEntre, nome: rotuloCliente, atualiza: () => carregaHoje(), anota: anotaSetup };
+    window.PainelHoje.render(null, ctx);
+    const app = $('painel');
+    app.classList.add('carregando');
+    app.setAttribute('aria-busy', 'true');
+    try {
+      const fontes = FONTES_HOJE.filter((f) => ['clientes', 'setup', 'ajustes'].includes(f[0]));
+      const rs = await Promise.allSettled(fontes.map((f) => f[2]()));
+      if (meu !== seqHoje) return;
+      if (rs.some((r) => r.status === 'rejected' && r.reason instanceof AuthError)) return;
+      const falhas = [];
+      const v = {};
+      rs.forEach((r, i) => {
+        if (r.status === 'rejected') falhas.push({ fonte: fontes[i][0], rotulo: fontes[i][1] });
+        else v[fontes[i][0]] = r.value;
+      });
+      if (falhas.length === fontes.length) { window.PainelHoje.render(false, ctx); return; }
+      const comMidia = (state.tenants || []).filter((t) => Number(t.spend_rows) > 0).map((t) => t.tenant);
+      const ms = await Promise.allSettled(comMidia.map((t) => consulta('funnel_month', { tenant: t })));
+      if (meu !== seqHoje) return;
+      if (ms.some((r) => r.status === 'rejected' && r.reason instanceof AuthError)) return;
+      const mensais = {};
+      const sem = [];
+      ms.forEach((r, i) => { if (r.status === 'fulfilled') mensais[comMidia[i]] = r.value; else sem.push(rotuloCliente(comMidia[i])); });
+      if (sem.length) falhas.push({ fonte: 'funil', rotulo: `o funil de ${sem.join(', ')}` });
+      window.PainelHoje.render({ tenants: state.tenants || [], foto: (v.setup || [])[0] || null, eventos: v.ajustes || [], mensais, falhas, lidoEm: new Date() }, ctx);
+    } catch (e) {
+      if (e instanceof AuthError) return;
+      if (meu === seqHoje) window.PainelHoje.render(false, ctx);
+    } finally {
+      if (meu === seqHoje) {
+        app.classList.remove('carregando');
+        app.removeAttribute('aria-busy');
+      }
+    }
+  }
+
   async function carregaHoje() {
+    if (state.pagina === 'hoje') return carregaObjetivos();
     const meu = ++seqHoje;
     const modo = state.pagina === 'clientes' ? 'clientes' : 'hoje';
     const ctx = { esc, modo, alvo: $(modo === 'clientes' ? 'clientes-corpo' : 'hoje-corpo'), hoje: hojeIso(), diasEntre, nome: rotuloCliente, atualiza: () => carregaHoje() };

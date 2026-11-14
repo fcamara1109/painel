@@ -137,6 +137,44 @@
      "v": "1793631710006000"
     }
    ]
+  },
+  {
+   "f": [
+    {
+     "v": "exemplo_a"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "setup_goal"
+    },
+    {
+     "v": "Dobrar as consultas de retorno\nAbrir agenda de sábado"
+    },
+    {
+     "v": "1793631720007000"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "exemplo_b"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "setup_goal"
+    },
+    {
+     "v": "Lotar a agenda de março"
+    },
+    {
+     "v": "1793631730008000"
+    }
+   ]
   }
  ]
 }

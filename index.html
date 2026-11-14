@@ -9,18 +9,18 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <!-- Fonte única de cor, fonte, espaço e forma (marca da casa). Não copiar valores: o publicar.sh copia o tokens.css canônico. -->
-<link rel="stylesheet" href="tokens.css?v=34540115a4">
+<link rel="stylesheet" href="tokens.css?v=25c2f9d07a">
 <!-- Tema (A, B, E): sobrescreve os tokens e traz a fonte; o tema.js troca este href pelo último salvo e liga o seletor do topo. -->
-<link rel="stylesheet" id="fc-tema" href="tema-a.css?v=34540115a4">
-<script src="tema.js?v=34540115a4"></script>
+<link rel="stylesheet" id="fc-tema" href="tema-a.css?v=25c2f9d07a">
+<script src="tema.js?v=25c2f9d07a"></script>
 <!-- Componentes do painel por tema (só A e B; o E fica no kit da marca). O painel.js troca este href junto com o tema. -->
-<link rel="stylesheet" id="painel-tema" href="painel-a.css?v=34540115a4">
-<link rel="stylesheet" href="cirurgias.css?v=34540115a4">
-<link rel="stylesheet" href="pacientes.css?v=34540115a4">
-<link rel="stylesheet" href="atividades.css?v=34540115a4">
-<link rel="stylesheet" href="setup.css?v=34540115a4">
-<link rel="stylesheet" href="hoje.css?v=34540115a4">
-<link rel="stylesheet" href="funil.css?v=34540115a4">
+<link rel="stylesheet" id="painel-tema" href="painel-a.css?v=25c2f9d07a">
+<link rel="stylesheet" href="cirurgias.css?v=25c2f9d07a">
+<link rel="stylesheet" href="pacientes.css?v=25c2f9d07a">
+<link rel="stylesheet" href="atividades.css?v=25c2f9d07a">
+<link rel="stylesheet" href="setup.css?v=25c2f9d07a">
+<link rel="stylesheet" href="hoje.css?v=25c2f9d07a">
+<link rel="stylesheet" href="funil.css?v=25c2f9d07a">
 <style>
 body { margin: 0; }
 :focus-visible { outline: 3px solid var(--fc-accent); outline-offset: 2px; }
@@ -36,6 +36,7 @@ h1, h2, h3, p { margin: 0; }
 .topo-g, .topo-l { max-width: 1440px; margin: 0 auto; padding: var(--fc-e-1) var(--fc-e-2); display: flex; align-items: center; gap: var(--fc-e-2) var(--fc-e-3); }
 .topo-l { flex-wrap: wrap; border-top: 1px solid var(--fc-hair); }
 @media (min-width: 700px) { .topo-g, .topo-l { padding-left: var(--fc-e-4); padding-right: var(--fc-e-4); } }
+@media (min-width: 700px) and (max-width: 899px) { .topo-g { padding-left: var(--fc-e-2); padding-right: var(--fc-e-2); gap: var(--fc-e-2); } } /* "Objetivos" é mais longo que "Hoje": cabe em 768 px */
 .marca { display: flex; align-items: center; gap: var(--fc-e-2); min-height: var(--fc-toque); color: var(--fc-ink); text-decoration: none; font-weight: 700; font-size: var(--fc-t-corpo); }
 .marca svg { display: block; flex: none; }
 .logo-fundo { fill: var(--fc-ink); }
@@ -286,7 +287,7 @@ td.txt small.sv { white-space: nowrap; }
       <span>Painel</span>
     </a>
     <nav class="nav-g" data-nav="global" aria-label="Principal">
-      <button type="button" data-pagina="hoje" aria-pressed="false">Hoje</button>
+      <button type="button" data-pagina="hoje" aria-pressed="false">Objetivos</button>
       <button type="button" data-pagina="clientes" aria-pressed="false">Clientes</button>
       <button type="button" data-pagina="setup" aria-pressed="false">Setup</button>
       <button type="button" data-pagina="atividades" aria-pressed="false">Atividades</button>
@@ -319,7 +320,7 @@ td.txt small.sv { white-space: nowrap; }
   <p class="faixa-ex" data-faixa="exemplo" id="selo-exemplo" hidden>Dados de exemplo. Nenhum paciente real.</p>
 </header>
 <nav class="barra-m" data-nav="global" aria-label="Principal no celular">
-  <button type="button" data-pagina="hoje" aria-pressed="false">Hoje</button>
+  <button type="button" data-pagina="hoje" aria-pressed="false">Objetivos</button>
   <button type="button" data-pagina="clientes" aria-pressed="false">Clientes</button>
   <button type="button" data-pagina="setup" aria-pressed="false">Setup</button>
   <button type="button" id="btn-mais" aria-expanded="false" aria-controls="mais-painel">Mais</button>
@@ -340,7 +341,7 @@ td.txt small.sv { white-space: nowrap; }
     </section>
 
     <section id="painel" hidden>
-      <section id="pg-hoje" data-tela="hoje" aria-labelledby="t-hoje" hidden><h1 class="fc-h2" id="t-hoje">Hoje</h1><div id="hoje-corpo"></div></section>
+      <section id="pg-hoje" data-tela="hoje" aria-labelledby="t-hoje" hidden><h1 class="fc-h2" id="t-hoje">Objetivos</h1><div id="hoje-corpo"></div></section>
       <section id="pg-clientes" data-tela="clientes" aria-labelledby="t-clientes" hidden><h1 class="fc-h2" id="t-clientes">Clientes</h1><div id="clientes-corpo"></div></section>
       <div id="pg-funil" data-tela="funil">
       <h1 class="fc-h2" id="t-funil-pagina"></h1>
@@ -545,15 +546,15 @@ td.txt small.sv { white-space: nowrap; }
     </section>
   </main>
 </div>
-<script src="config.js?v=34540115a4"></script>
-<script src="followup.js?v=34540115a4"></script>
-<script src="cirurgias.js?v=34540115a4"></script>
-<script src="pacientes.js?v=34540115a4"></script>
-<script src="setup.js?v=34540115a4"></script>
-<script src="onboarding.js?v=34540115a4"></script>
-<script src="modulos.js?v=34540115a4"></script>
-<script src="atividades.js?v=34540115a4"></script>
-<script src="hoje.js?v=34540115a4"></script>
-<script src="painel.js?v=34540115a4"></script>
+<script src="config.js?v=25c2f9d07a"></script>
+<script src="followup.js?v=25c2f9d07a"></script>
+<script src="cirurgias.js?v=25c2f9d07a"></script>
+<script src="pacientes.js?v=25c2f9d07a"></script>
+<script src="setup.js?v=25c2f9d07a"></script>
+<script src="onboarding.js?v=25c2f9d07a"></script>
+<script src="modulos.js?v=25c2f9d07a"></script>
+<script src="atividades.js?v=25c2f9d07a"></script>
+<script src="hoje.js?v=25c2f9d07a"></script>
+<script src="painel.js?v=25c2f9d07a"></script>
 </body>
 </html>

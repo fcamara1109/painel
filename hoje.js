@@ -114,25 +114,6 @@
     return s;
   }
 
-  // Ordem: prioridade do cliente, depois gravidade (sem passo ou sem audiência > travado > lista velha > devidos), depois a ordem da lista.
-  function itensDe(clientes, sin) {
-    const itens = [];
-    clientes.forEach((c, ci) => {
-      const s = sin[c.tenant], p = s.pacientes;
-      const base = { tenant: c.tenant, nome: c.nome, prio: c.prio, ci };
-      const novo = (g, sinal, texto, botao, alvo) => itens.push(Object.assign({}, base, { g, sinal, texto, botao, alvo }));
-      if (p && p.sem_passo > 0) novo(1, 'no_next_step', `${p.sem_passo} sem próximo passo`, 'Ver sem próximo passo', { pagina: 'pacientes', tenant: c.tenant, view: 'no_next_step' });
-      if (p && p.sem_aud > 0) novo(1, 'unsegmented', `${p.sem_aud} sem audiência`, 'Definir audiência', { pagina: 'pacientes', tenant: c.tenant, view: 'unsegmented' });
-      s.travados.forEach((t) => novo(2, 'setup_blocked', `${t.titulo} travado${t.nota ? '. ' + t.nota : ''}`, 'Abrir no Setup', { pagina: 'setup', hash: `x-${c.tenant}-${t.modulo}` }));
-      if (s.listaDias !== null && s.listaDias > LISTA_VELHA_DIAS) novo(3, 'surgeries_old', `Lista de cirurgia tem ${s.listaDias} dias`, 'Ver a lista', { pagina: 'cirurgias', tenant: c.tenant });
-      if (p && p.sem_aud === 0 && p.sem_passo === 0 && p.devidos > 0) {
-        const envios = p.teto !== undefined ? ` · ${p.enviados} de ${p.teto} envios` : '';
-        novo(6, 'due_today', `${plural(p.devidos, 'devido hoje', 'devidos hoje')}${envios}`, 'Ver devidos', { pagina: 'pacientes', tenant: c.tenant, view: 'due_today' });
-      }
-    });
-    return itens.sort((a, b) => (PRIO_ORDEM.indexOf(a.prio) - PRIO_ORDEM.indexOf(b.prio)) || (a.g - b.g) || (a.ci - b.ci));
-  }
-
   // ------------------------------------------------------------ desenho
   // Links comuns (recarrega a página, como os links do protótipo): só o ?fixture=1 atravessa.
   function href(p) {
@@ -145,10 +126,6 @@
     return `?${q}${p.hash ? '#' + p.hash : ''}`;
   }
 
-  const titulo = (hoje) => {
-    const d = new Date(Date.UTC(+hoje.slice(0, 4), +hoje.slice(5, 7) - 1, +hoje.slice(8, 10)));
-    return `Hoje, ${SEMANA[d.getUTCDay()]} ${hoje.slice(8, 10)}/${hoje.slice(5, 7)}`;
-  };
   const hhmm = (d) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
 
   function cartao(c, s, semAlerta, esc) {
@@ -189,47 +166,205 @@
   function esqueleto(ctx) {
     const cartoes = Array.from({ length: 4 }, () => '<div class="hj-esq hj-esq-cartao"></div>').join('');
     if (ctx.modo === 'clientes') return `<div data-estado="carregando" aria-live="polite"><p class="hj-sub">Carregando os clientes...</p><div class="hj-cartoes">${cartoes}</div></div>`;
-    return `<div data-estado="carregando" aria-live="polite"><p class="hj-sub">Carregando o que precisa de você...</p>` +
-      `<div class="hj-bloco">${Array.from({ length: 3 }, () => '<div class="hj-esq hj-esq-linha"></div>').join('')}</div><div class="hj-cartoes">${cartoes}</div></div>`;
+    return `<div data-estado="carregando" aria-live="polite"><p class="hj-sub">Carregando os objetivos...</p><div class="ob-grade">${cartoes}</div></div>`;
+  }
+
+  // ------------------------------------------------------------ Objetivos (a tela Hoje virou Objetivos em 14/11/2026)
+  // Matriz 1 do Felipe (Resultado x Entrega de valor). Resultado = honorário e ROAS em run rate (o mês corrente esticado até o fim),
+  // contra o antes. Setup = realizado x planejado e os canais de aquisição. Objetivos = texto editável (evento setup_goal, uma linha por objetivo).
+  const BRL0 = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
+  const N1 = new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const MES_CURTO = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  const CANAIS = ['ads_search', 'ads_meta', 'ads_bing', 'doctoralia_paid']; // ids de _shared/adm/setup/modulos.json: onde a aquisição de pacientes acontece
+  const SITUACAO = {
+    cresce: ['🟢', 'Cresce conosco'], sem_ver: ['🔵', 'Cresce sem nos ver'], esforco: ['🟡', 'Vê esforço, não vê retorno'],
+    parado: ['🔴', 'Não cresce e não engaja'], sem: ['⚪', 'Sem medição ainda'],
+  };
+  const num = (v) => (v === null || v === undefined || v === '' ? null : Number(v));
+  const mesCurto = (p) => MES_CURTO[Number(p.slice(5, 7)) - 1];
+
+  // Linhas de funnel_month.sql -> o que a tela mostra. null = sem gasto de mídia (sem medição).
+  function medidas(rows) {
+    const m = (rows || []).map((r) => ({ p: r.period, fee: num(r.physician_fee), spend: num(r.spend), pac: num(r.completed_patients), roas: num(r.roas_honorario), parcial: r.partial_until || null }));
+    const ini = m.findIndex((x) => x.fee !== null || (x.spend || 0) > 0);
+    if (ini < 0) return null;
+    const cur = m[m.length - 1];
+    let k = 1;
+    if (cur.parcial) { const [a, me] = cur.p.split('-').map(Number); k = new Date(a, me, 0).getDate() / Number(cur.parcial.slice(8, 10)); }
+    const fee = cur.fee === null ? null : cur.fee * k;
+    const serie = m.slice(ini);
+    const iRoas = m.findIndex((x, i) => i < m.length - 1 && x.roas !== null);
+    const iGasto = m.findIndex((x) => (x.spend || 0) > 0);
+    return {
+      cur, k, fee, roas: cur.roas,
+      serieFee: serie.map((x, i) => (i === serie.length - 1 ? fee : x.fee)), serieRoas: serie.map((x) => x.roas),
+      antesFee: iGasto > 0 && m[iGasto - 1].fee !== null ? { v: m[iGasto - 1].fee, p: m[iGasto - 1].p } : null, // o mês antes de a mídia começar
+      antesRoas: iRoas >= 0 ? { v: m[iRoas].roas, p: m[iRoas].p } : null,
+      temGasto: iGasto >= 0, temPaciente: m.some((x) => x.pac > 0), gasto: m.reduce((t, x) => t + (x.spend || 0), 0),
+    };
+  }
+
+  function canaisDe(c) {
+    return CANAIS.map((id) => (c.celulas && c.celulas[id] ? Object.assign({ id }, c.celulas[id]) : null))
+      .filter((x) => x && (x.planned === 'sim' || x.stage));
+  }
+  function setupDe(c) {
+    const cel = c.celulas ? Object.keys(c.celulas).map((k) => c.celulas[k]) : [];
+    const plan = cel.filter((x) => x.planned === 'sim');
+    return { planejados: plan.length, noar: plan.filter((x) => x.stage === 'no ar').length, canais: canaisDe(c) };
+  }
+  // Resultado alto = tem paciente e o honorário cobre o gasto (ROAS >= 1). Entrega alta = a aquisição de pacientes já começou (canal no ar ou em teste).
+  function situacao(c, med) {
+    if (!med || !med.temGasto) return 'sem';
+    const resultado = med.temPaciente && med.roas !== null && med.roas >= 1;
+    const entrega = canaisDe(c).some((x) => x.stage === 'no ar' || x.stage === 'em montagem');
+    if (resultado) return entrega ? 'cresce' : 'sem_ver';
+    return entrega ? 'esforco' : 'parado';
+  }
+  function objetivosDe(eventos) {
+    const por = {};
+    (eventos || []).slice().sort((a, b) => Number(a.seq) - Number(b.seq)).forEach((r) => { if (r.event_name === 'setup_goal') por[r.tenant] = String(r.value || ''); });
+    return por;
+  }
+  const linhasDe = (txt) => String(txt || '').split('\n').map((l) => l.trim()).filter(Boolean);
+
+  function barras(serie) {
+    const v = serie.map((x) => (x === null || x === undefined ? 0 : Math.max(x, 0)));
+    const mx = Math.max(0, ...v);
+    if (!mx || v.length < 2) return '';
+    const w = 100 / v.length;
+    return '<svg class="ob-barras" viewBox="0 0 100 24" preserveAspectRatio="none" aria-hidden="true" focusable="false">' + v.map((x, i) => {
+      const h = x ? Math.max((x / mx) * 24, 1.5) : 0;
+      return `<rect${i === v.length - 1 ? ' class="agora"' : ''} x="${(i * w + w * 0.15).toFixed(2)}" y="${(24 - h).toFixed(2)}" width="${(w * 0.7).toFixed(2)}" height="${h.toFixed(2)}"/>`;
+    }).join('') + '</svg>';
+  }
+  function variacao(agora, antes) {
+    if (agora === null || antes === null || !antes) return '';
+    const f = agora / antes - 1;
+    return `<span class="ob-var" data-sobe="${f >= 0}">${f >= 0 ? '▲' : '▼'} ${Math.abs(Math.round(f * 100))}%</span>`;
+  }
+  function tile(esc, o) {
+    const sub = o.sub ? `<span class="ob-sub">${o.sub}</span>` : '';
+    const corpo = `<span class="fc-rotulo">${esc(o.rotulo)}</span><span class="ob-grande"${o.vazio ? ' data-vazio="1"' : ''}>${esc(o.grande)}</span>${sub}${o.barras || ''}`;
+    return o.href ? `<a class="ob-tile" href="${esc(o.href)}" data-ir="${o.ir}" aria-label="${esc(o.aria)}">${corpo}</a>` : `<div class="ob-tile">${corpo}</div>`;
+  }
+  function metricasHtml(c, med, esc) {
+    const funil = href({ pagina: 'funil', tenant: c.tenant });
+    if (!med || !med.temGasto) return '';
+    if (!med.temPaciente) {
+      return `<div class="ob-metricas">${tile(esc, { rotulo: 'Resultado', grande: 'Nenhum paciente ainda', vazio: true, sub: esc(`${BRL0.format(med.gasto)} investidos no teste`), href: funil, ir: 'funil', aria: 'Resultado: nenhum paciente ainda. Abrir o Funil' })}</div>`;
+    }
+    const fee = med.fee, roas = med.roas;
+    const subFee = med.antesFee ? `${variacao(fee, med.antesFee.v)} <span>era ${esc(BRL0.format(med.antesFee.v))} em ${mesCurto(med.antesFee.p)}</span>` : '<span>sem base de antes</span>';
+    const subRoas = med.antesRoas ? `${variacao(roas, med.antesRoas.v)} <span>era ${esc(N1.format(med.antesRoas.v))} em ${mesCurto(med.antesRoas.p)}</span>` : '<span>sem base de antes</span>';
+    return `<div class="ob-metricas">` +
+      tile(esc, { rotulo: 'Honorário por mês', grande: fee === null ? 'sem dado' : BRL0.format(fee), sub: subFee, barras: barras(med.serieFee), href: funil, ir: 'funil', aria: `Honorário por mês, run rate: ${fee === null ? 'sem dado' : BRL0.format(fee)}. Abrir o Funil` }) +
+      tile(esc, { rotulo: 'ROAS', grande: roas === null ? 'sem dado' : N1.format(roas), sub: subRoas, barras: barras(med.serieRoas), href: funil, ir: 'funil', aria: `ROAS: ${roas === null ? 'sem dado' : N1.format(roas)}. Abrir o Funil` }) + '</div>';
+  }
+  function setupHtml(c, esc) {
+    const s = setupDe(c);
+    const pc = s.planejados ? Math.round((s.noar / s.planejados) * 100) : 0;
+    const pilulas = s.canais.length
+      ? s.canais.map((x) => `<li data-estagio="${esc(x.stage || 'planejado')}">${esc(x.modulo)}<span class="ob-est">${esc(x.stage === 'em montagem' ? 'em teste' : (x.stage || 'planejado'))}</span></li>`).join('')
+      : '<li data-estagio="nenhum">Aquisição não começou</li>';
+    return `<a class="ob-setup" href="${esc(href({ pagina: 'setup', tenant: c.tenant }))}" data-ir="setup" aria-label="${esc(`Setup: ${s.noar} de ${s.planejados} no ar. Abrir o Setup`)}">` +
+      `<span class="ob-setup-t"><span class="fc-rotulo">Setup</span><span class="ob-frac">${s.planejados ? `<b>${s.noar}</b> de ${s.planejados} no ar` : 'nada planejado'}</span></span>` +
+      `<span class="ob-barra" aria-hidden="true"><i style="width:${pc}%"></i></span><ul class="ob-canais">${pilulas}</ul></a>`;
+  }
+  const metaHtml = (txt, esc) => `<li class="ob-meta" contenteditable="plaintext-only" role="textbox" aria-label="Objetivo" data-ph="Escreva o objetivo" spellcheck="true">${esc(txt)}</li>`;
+
+  function cartaoObj(c, med, metas, esc) {
+    const sit = situacao(c, med), [emoji, nome] = SITUACAO[sit];
+    const linhas = linhasDe(metas);
+    return `<article class="ob-cartao" data-tenant="${esc(c.tenant)}" data-sit="${sit}" data-metas="${esc(linhas.join('\n'))}">` +
+      `<header class="ob-topo"><span class="ob-sit" role="img" aria-label="${esc(nome)}" title="${esc(nome)}">${emoji}</span><h3 class="ob-nome">${esc(c.nome)}</h3>${sit === 'sem' ? '<span class="ob-semmed">sem medição ainda</span>' : ''}</header>` +
+      metricasHtml(c, med, esc) + setupHtml(c, esc) +
+      `<section class="ob-metas" aria-label="Objetivos do momento"><div class="ob-metas-t"><span class="fc-rotulo">Objetivos do momento</span><span class="ob-estado" role="status" aria-live="polite"></span>` +
+      `<button type="button" class="ob-mais" data-act="mais" aria-label="Adicionar objetivo" title="Adicionar objetivo">+</button></div>` +
+      `<ul class="ob-lista">${(linhas.length ? linhas : ['']).map((l) => metaHtml(l, esc)).join('')}</ul></section></article>`;
+  }
+
+  // Grava o texto dos objetivos de um cartão (um evento setup_goal; o último vale). Só grava se mudou.
+  async function salvaMetas(card, ctx) {
+    const lista = card.querySelector('.ob-lista');
+    lista.querySelectorAll('.ob-meta').forEach((li) => { if (!li.textContent.trim() && lista.children.length > 1) li.remove(); });
+    const texto = Array.from(lista.querySelectorAll('.ob-meta')).map((li) => li.textContent.trim()).filter(Boolean).join('\n');
+    if (texto === card.dataset.metas) return;
+    const estado = card.querySelector('.ob-estado');
+    estado.textContent = 'Salvando...';
+    let r = 'falha';
+    try { r = await ctx.anota([{ event_name: 'setup_goal', tenant: card.dataset.tenant, body: { value: texto } }]); } catch (e) { r = 'falha'; }
+    if (r === 'ok') card.dataset.metas = texto;
+    estado.textContent = { ok: 'Salvo', sem_login: 'Entre de novo para salvar', sem_permissao: 'Sem permissão para salvar' }[r] || 'Não salvou. Edite de novo para tentar.';
+    estado.dataset.erro = r === 'ok' ? '' : '1';
+  }
+
+  function ligaEdicao(alvo, ctx) {
+    alvo.onclick = (e) => {
+      if (e.target.closest('[data-act="atualizar"]')) { ctx.atualiza(); return; }
+      const mais = e.target.closest('[data-act="mais"]');
+      if (!mais) return;
+      const lista = mais.closest('.ob-metas').querySelector('.ob-lista');
+      const vazio = Array.from(lista.querySelectorAll('.ob-meta')).find((li) => !li.textContent.trim());
+      const li = vazio || lista.appendChild(Object.assign(document.createElement('li'), { className: 'ob-meta', contentEditable: 'plaintext-only', spellcheck: true }));
+      if (!vazio) { li.setAttribute('role', 'textbox'); li.setAttribute('aria-label', 'Objetivo'); li.dataset.ph = 'Escreva o objetivo'; }
+      li.focus();
+    };
+    alvo.onkeydown = (e) => {
+      const li = e.target.closest && e.target.closest('.ob-meta');
+      if (li && e.key === 'Enter') { e.preventDefault(); li.blur(); }
+    };
+    alvo.onfocusout = (e) => {
+      const li = e.target.closest && e.target.closest('.ob-meta');
+      if (li && !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.ob-metas') === li.closest('.ob-metas'))) salvaMetas(li.closest('.ob-cartao'), ctx);
+    };
+    alvo.onpaste = (e) => {
+      if (!e.target.closest || !e.target.closest('.ob-meta')) return;
+      e.preventDefault();
+      document.execCommand('insertText', false, (e.clipboardData.getData('text/plain') || '').replace(/\s*\n\s*/g, ' '));
+    };
+  }
+
+  function objetivosHtml(dados, ctx) {
+    const { esc } = ctx;
+    const clientes = montaClientes(dados, ctx);
+    const metas = objetivosDe(dados.eventos);
+    const avisos = (dados.falhas || []).map((f) =>
+      `<div class="hj-aviso" data-aviso="fonte" data-fonte="${esc(f.fonte)}" role="status"><p>Não consegui ler ${esc(f.rotulo)}. Tente de novo.</p><button type="button" class="btn ghost" data-act="atualizar">Tentar de novo</button></div>`).join('');
+    const grupos = PRIO_ORDEM.map((pr) => {
+      const g = clientes.filter((c) => c.prio === pr);
+      if (!g.length) return '';
+      return `<div class="hj-grupo" data-prio="${pr}"><h2 class="hj-grupo-t">${PRIO_ROTULO[pr]}<span class="hj-grupo-n">${plural(g.length, 'cliente', 'clientes')}</span></h2>` +
+        `<div class="ob-grade">${g.map((c) => cartaoObj(c, medidas((dados.mensais || {})[c.tenant]), metas[c.tenant], esc)).join('')}</div></div>`;
+    }).join('');
+    const legenda = Object.keys(SITUACAO).map((k) => `<li><span aria-hidden="true">${SITUACAO[k][0]}</span> ${esc(SITUACAO[k][1])}</li>`).join('');
+    return `<div data-estado="ok">${avisos}${grupos}` +
+      `<footer class="hj-rodape"><ul class="ob-legenda" aria-label="Legenda da situação">${legenda}</ul>` +
+      `<p>Run rate: o mês corrente esticado até o fim. Resultado abre o Funil, Setup abre o Setup. Lido às ${hhmm(dados.lidoEm || new Date())} · <button type="button" class="btn ghost" data-act="atualizar">Atualizar</button></p></footer></div>`;
   }
 
   function render(dados, ctx) {
     const { esc } = ctx;
     const alvo = ctx.alvo;
     alvo.onclick = (e) => { if (e.target.closest('[data-act="atualizar"]')) ctx.atualiza(); };
+    alvo.onkeydown = alvo.onfocusout = alvo.onpaste = null;
     const h1 = document.getElementById('t-hoje');
-    if (ctx.modo === 'hoje' && h1) h1.textContent = titulo(ctx.hoje); // o título já aparece com o esqueleto
+    if (ctx.modo === 'hoje' && h1) h1.textContent = 'Objetivos';
     if (dados === null) { alvo.innerHTML = esqueleto(ctx); return; }
     if (dados === false) {
       alvo.innerHTML = '<div data-estado="erro" class="hj-erro" role="alert"><p>Não consegui ler os dados dos clientes. Tente de novo.</p><button type="button" class="btn" data-act="atualizar">Tentar de novo</button></div>';
       return;
     }
+    if (ctx.modo === 'hoje') { alvo.innerHTML = objetivosHtml(dados, ctx); ligaEdicao(alvo, ctx); return; }
     const clientes = montaClientes(dados, ctx);
     const fotos = window.PainelHoje.fotoRecente(dados.cirurgias);
     const sin = {};
     clientes.forEach((c) => { sin[c.tenant] = sinais(c, dados, ctx, fotos); });
-    const itens = itensDe(clientes, sin);
-    const nCli = new Set(itens.map((i) => i.tenant)).size;
-    const vazio = itens.length === 0;
     const avisos = (dados.falhas || []).map((f) =>
       `<div class="hj-aviso" data-aviso="fonte" data-fonte="${esc(f.fonte)}" role="status"><p>Não consegui ler ${esc(f.rotulo)}. Tente de novo.</p><button type="button" class="btn ghost" data-act="atualizar">Tentar de novo</button></div>`).join('');
     const rodape = `<footer class="hj-rodape"><p>Lido às ${hhmm(dados.lidoEm || new Date())} · <button type="button" class="btn ghost" data-act="atualizar">Atualizar</button></p></footer>`;
-
-    if (ctx.modo === 'clientes') {
-      alvo.innerHTML = `<div data-estado="ok">${avisos}${listaClientes(clientes, sin, false, esc)}${rodape}</div>`;
-      return;
-    }
-    const sub = vazio ? 'Nada pendente. Nenhum cliente precisa de você agora.'
-      : `${plural(itens.length, 'coisa precisa', 'coisas precisam')} de você em ${plural(nCli, 'cliente', 'clientes')}`;
-    const lista = vazio
-      ? '<ul class="hj-itens" data-lista="precisa"><li class="hj-vazio">Nada pendente.</li></ul>'
-      : `<ul class="hj-itens" data-lista="precisa">${itens.map((i) =>
-        `<li class="hj-item" data-tenant="${esc(i.tenant)}" data-sinal="${i.sinal}"><div class="hj-item-txt"><p class="hj-item-cli">${esc(i.nome)}</p><p class="hj-item-sinal">${esc(i.texto)}</p></div>` +
-        `<a class="btn ghost" href="${esc(href(i.alvo))}">${esc(i.botao)}</a></li>`).join('')}</ul>`;
-    alvo.innerHTML = `<div data-estado="${vazio ? 'vazio' : 'ok'}"><p class="hj-sub" data-hoje="sub">${esc(sub)}</p>${avisos}` +
-      `<section class="hj-bloco" aria-labelledby="hj-precisa"><h2 id="hj-precisa" class="hj-h2">Precisa de você</h2>${lista}</section>` +
-      `<section aria-labelledby="hj-clientes"><h2 id="hj-clientes" class="hj-h2">Clientes</h2>${listaClientes(clientes, sin, vazio, esc)}</section>${rodape}</div>`;
+    alvo.innerHTML = `<div data-estado="ok">${avisos}${listaClientes(clientes, sin, false, esc)}${rodape}</div>`;
   }
 
-  window.PainelHoje = { render, fotoRecente };
+  window.PainelHoje = { render, fotoRecente, medidas, situacao };
 })();
