@@ -184,7 +184,7 @@
   const mesCurto = (p) => MES_CURTO[Number(p.slice(5, 7)) - 1];
 
   // Linhas de funnel_month.sql -> o que a tela mostra. null = sem gasto de mídia (sem medição).
-  function medidas(rows) {
+  function medidas(rows, base) {
     const m = (rows || []).map((r) => ({ p: r.period, fee: num(r.physician_fee), spend: num(r.spend), pac: num(r.completed_patients), roas: num(r.roas_honorario), parcial: r.partial_until || null }));
     const ini = m.findIndex((x) => x.fee !== null || (x.spend || 0) > 0);
     if (ini < 0) return null;
@@ -198,7 +198,8 @@
     return {
       cur, k, fee, roas: cur.roas,
       serieFee: serie.map((x, i) => (i === serie.length - 1 ? fee : x.fee)), serieRoas: serie.map((x) => x.roas),
-      antesFee: iGasto > 0 && m[iGasto - 1].fee !== null ? { v: m[iGasto - 1].fee, p: m[iGasto - 1].p } : null, // o mês antes de a mídia começar
+      // o antes do honorário: o que o Felipe cadastrou (setup_baseline); sem isso, o mês antes de a mídia começar, se o funil tiver
+      antesFee: base || (iGasto > 0 && m[iGasto - 1].fee !== null ? { v: m[iGasto - 1].fee, p: m[iGasto - 1].p } : null),
       antesRoas: iRoas >= 0 ? { v: m[iRoas].roas, p: m[iRoas].p } : null,
       temGasto: iGasto >= 0, temPaciente: m.some((x) => x.pac > 0), gasto: m.reduce((t, x) => t + (x.spend || 0), 0),
     };
@@ -224,6 +225,22 @@
   function objetivosDe(eventos) {
     const por = {};
     (eventos || []).slice().sort((a, b) => Number(a.seq) - Number(b.seq)).forEach((r) => { if (r.event_name === 'setup_goal') por[r.tenant] = String(r.value || ''); });
+    return por;
+  }
+  // Ordem dos cartões que o Felipe escolheu (arrastar ou setas): lista de tenants, só neste navegador, só dentro de cada prioridade.
+  const ORDEM_KEY = 'painel.objetivos.ordem';
+  const lerOrdem = () => { try { const o = JSON.parse(localStorage.getItem(ORDEM_KEY)); return Array.isArray(o) ? o : []; } catch (e) { return []; } };
+  const salvaOrdem = (alvo) => { try { localStorage.setItem(ORDEM_KEY, JSON.stringify(Array.from(alvo.querySelectorAll('.ob-cartao')).map((c) => c.dataset.tenant))); } catch (e) { /* sem armazenamento: a ordem não persiste */ } };
+  // setup_baseline: texto JSON {period, physician_fee}; o último vale. Texto torto vira sem base (nunca derruba a tela).
+  function baselinesDe(eventos) {
+    const por = {};
+    (eventos || []).slice().sort((a, b) => Number(a.seq) - Number(b.seq)).forEach((r) => {
+      if (r.event_name !== 'setup_baseline') return;
+      try {
+        const j = JSON.parse(String(r.value || ''));
+        por[r.tenant] = /^\d{4}-\d{2}$/.test(j.period) && Number.isFinite(Number(j.physician_fee)) ? { p: j.period, v: Number(j.physician_fee) } : null;
+      } catch (e) { por[r.tenant] = null; }
+    });
     return por;
   }
   const linhasDe = (txt) => String(txt || '').split('\n').map((l) => l.trim()).filter(Boolean);
@@ -277,7 +294,8 @@
     const sit = situacao(c, med), [emoji, nome] = SITUACAO[sit];
     const linhas = linhasDe(metas);
     return `<article class="ob-cartao" data-tenant="${esc(c.tenant)}" data-sit="${sit}" data-metas="${esc(linhas.join('\n'))}">` +
-      `<header class="ob-topo"><span class="ob-sit" role="img" aria-label="${esc(nome)}" title="${esc(nome)}">${emoji}</span><h3 class="ob-nome">${esc(c.nome)}</h3>${sit === 'sem' ? '<span class="ob-semmed">sem medição ainda</span>' : ''}</header>` +
+      `<header class="ob-topo"><span class="ob-sit" role="img" aria-label="${esc(nome)}" title="${esc(nome)}">${emoji}</span><h3 class="ob-nome">${esc(c.nome)}</h3>${sit === 'sem' ? '<span class="ob-semmed">sem medição ainda</span>' : ''}` +
+      `<button type="button" class="ob-alca" data-act="mover" aria-label="${esc(`Mover o cartão de ${c.nome}. Arraste, ou use as setas`)}" title="Arrastar para reordenar">⠿</button></header>` +
       metricasHtml(c, med, esc) + setupHtml(c, esc) +
       `<section class="ob-metas" aria-label="Objetivos do momento"><div class="ob-metas-t"><span class="fc-rotulo">Objetivos do momento</span><span class="ob-estado" role="status" aria-live="polite"></span>` +
       `<button type="button" class="ob-mais" data-act="mais" aria-label="Adicionar objetivo" title="Adicionar objetivo">+</button></div>` +
@@ -312,11 +330,45 @@
     };
     alvo.onkeydown = (e) => {
       const li = e.target.closest && e.target.closest('.ob-meta');
-      if (li && e.key === 'Enter') { e.preventDefault(); li.blur(); }
+      if (li && e.key === 'Enter') { e.preventDefault(); li.blur(); return; }
+      const alca = e.target.closest && e.target.closest('.ob-alca');
+      const volta = ['ArrowUp', 'ArrowLeft'].includes(e.key), avanca = ['ArrowDown', 'ArrowRight'].includes(e.key);
+      if (!alca || !(volta || avanca)) return;
+      e.preventDefault();
+      const c = alca.closest('.ob-cartao');
+      const viz = volta ? c.previousElementSibling : c.nextElementSibling;
+      if (!viz) return;
+      c.parentNode.insertBefore(c, volta ? viz : viz.nextSibling);
+      alca.focus();
+      salvaOrdem(alvo);
     };
     alvo.onfocusout = (e) => {
       const li = e.target.closest && e.target.closest('.ob-meta');
       if (li && !(e.relatedTarget && e.relatedTarget.closest && e.relatedTarget.closest('.ob-metas') === li.closest('.ob-metas'))) salvaMetas(li.closest('.ob-cartao'), ctx);
+    };
+    // Arrastar: só pela alça (o cartão tem texto editável e links). Troca de lugar dentro da mesma prioridade; as setas fazem o mesmo.
+    alvo.onpointerdown = (e) => { const a = e.target.closest && e.target.closest('.ob-alca'); if (a) a.closest('.ob-cartao').draggable = true; };
+    alvo.ondragstart = (e) => {
+      const c = e.target;
+      if (!c.classList || !c.classList.contains('ob-cartao')) return;
+      c.dataset.arrastando = '1';
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', c.dataset.tenant);
+    };
+    alvo.ondragover = (e) => {
+      const arr = alvo.querySelector('[data-arrastando]');
+      const alvoC = e.target.closest && e.target.closest('.ob-cartao');
+      if (!arr || !alvoC || alvoC === arr || alvoC.parentNode !== arr.parentNode) return;
+      e.preventDefault();
+      const depois = arr.compareDocumentPosition(alvoC) & Node.DOCUMENT_POSITION_FOLLOWING;
+      alvoC.parentNode.insertBefore(arr, depois ? alvoC.nextSibling : alvoC);
+    };
+    alvo.ondragend = (e) => {
+      const c = e.target;
+      if (!c.classList || !c.classList.contains('ob-cartao')) return;
+      c.draggable = false;
+      delete c.dataset.arrastando;
+      salvaOrdem(alvo);
     };
     alvo.onpaste = (e) => {
       if (!e.target.closest || !e.target.closest('.ob-meta')) return;
@@ -329,13 +381,16 @@
     const { esc } = ctx;
     const clientes = montaClientes(dados, ctx);
     const metas = objetivosDe(dados.eventos);
+    const bases = baselinesDe(dados.eventos);
     const avisos = (dados.falhas || []).map((f) =>
       `<div class="hj-aviso" data-aviso="fonte" data-fonte="${esc(f.fonte)}" role="status"><p>Não consegui ler ${esc(f.rotulo)}. Tente de novo.</p><button type="button" class="btn ghost" data-act="atualizar">Tentar de novo</button></div>`).join('');
     const grupos = PRIO_ORDEM.map((pr) => {
-      const g = clientes.filter((c) => c.prio === pr);
+      const ord = lerOrdem();
+      const pos = (c) => (ord.indexOf(c.tenant) < 0 ? 1e6 : ord.indexOf(c.tenant));
+      const g = clientes.filter((c) => c.prio === pr).map((c, i) => ({ c, i })).sort((a, b) => (pos(a.c) - pos(b.c)) || (a.i - b.i)).map((x) => x.c);
       if (!g.length) return '';
       const cab = `<span class="ob-prio">${PRIO_ROTULO[pr]}</span><span class="hj-grupo-n">${plural(g.length, 'cliente', 'clientes')}</span>`;
-      const grade = `<div class="ob-grade">${g.map((c) => cartaoObj(c, medidas((dados.mensais || {})[c.tenant]), metas[c.tenant], esc)).join('')}</div>`;
+      const grade = `<div class="ob-grade">${g.map((c) => cartaoObj(c, medidas((dados.mensais || {})[c.tenant], bases[c.tenant]), metas[c.tenant], esc)).join('')}</div>`;
       // Cortesia e Admin (sem prioridade) vêm recolhidos: o foco é nos clientes que pagam ou vão pagar.
       return pr === 'cortesia' || pr === 'outros'
         ? `<details class="hj-grupo ob-grupo" data-prio="${pr}"><summary class="ob-grupo-t">${cab}</summary>${grade}</details>`
@@ -351,7 +406,7 @@
     const { esc } = ctx;
     const alvo = ctx.alvo;
     alvo.onclick = (e) => { if (e.target.closest('[data-act="atualizar"]')) ctx.atualiza(); };
-    alvo.onkeydown = alvo.onfocusout = alvo.onpaste = null;
+    alvo.onkeydown = alvo.onfocusout = alvo.onpaste = alvo.onpointerdown = alvo.ondragstart = alvo.ondragover = alvo.ondragend = null;
     const h1 = document.getElementById('t-hoje');
     if (ctx.modo === 'hoje' && h1) h1.textContent = 'Objetivos';
     if (dados === null) { alvo.innerHTML = esqueleto(ctx); return; }
