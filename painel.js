@@ -198,7 +198,7 @@
 
   // Topo em dois andares (redesign, 13/11/2026): GLOBAIS no andar de cima, sempre iguais; LOCAIS só dentro de um cliente (seletor + Funil | Cirurgias | Pacientes).
   // Sem ?pagina abre o Hoje.
-  const GLOBAIS = { hoje: 'Hoje', clientes: 'Clientes', setup: 'Setup', atividades: 'Atividades', onboarding: 'Onboarding' };
+  const GLOBAIS = { hoje: 'Objetivos', clientes: 'Clientes', setup: 'Setup', atividades: 'Atividades', onboarding: 'Onboarding' };
   const LOCAIS = { funil: 'Funil', cirurgias: 'Cirurgias', pacientes: 'Pacientes' };
   function paginaDaUrl() {
     const p = new URLSearchParams(location.search).get('pagina');
