@@ -1,5 +1,5 @@
 /* Página Atividades: linha do tempo por dia. Só usa os tokens da marca (tokens.css) e os componentes do index.html: .campo, .fc-rotulo, .nota, .erro.
-   P5 (13/11/2026): tipos como alternadores com marca de check, ícones SVG, cartão (reunião, WhatsApp) e linha compacta (setup, tarefa). */
+   P5 (13/11/2026): tipos como alternadores com marca de check, ícones SVG, cartão (reunião, WhatsApp, entrega) e linha compacta (setup, tarefa). */
 .atv-filtros { display: flex; flex-wrap: wrap; gap: var(--fc-e-2) var(--fc-e-4); align-items: flex-end; }
 .atv-campo { display: flex; flex-direction: column; gap: var(--fc-e-1); width: 220px; max-width: 100%; }
 .atv-campo:has(> .atv-chips) { width: auto; }
@@ -33,3 +33,7 @@
 .atv-rot { font-size: var(--fc-t-rotulo); letter-spacing: var(--fc-track-rotulo); text-transform: uppercase; color: var(--fc-ink-3); }
 .atv-det a { color: var(--fc-accent-forte); }
 @media (max-width: 520px) { .atv-linha { padding-left: 28px; margin-left: 10px; } .atv-ic { left: -45px; } }
+/* Entrega (work_goal_achieved): cartão no topo do dia; o impacto em destaque, a prova embaixo. */
+.atv-entrega { border-color: var(--fc-accent); }
+.atv-entrega .atv-ic { background: var(--fc-accent); border-color: var(--fc-accent); color: var(--fc-on-accent); }
+.atv-det .atv-impacto { font-size: var(--fc-t-lede); font-weight: 600; color: var(--fc-ink); line-height: var(--fc-lh-legenda); }

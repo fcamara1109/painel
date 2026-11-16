@@ -1,4 +1,4 @@
-// Página Atividades: a linha do tempo do que aconteceu entre o Felipe e cada cliente (setup, reunião gravada, tarefa, dia de WhatsApp).
+// Página Atividades: a linha do tempo do que aconteceu entre o Felipe e cada cliente (setup, reunião gravada, tarefa, dia de WhatsApp, entrega).
 // O painel.js carrega o dado (login, token, consulta sql/activities.sql ao BigQuery) e chama PainelAtividades.render(linhas, ctx):
 //   linhas = [{ ts 'AAAA-MM-DD HH:MM' (São Paulo), tenant, kind, event_name, title, detail (JSON do body, chaves em inglês), link, event_id }]
 //            null = carregando; false = a consulta falhou (só limpa a lista).
@@ -13,8 +13,9 @@
     meeting: { rotulo: 'Reunião', icone: '<rect x="3" y="6" width="12" height="12" rx="2"/><path d="m15 10 6-3v10l-6-3"/>' },
     task: { rotulo: 'Tarefa', icone: '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="m8.5 12 2.5 2.5 4.5-5"/>' },
     whatsapp_day: { rotulo: 'WhatsApp', icone: '<path d="M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-8l-4 3.5V16H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1Z"/>' },
+    delivery: { rotulo: 'Entrega', icone: '<path d="M8 4h8v5a4 4 0 0 1-8 0V4Z"/><path d="M8 6H5v1a3 3 0 0 0 3 3M16 6h3v1a3 3 0 0 1-3 3"/><path d="M12 13v4M9 20h6M10 17h4"/>' },
   };
-  const CARTAO = new Set(['meeting', 'whatsapp_day']); // têm resumo: viram cartão; setup e tarefa ficam em linha compacta
+  const CARTAO = new Set(['meeting', 'whatsapp_day', 'delivery']); // têm resumo: viram cartão; setup e tarefa ficam em linha compacta
   const svg = (classe, miolo) => `<svg class="${classe}" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${miolo}</svg>`;
   const TAREFA = { task_created: 'Tarefa criada', task_prioritized: 'Tarefa priorizada', task_done: 'Tarefa feita', task_cancelled: 'Tarefa cancelada' };
   const SETUP = { setup_stage: 'Estágio', setup_planned: 'Planejado', setup_note: 'Nota', setup_priority: 'Prioridade do cliente', setup_type: 'Tipo do cliente', setup_name: 'Nome do cliente' };
@@ -27,7 +28,7 @@
   let tenantInicial = false; // o ?tenant= vale só na primeira desenhada: depois quem manda é o seletor da página
 
   const nomeModulo = (id) => (window.MODULOS_SETUP && Object.prototype.hasOwnProperty.call(window.MODULOS_SETUP, id) ? window.MODULOS_SETUP[id] : id);
-  const rotuloCliente = (t) => (t === 'felipe' ? 'Sem cliente' : t);
+  const rotuloCliente = (t, kind) => (t === 'felipe' ? (kind === 'delivery' ? 'Todos os clientes' : 'Sem cliente') : t); // entrega do dono (tenant felipe) vale para todos os clientes
   const dataBr = (iso) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
 
   function leDetail(l) {
@@ -48,6 +49,7 @@
       const valor = d.value !== undefined && d.value !== null ? d.value : '';
       return `${quem}${SETUP[l.event_name] || 'Mudança'}${l.event_name === 'setup_note' ? '' : ` → ${valor}`}`;
     }
+    if (l.kind === 'delivery') return d.title || l.title || 'Entrega';
     return l.title || '';
   }
 
@@ -66,6 +68,10 @@
       const por = Array.isArray(d.by_person) ? d.by_person : [];
       if (por.length) h += `<p>${por.map((p) => `${esc(p.name)}: <b>${esc(p.n)}</b>`).join(' · ')}</p>`;
       if (d.summary) h += `<p>${esc(d.summary)}</p>`;
+    } else if (l.kind === 'delivery') {
+      if (d.impact) h += `<p class="atv-impacto">${esc(d.impact)}</p>`;
+      const prova = (Array.isArray(d.evidence) ? d.evidence : []).map(String);
+      if (prova.length) h += `<p class="atv-rot">Prova</p><ul>${prova.map((x) => `<li>${/^https:\/\//.test(x) ? `<a href="${esc(x)}" target="_blank" rel="noopener">${esc(x)}</a>` : esc(x)}</li>`).join('')}</ul>`;
     } else if (l.kind === 'task') {
       if (d.assignee && d.assignee !== 'felipe') h += `<p>Responsável: ${esc(d.assignee)}</p>`; // o Felipe é o padrão: só aparece quando é outra pessoa
     } else if (l.kind === 'setup' && l.event_name === 'setup_note' && d.text) {
@@ -107,7 +113,7 @@
       const n = doCliente.filter((l) => l.kind === k).length;
       return `<button type="button" class="atv-chip" data-kind="${k}" aria-pressed="${estado.ligado.has(k)}">${svg('atv-ok', '<path d="m5 12.5 4.5 4.5L19 7.5"/>')}${svg('atv-tp', TIPOS[k].icone)}${TIPOS[k].rotulo} <span class="atv-n">${n}</span></button>`;
     }).join('');
-    const mostradas = doCliente.filter((l) => estado.ligado.has(l.kind)).sort((a, b) => (`${b.ts} ${b.event_id || ''}`).localeCompare(`${a.ts} ${a.event_id || ''}`));
+    const mostradas = doCliente.filter((l) => estado.ligado.has(l.kind)).sort((a, b) => b.ts.slice(0, 10).localeCompare(a.ts.slice(0, 10)) || (b.kind === 'delivery') - (a.kind === 'delivery') || (`${b.ts} ${b.event_id || ''}`).localeCompare(`${a.ts} ${a.event_id || ''}`)); // entrega vai ao topo do seu dia
     document.getElementById('atv-sub').textContent = `${mostradas.length} ${mostradas.length === 1 ? 'atividade' : 'atividades'} de ${dataBr(ctx.inicio)} a ${dataBr(ctx.fim)}`;
     const saida = document.getElementById('atv-lista');
     if (!mostradas.length) {
@@ -124,9 +130,9 @@
       + itens.map((l) => {
         const d = leDetail(l);
         const hora = l.kind === 'whatsapp_day' ? 'dia todo' : l.ts.slice(11);
-        return `<article class="atv-item ${CARTAO.has(l.kind) ? 'atv-cartao' : 'atv-compacto'}" data-kind="${ctx.esc(l.kind)}" data-tenant="${ctx.esc(l.tenant)}">`
+        return `<article class="atv-item ${CARTAO.has(l.kind) ? 'atv-cartao' : 'atv-compacto'}${l.kind === 'delivery' ? ' atv-entrega' : ''}" data-kind="${ctx.esc(l.kind)}" data-tenant="${ctx.esc(l.tenant)}">`
           + `<span class="atv-ic">${svg('atv-tp', TIPOS[l.kind].icone)}</span>`
-          + `<header><h4>${ctx.esc(titulo(l, d))}</h4><span class="atv-meta">${hora} · <span class="atv-cli">${ctx.esc(rotuloCliente(l.tenant))}</span></span></header>`
+          + `<header><h4>${ctx.esc(titulo(l, d))}</h4><span class="atv-meta">${hora} · <span class="atv-cli">${ctx.esc(rotuloCliente(l.tenant, l.kind))}</span></span></header>`
           + `<div class="atv-det">${corpo(l, d, ctx.esc)}</div></article>`;
       }).join('') + '</div></section>').join('');
   }

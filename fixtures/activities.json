@@ -179,6 +179,34 @@
   {
    "f": [
     {
+     "v": "2026-11-10 08:00"
+    },
+    {
+     "v": "exemplo_a"
+    },
+    {
+     "v": "delivery"
+    },
+    {
+     "v": "work_goal_achieved"
+    },
+    {
+     "v": "Confirmação 24h antes no ar"
+    },
+    {
+     "v": "{\"evidence\":[\"commit abc1234\",\"workflow Core v12\",\"https://github.com/exemplo/exemplo/pull/1\",\"javascript:alert(1)\"],\"impact\":\"Pacientes recebem lembrete um dia antes e faltam menos à consulta.\",\"session\":\"sessao-exemplo-1\",\"source\":\"claude_session\",\"title\":\"Confirmação 24h antes no ar\"}"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "910000000000000016"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
      "v": "2026-11-09 12:00"
     },
     {
@@ -285,6 +313,34 @@
     },
     {
      "v": "910000000000000014"
+    }
+   ]
+  },
+  {
+   "f": [
+    {
+     "v": "2026-11-06 11:00"
+    },
+    {
+     "v": "felipe"
+    },
+    {
+     "v": "delivery"
+    },
+    {
+     "v": "work_goal_achieved"
+    },
+    {
+     "v": "Painel mostra as entregas"
+    },
+    {
+     "v": "{\"evidence\":[\"PR exemplo #2\"],\"impact\":\"Todos os clientes passam a ver o que foi entregue na semana.\",\"session\":\"sessao-exemplo-2\",\"source\":\"claude_session\",\"title\":\"Painel mostra as entregas\"}"
+    },
+    {
+     "v": null
+    },
+    {
+     "v": "910000000000000017"
     }
    ]
   },
